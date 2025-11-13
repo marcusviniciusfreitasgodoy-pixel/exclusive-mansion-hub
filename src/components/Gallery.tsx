@@ -5,14 +5,45 @@ import { Button } from "@/components/ui/button";
 export const Gallery = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Placeholder images - user will need to upload actual photos
   const images = [
-    { url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80", alt: "Vista da sala de estar" },
-    { url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80", alt: "Cozinha gourmet" },
-    { url: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80", alt: "Suíte master" },
-    { url: "https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=1200&q=80", alt: "Vista do terraço" },
-    { url: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=1200&q=80", alt: "Piscina privativa" },
-    { url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80", alt: "Cinema privativo" },
+    // Vista Externa e Terraço
+    { url: new URL('@/assets/gallery/01.jpg', import.meta.url).href, alt: "Terraço gourmet com vista panorâmica do mar" },
+    { url: new URL('@/assets/gallery/ocean-front.jpg', import.meta.url).href, alt: "Vista frontal para o oceano Atlântico" },
+    { url: new URL('@/assets/gallery/02.jpg', import.meta.url).href, alt: "Vista panorâmica da praia e orla da Barra" },
+    
+    // Áreas Sociais
+    { url: new URL('@/assets/gallery/principal.jpg', import.meta.url).href, alt: "Sala de estar principal com vista panorâmica" },
+    { url: new URL('@/assets/gallery/05.jpg', import.meta.url).href, alt: "Sala de estar elegante com varanda integrada" },
+    { url: new URL('@/assets/gallery/10.jpg', import.meta.url).href, alt: "Sala de jantar integrada à área social" },
+    { url: new URL('@/assets/gallery/12.jpg', import.meta.url).href, alt: "Área social com decoração contemporânea" },
+    { url: new URL('@/assets/gallery/03.jpg', import.meta.url).href, alt: "Living com pé direito alto e iluminação natural" },
+    { url: new URL('@/assets/gallery/04.jpg', import.meta.url).href, alt: "Sala de estar com móveis de designer" },
+    { url: new URL('@/assets/gallery/06.jpg', import.meta.url).href, alt: "Ambiente integrado sala e varanda" },
+    
+    // Cinema Privativo
+    { url: new URL('@/assets/gallery/47.jpg', import.meta.url).href, alt: "Cinema privativo com projetor e poltronas reclináveis" },
+    { url: new URL('@/assets/gallery/07.jpg', import.meta.url).href, alt: "Home theater equipado" },
+    
+    // Cozinha e Área Gourmet
+    { url: new URL('@/assets/gallery/08.jpg', import.meta.url).href, alt: "Cozinha gourmet totalmente equipada" },
+    { url: new URL('@/assets/gallery/09.jpg', import.meta.url).href, alt: "Área gourmet com eletrodomésticos de última geração" },
+    
+    // Suítes e Quartos
+    { url: new URL('@/assets/gallery/11.jpg', import.meta.url).href, alt: "Suíte master com closet e vista panorâmica" },
+    { url: new URL('@/assets/gallery/13.jpg', import.meta.url).href, alt: "Suíte com iluminação cênica e acabamentos premium" },
+    { url: new URL('@/assets/gallery/14.jpg', import.meta.url).href, alt: "Quarto espaçoso com móveis planejados" },
+    { url: new URL('@/assets/gallery/15.jpg', import.meta.url).href, alt: "Suíte com decoração elegante" },
+    { url: new URL('@/assets/gallery/16.jpg', import.meta.url).href, alt: "Quarto com iluminação LED e espelhos" },
+    { url: new URL('@/assets/gallery/17.jpg', import.meta.url).href, alt: "Suíte com closet integrado" },
+    { url: new URL('@/assets/gallery/19.jpg', import.meta.url).href, alt: "Quarto com vista privilegiada" },
+    { url: new URL('@/assets/gallery/20.jpg', import.meta.url).href, alt: "Suíte com decoração contemporânea" },
+    { url: new URL('@/assets/gallery/21.jpg', import.meta.url).href, alt: "Ambiente íntimo com iluminação diferenciada" },
+    { url: new URL('@/assets/gallery/23.jpg', import.meta.url).href, alt: "Quarto com móveis espelhados" },
+    { url: new URL('@/assets/gallery/26.jpg', import.meta.url).href, alt: "Suíte com acabamentos de luxo" },
+    { url: new URL('@/assets/gallery/28.jpg', import.meta.url).href, alt: "Quarto espaçoso e aconchegante" },
+    
+    // Banheiros
+    { url: new URL('@/assets/gallery/24.jpg', import.meta.url).href, alt: "Banheiro moderno com acabamento em mármore" },
   ];
 
   const next = () => {
@@ -71,7 +102,7 @@ export const Gallery = () => {
           </div>
 
           {/* Thumbnails */}
-          <div className="mt-6 grid grid-cols-6 gap-3">
+          <div className="mt-6 grid grid-cols-4 gap-3 md:grid-cols-6 lg:grid-cols-9">
             {images.map((image, index) => (
               <button
                 key={index}
@@ -91,12 +122,6 @@ export const Gallery = () => {
             ))}
           </div>
 
-          {/* Note about placeholder images */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-white/60 italic">
-              Nota: Imagens ilustrativas. As fotos reais da cobertura serão adicionadas em breve.
-            </p>
-          </div>
         </div>
       </div>
     </section>
