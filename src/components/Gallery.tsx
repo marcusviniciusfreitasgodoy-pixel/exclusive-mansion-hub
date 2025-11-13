@@ -19,14 +19,20 @@ export const Gallery = () => {
     { url: new URL('@/assets/gallery/03.jpg', import.meta.url).href, alt: "Living com pé direito alto e iluminação natural" },
     { url: new URL('@/assets/gallery/04.jpg', import.meta.url).href, alt: "Sala de estar com móveis de designer" },
     { url: new URL('@/assets/gallery/06.jpg', import.meta.url).href, alt: "Ambiente integrado sala e varanda" },
+    { url: new URL('@/assets/gallery/29.jpg', import.meta.url).href, alt: "Área social com vista panorâmica" },
+    { url: new URL('@/assets/gallery/31.jpg', import.meta.url).href, alt: "Living integrado com varanda" },
+    { url: new URL('@/assets/gallery/32.jpg', import.meta.url).href, alt: "Sala de estar com decoração contemporânea" },
     
     // Cinema Privativo
     { url: new URL('@/assets/gallery/47.jpg', import.meta.url).href, alt: "Cinema privativo com projetor e poltronas reclináveis" },
     { url: new URL('@/assets/gallery/07.jpg', import.meta.url).href, alt: "Home theater equipado" },
+    { url: new URL('@/assets/gallery/46.jpg', import.meta.url).href, alt: "Cinema com sistema de som premium" },
     
     // Cozinha e Área Gourmet
     { url: new URL('@/assets/gallery/08.jpg', import.meta.url).href, alt: "Cozinha gourmet totalmente equipada" },
     { url: new URL('@/assets/gallery/09.jpg', import.meta.url).href, alt: "Área gourmet com eletrodomésticos de última geração" },
+    { url: new URL('@/assets/gallery/33.jpg', import.meta.url).href, alt: "Cozinha integrada com área de serviço" },
+    { url: new URL('@/assets/gallery/34.jpg', import.meta.url).href, alt: "Área gourmet com vista" },
     
     // Suítes e Quartos
     { url: new URL('@/assets/gallery/11.jpg', import.meta.url).href, alt: "Suíte master com closet e vista panorâmica" },
@@ -41,6 +47,16 @@ export const Gallery = () => {
     { url: new URL('@/assets/gallery/23.jpg', import.meta.url).href, alt: "Quarto com móveis espelhados" },
     { url: new URL('@/assets/gallery/26.jpg', import.meta.url).href, alt: "Suíte com acabamentos de luxo" },
     { url: new URL('@/assets/gallery/28.jpg', import.meta.url).href, alt: "Quarto espaçoso e aconchegante" },
+    { url: new URL('@/assets/gallery/35.jpg', import.meta.url).href, alt: "Suíte com closet planejado" },
+    { url: new URL('@/assets/gallery/36.jpg', import.meta.url).href, alt: "Quarto com iluminação ambiente" },
+    { url: new URL('@/assets/gallery/37.jpg', import.meta.url).href, alt: "Suíte com varanda privativa" },
+    { url: new URL('@/assets/gallery/38.jpg', import.meta.url).href, alt: "Quarto com decoração moderna" },
+    { url: new URL('@/assets/gallery/39.jpg', import.meta.url).href, alt: "Suíte master secundária" },
+    { url: new URL('@/assets/gallery/40.jpg', import.meta.url).href, alt: "Quarto com móveis de designer" },
+    { url: new URL('@/assets/gallery/41.jpg', import.meta.url).href, alt: "Suíte com acabamentos premium" },
+    { url: new URL('@/assets/gallery/43.jpg', import.meta.url).href, alt: "Quarto com iluminação LED" },
+    { url: new URL('@/assets/gallery/44.jpg', import.meta.url).href, alt: "Suíte com vista panorâmica" },
+    { url: new URL('@/assets/gallery/45.jpg', import.meta.url).href, alt: "Quarto espaçoso e confortável" },
     
     // Banheiros
     { url: new URL('@/assets/gallery/24.jpg', import.meta.url).href, alt: "Banheiro moderno com acabamento em mármore" },
