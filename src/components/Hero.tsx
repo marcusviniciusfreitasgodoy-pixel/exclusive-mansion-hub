@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
-import logo from "@/assets/logo-negativo.png";
+import heroImage from "@/assets/hero-ocean-view.jpg";
 
 export const Hero = () => {
   const scrollToDetails = () => {
@@ -9,20 +9,20 @@ export const Hero = () => {
 
   return (
     <section className="relative h-screen w-full overflow-hidden">
-      {/* Background with overlay */}
-      <div className="absolute inset-0 luxury-gradient">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
+      {/* Background Image with overlay */}
+      <div className="absolute inset-0">
+        <img 
+          src={heroImage} 
+          alt="Vista panorâmica do mar da Barra da Tijuca" 
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
       </div>
       
       {/* Content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-8">
-        {/* Logo */}
-        <div className="animate-fade-in">
-          <img src={logo} alt="Godoy Prime Realty" className="h-16 md:h-20" />
-        </div>
-        
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 py-8">
         {/* Main Content */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <div className="text-center animate-fade-in mt-20">
           <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent md:text-base">
             Exclusividade Godoy Prime Realty
           </p>
@@ -52,15 +52,17 @@ export const Hero = () => {
         </div>
         
         {/* Scroll Indicator */}
-        <button 
-          onClick={scrollToDetails}
-          className="animate-fade-in flex flex-col items-center text-white/80 hover:text-white transition-smooth"
-          style={{ animationDelay: "0.4s" }}
-          aria-label="Scroll para mais informações"
-        >
-          <span className="mb-2 text-xs uppercase tracking-widest">Descubra</span>
-          <ArrowDown className="h-6 w-6 animate-bounce" />
-        </button>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <button 
+            onClick={scrollToDetails}
+            className="animate-fade-in flex flex-col items-center text-white/80 hover:text-white transition-smooth"
+            style={{ animationDelay: "0.4s" }}
+            aria-label="Scroll para mais informações"
+          >
+            <span className="mb-2 text-xs uppercase tracking-widest">Descubra</span>
+            <ArrowDown className="h-6 w-6 animate-bounce" />
+          </button>
+        </div>
       </div>
     </section>
   );
