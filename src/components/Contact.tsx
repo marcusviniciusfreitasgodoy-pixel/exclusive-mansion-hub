@@ -20,7 +20,7 @@ export const Contact = () => {
 
     // WhatsApp message
     const message = `Olá! Tenho interesse na Cobertura Duplex Frente-Mar.\n\nNome: ${formData.name}\nEmail: ${formData.email}\nTelefone: ${formData.phone}\nMensagem: ${formData.message}`;
-    const whatsappUrl = `https://wa.me/5521999999999?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/5521964075124?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
     toast({
       title: "Redirecionando para WhatsApp",
@@ -72,8 +72,8 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-primary mb-1">Telefone / WhatsApp</p>
-                    <a href="tel:+5521999999999" className="text-muted-foreground hover:text-accent transition-smooth">
-                      (21) 99999-9999
+                    <a href="tel:+5521964075124" className="text-muted-foreground hover:text-accent transition-smooth">
+                      (21) 96407-5124
                     </a>
                   </div>
                 </div>
