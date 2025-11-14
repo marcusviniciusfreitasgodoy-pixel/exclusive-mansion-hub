@@ -7,10 +7,8 @@ import { Gallery } from "@/components/Gallery";
 import { VideoSection } from "@/components/VideoSection";
 import { Contact } from "@/components/Contact";
 import logoWhite from "@/assets/logo-negativo.png";
-
 const Index = () => {
-  return (
-    <main className="min-h-screen">
+  return <main className="min-h-screen">
       <Navbar />
       <ScrollToTop />
       <div id="hero">
@@ -35,13 +33,9 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-primary py-12 text-center">
         <div className="container mx-auto px-6">
-          <img 
-            src={logoWhite} 
-            alt="Godoy Prime Realty" 
-            className="mx-auto mb-6 h-12" 
-          />
+          <img src={logoWhite} alt="Godoy Prime Realty" className="mx-auto mb-6 h-12" />
           <p className="text-sm text-white/60">
-            © 2024 Godoy Prime Realty. Todos os direitos reservados.
+            © 2025 Godoy Prime Realty. Todos os direitos reservados.
           </p>
           <p className="mt-2 text-xs text-white/40">
             CRECI: [Número do CRECI] | Código do Imóvel: 172850
@@ -53,8 +47,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </main>
-  );
+    </main>;
 };
-
 export default Index;
