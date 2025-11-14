@@ -38,15 +38,13 @@ export const VideoSection = () => {
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    <a
-                      href="https://youtube.com/shorts/qumxudth3mk"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setIsPlaying(true)}
                       className="flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
-                      aria-label="Assistir vídeo no YouTube"
+                      aria-label="Reproduzir vídeo"
                     >
                       <Play className="h-10 w-10 text-primary ml-1" fill="currentColor" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               ) : (
