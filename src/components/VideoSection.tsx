@@ -22,10 +22,10 @@ export const VideoSection = () => {
           </p>
         </div>
 
-        <div className="mx-auto max-w-5xl">
-          <div className="grid gap-8 md:grid-cols-2">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3">
             {/* Main Video */}
-            <div className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in md:col-span-2">
+            <div className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in md:col-span-1 mx-auto w-full max-w-md">
               {!isPlaying ? (
                 <div className="relative h-full w-full">
                   <img
@@ -55,7 +55,7 @@ export const VideoSection = () => {
             </div>
 
             {/* Additional Videos */}
-            <div className="relative aspect-video overflow-hidden rounded-xl shadow-elegant animate-fade-in">
+            <div className="relative aspect-[9/16] overflow-hidden rounded-xl shadow-elegant animate-fade-in mx-auto w-full max-w-md">
               <img
                 src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80"
                 alt="Thumbnail suítes"
@@ -74,7 +74,7 @@ export const VideoSection = () => {
               </div>
             </div>
 
-            <div className="relative aspect-video overflow-hidden rounded-xl shadow-elegant animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <div className="relative aspect-[9/16] overflow-hidden rounded-xl shadow-elegant animate-fade-in mx-auto w-full max-w-md" style={{ animationDelay: "0.1s" }}>
               <img
                 src="https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&q=80"
                 alt="Thumbnail área de lazer"
