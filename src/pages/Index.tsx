@@ -38,7 +38,7 @@ const Index = () => {
             © 2025 Godoy Prime Realty. Todos os direitos reservados.
           </p>
           <p className="mt-2 text-xs text-white/40">
-            CRECI: [Número do CRECI] | Código do Imóvel: 172850
+            CRECI: 11841 | Código do Imóvel: 172850
           </p>
           <div className="mt-6 flex justify-center gap-4 text-xs text-white/40">
             <a href="#" className="hover:text-accent transition-smooth">Política de Privacidade</a>
