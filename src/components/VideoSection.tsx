@@ -4,8 +4,8 @@ import { useState } from "react";
 export const VideoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Placeholder video - user will provide actual video links
-  const videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ";
+  // YouTube Shorts video
+  const videoUrl = "https://www.youtube.com/embed/qumxudth3mk";
 
   return (
     <section className="relative py-24 bg-white">
