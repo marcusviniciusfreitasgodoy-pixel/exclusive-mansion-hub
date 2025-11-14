@@ -1,5 +1,7 @@
 import { Play } from "lucide-react";
 import { useState } from "react";
+import videoThumbnailOcean from "@/assets/video-thumbnail-ocean.jpg";
+import videoThumbnailInterior from "@/assets/video-thumbnail-interior.jpg";
 export const VideoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingSecond, setIsPlayingSecond] = useState(false);
@@ -26,7 +28,7 @@ export const VideoSection = () => {
             {/* Main Video */}
             <div className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md">
               {!isPlaying ? <div className="relative h-full w-full">
-                  <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80" alt="Thumbnail do vídeo" className="h-full w-full object-cover" />
+                  <img src={videoThumbnailOcean} alt="Vista da praia" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                     <button onClick={() => setIsPlaying(true)} className="flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110" aria-label="Reproduzir vídeo">
                       <Play className="h-10 w-10 text-primary ml-1" fill="currentColor" />
@@ -38,7 +40,7 @@ export const VideoSection = () => {
             {/* Second Video */}
             <div className="relative aspect-[9/16] overflow-hidden rounded-xl shadow-elegant animate-fade-in w-full max-w-md">
               {!isPlayingSecond ? <div className="relative h-full w-full">
-                  <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80" alt="Thumbnail suítes" className="h-full w-full object-cover" />
+                  <img src={videoThumbnailInterior} alt="Interior da cobertura" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                     <button onClick={() => setIsPlayingSecond(true)} className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/90 shadow-gold transition-elegant hover:scale-110" aria-label="Reproduzir vídeo das suítes">
                       <Play className="h-8 w-8 text-primary ml-1" fill="currentColor" />
