@@ -47,7 +47,7 @@ export const VideoSection = () => {
                     </button>
                   </div>
                   <div className="absolute bottom-4 left-4 right-4 text-white">
-                    <p className="font-semibold">Suítes e Closets</p>
+                    
                   </div>
                 </div> : <iframe src={videoUrlSecond} title="Vídeo das Suítes" className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}
             </div>
