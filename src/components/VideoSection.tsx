@@ -4,10 +4,12 @@ import { useState } from "react";
 export const VideoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingSecond, setIsPlayingSecond] = useState(false);
+  const [isPlayingThird, setIsPlayingThird] = useState(false);
 
   // YouTube Shorts video
   const videoUrl = "https://www.youtube.com/embed/qumxudth3mk";
   const videoUrlSecond = "https://www.youtube.com/embed/UaRbQ7U_IGE";
+  const videoUrlThird = "https://www.youtube.com/embed/TsOfLja2vXo";
 
   return (
     <section className="relative py-24 bg-white">
@@ -90,22 +92,35 @@ export const VideoSection = () => {
             </div>
 
             <div className="relative aspect-[9/16] overflow-hidden rounded-xl shadow-elegant animate-fade-in mx-auto w-full max-w-md" style={{ animationDelay: "0.1s" }}>
-              <img
-                src="https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&q=80"
-                alt="Thumbnail área de lazer"
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                <button
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/90 shadow-gold transition-elegant hover:scale-110"
-                  aria-label="Reproduzir vídeo da área de lazer"
-                >
-                  <Play className="h-8 w-8 text-primary ml-1" fill="currentColor" />
-                </button>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <p className="font-semibold">Área de Lazer</p>
-              </div>
+              {!isPlayingThird ? (
+                <div className="relative h-full w-full">
+                  <img
+                    src="https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&q=80"
+                    alt="Thumbnail área de lazer"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <button
+                      onClick={() => setIsPlayingThird(true)}
+                      className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/90 shadow-gold transition-elegant hover:scale-110"
+                      aria-label="Reproduzir vídeo da área de lazer"
+                    >
+                      <Play className="h-8 w-8 text-primary ml-1" fill="currentColor" />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <p className="font-semibold">Área de Lazer</p>
+                  </div>
+                </div>
+              ) : (
+                <iframe
+                  src={videoUrlThird}
+                  title="Vídeo da Área de Lazer"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
             </div>
           </div>
 
