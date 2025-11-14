@@ -5,42 +5,41 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo-principal.png";
-
 export const Contact = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    message: "",
+    message: ""
   });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // WhatsApp message
     const message = `Olá! Tenho interesse na Cobertura Duplex Frente-Mar.\n\nNome: ${formData.name}\nEmail: ${formData.email}\nTelefone: ${formData.phone}\nMensagem: ${formData.message}`;
     const whatsappUrl = `https://wa.me/5521999999999?text=${encodeURIComponent(message)}`;
-    
     window.open(whatsappUrl, "_blank");
-    
     toast({
       title: "Redirecionando para WhatsApp",
-      description: "Você será direcionado para continuar a conversa.",
+      description: "Você será direcionado para continuar a conversa."
     });
-
-    setFormData({ name: "", email: "", phone: "", message: "" });
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      message: ""
+    });
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
-
-  return (
-    <section className="relative py-24 bg-luxury-cream">
+  return <section className="relative py-24 bg-luxury-cream">
       <div className="container mx-auto px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center animate-fade-in">
@@ -98,7 +97,8 @@ export const Contact = () => {
                   <div>
                     <p className="font-semibold text-primary mb-1">Localização</p>
                     <p className="text-muted-foreground">
-                      Avenida Lúcio Costa<br />
+                      Avenida Lúcio Costa 2360
+Barra da Tijuca, Rio de Janeiro<br />
                       Barra da Tijuca, Rio de Janeiro
                     </p>
                   </div>
@@ -112,72 +112,39 @@ export const Contact = () => {
             </div>
 
             {/* Contact Form */}
-            <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <div className="animate-fade-in" style={{
+            animationDelay: "0.2s"
+          }}>
               <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-white p-8 shadow-elegant">
                 <div>
                   <label htmlFor="name" className="mb-2 block text-sm font-medium text-primary">
                     Nome Completo *
                   </label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="border-border focus:border-accent transition-smooth"
-                  />
+                  <Input id="name" name="name" type="text" required value={formData.name} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="mb-2 block text-sm font-medium text-primary">
                     E-mail *
                   </label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="border-border focus:border-accent transition-smooth"
-                  />
+                  <Input id="email" name="email" type="email" required value={formData.email} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
                 </div>
 
                 <div>
                   <label htmlFor="phone" className="mb-2 block text-sm font-medium text-primary">
                     Telefone / WhatsApp *
                   </label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="border-border focus:border-accent transition-smooth"
-                  />
+                  <Input id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
                 </div>
 
                 <div>
                   <label htmlFor="message" className="mb-2 block text-sm font-medium text-primary">
                     Mensagem
                   </label>
-                  <Textarea
-                    id="message"
-                    name="message"
-                    rows={4}
-                    value={formData.message}
-                    onChange={handleChange}
-                    className="border-border focus:border-accent transition-smooth resize-none"
-                    placeholder="Conte-nos mais sobre seu interesse..."
-                  />
+                  <Textarea id="message" name="message" rows={4} value={formData.message} onChange={handleChange} className="border-border focus:border-accent transition-smooth resize-none" placeholder="Conte-nos mais sobre seu interesse..." />
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6"
-                >
+                <Button type="submit" className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6">
                   Enviar Mensagem via WhatsApp
                 </Button>
 
@@ -189,6 +156,5 @@ export const Contact = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
