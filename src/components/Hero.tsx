@@ -44,7 +44,7 @@ export const Hero = () => {
               size="lg" 
               variant="outline"
               className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 transition-elegant text-base font-semibold px-8"
-              onClick={() => window.open("https://wa.me/5521999999999", "_blank")}
+              onClick={() => window.open("https://wa.me/5521964075124", "_blank")}
             >
               Agendar Visita
             </Button>
