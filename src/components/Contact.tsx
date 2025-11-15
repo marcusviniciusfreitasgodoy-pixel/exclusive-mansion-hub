@@ -47,7 +47,7 @@ export const Contact = () => {
               Entre em Contato
             </span>
             <h2 className="mb-4 text-4xl font-bold text-primary md:text-5xl">
-              Agende sua Visita
+              Agende sua Visita ou Entre em Contato        
             </h2>
             <p className="text-xl text-muted-foreground">
               Descubra pessoalmente todos os detalhes desta propriedade excepcional
