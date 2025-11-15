@@ -5,10 +5,12 @@ import videoThumbnailInterior from "@/assets/video-thumbnail-interior.jpg";
 export const VideoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingSecond, setIsPlayingSecond] = useState(false);
+  const [isPlayingNarration, setIsPlayingNarration] = useState(false);
 
   // YouTube Shorts video
   const videoUrl = "https://www.youtube.com/embed/qumxudth3mk";
   const videoUrlSecond = "https://www.youtube.com/embed/UaRbQ7U_IGE";
+  const videoUrlNarration = "https://www.youtube.com/embed/YOUR_VIDEO_ID"; // Substitua YOUR_VIDEO_ID pelo ID do vídeo
   return <section className="relative py-24 bg-white">
       <div className="container mx-auto px-6">
         <div className="mb-16 text-center animate-fade-in">
@@ -54,9 +56,39 @@ export const VideoSection = () => {
 
           </div>
 
-          {/* Note */}
-          <div className="mt-8 text-center">
-            
+          {/* Narration Video - 16:9 */}
+          <div className="mt-12">
+            <h3 className="mb-6 text-center text-2xl font-semibold text-primary">
+              Vídeo com Narração
+            </h3>
+            <div className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in">
+              {!isPlayingNarration ? (
+                <div className="relative h-full w-full">
+                  <img 
+                    src={videoThumbnailOcean} 
+                    alt="Vídeo com narração" 
+                    className="h-full w-full object-cover" 
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <button
+                      onClick={() => setIsPlayingNarration(true)}
+                      className="flex h-24 w-24 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
+                      aria-label="Reproduzir vídeo com narração"
+                    >
+                      <Play className="h-12 w-12 text-primary ml-1" fill="currentColor" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <iframe
+                  src={videoUrlNarration}
+                  title="Vídeo com Narração"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
