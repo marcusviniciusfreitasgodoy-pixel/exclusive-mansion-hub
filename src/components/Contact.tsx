@@ -105,10 +105,7 @@ Barra da Tijuca, Rio de Janeiro<br />
                 </div>
               </div>
 
-              <div className="rounded-xl bg-primary p-8 shadow-elegant">
-                
-                
-              </div>
+              
             </div>
 
             {/* Contact Form */}
