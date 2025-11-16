@@ -44,7 +44,7 @@ export const Contact = () => {
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center animate-fade-in">
             <span className="mb-4 inline-block text-sm uppercase tracking-[0.3em] text-accent">
-              Entre em Contato
+              FALE CONOSCO AGORA      
             </span>
             <h2 className="mb-4 text-4xl font-bold text-primary md:text-5xl">
               Agende sua Visita ou Entre em Contato        
@@ -106,8 +106,8 @@ Barra da Tijuca, Rio de Janeiro<br />
               </div>
 
               <div className="rounded-xl bg-primary p-8 shadow-elegant">
-                <p className="text-sm uppercase tracking-widest text-accent mb-2">Código do Imóvel</p>
-                <p className="text-3xl font-bold text-white">172850</p>
+                
+                
               </div>
             </div>
 
