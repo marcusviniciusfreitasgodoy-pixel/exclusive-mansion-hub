@@ -40,7 +40,7 @@ export const PropertyDetails = () => {
         {/* Price Section */}
         <div className="mb-16 text-center">
           <div className="inline-block luxury-gradient rounded-2xl px-12 py-8 shadow-gold animate-scale-in">
-            <p className="mb-2 text-sm uppercase tracking-widest text-accent">VALOR DO IMÓVEL COM PORTEIRA FECHADA            </p>
+            <p className="mb-2 text-sm uppercase tracking-widest text-accent text-center">VALOR DO IMÓVEL COM PORTEIRA FECHADA</p>
             <p className="text-5xl font-bold text-white md:text-6xl">R$ 13.500.000</p>
             <div className="mt-4 flex justify-center gap-8 text-sm text-white/80">
               <span>Condomínio: R$ 5.500</span>
