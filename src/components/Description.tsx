@@ -1,34 +1,8 @@
 import { Check } from "lucide-react";
-
 export const Description = () => {
-  const highlights = [
-    "Vista panorâmica inigualável para o mar da Barra",
-    "Piscina privativa aquecida e sauna exclusiva",
-    "Sala de cinema e adega climatizada",
-    "Cinco suítes com três closets privativos",
-    "Cinco vagas de garagem + quarto de motorista",
-    "Condomínio com portaria 24h e segurança total",
-    "Suíte Máster com hidromassagem",
-    "Acabamentos de altíssimo padrão"
-  ];
-
-  const features = [
-    "5 suítes luxuosas, sendo 3 com closet",
-    "Cinema particular",
-    "7 banheiros completos",
-    "Adega climatizada",
-    "Espaço gourmet integrado",
-    "Piscina privativa aquecida",
-    "Sauna exclusiva",
-    "Aquecimento a gás",
-    "Ar-condicionado central",
-    "Hidromassagem",
-    "Fechadura digital",
-    "Iluminação LED inteligente"
-  ];
-
-  return (
-    <section className="relative py-24 bg-white">
+  const highlights = ["Vista panorâmica inigualável para o mar da Barra", "Piscina privativa aquecida e sauna exclusiva", "Sala de cinema e adega climatizada", "Cinco suítes com três closets privativos", "Cinco vagas de garagem + quarto de motorista", "Condomínio com portaria 24h e segurança total", "Suíte Máster com hidromassagem", "Acabamentos de altíssimo padrão"];
+  const features = ["5 suítes luxuosas, sendo 3 com closet", "Cinema particular", "7 banheiros completos", "Adega climatizada", "Espaço gourmet integrado", "Piscina privativa aquecida", "Sauna exclusiva", "Aquecimento a gás", "Ar-condicionado central", "Hidromassagem", "Fechadura digital", "Iluminação LED inteligente"];
+  return <section className="relative py-24 bg-white">
       <div className="container mx-auto px-6">
         <div className="mx-auto max-w-5xl">
           {/* Main Description */}
@@ -65,43 +39,22 @@ export const Description = () => {
               Diferenciais Exclusivos
             </h3>
             <div className="grid gap-4 md:grid-cols-2">
-              {highlights.map((highlight, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 rounded-lg bg-luxury-cream p-6 transition-elegant hover:shadow-elegant animate-fade-in"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
+              {highlights.map((highlight, index) => <div key={index} className="flex items-start gap-4 rounded-lg bg-luxury-cream p-6 transition-elegant hover:shadow-elegant animate-fade-in" style={{
+              animationDelay: `${index * 0.05}s`
+            }}>
                   <div className="flex-shrink-0">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
                       <Check className="h-5 w-5 text-primary" />
                     </div>
                   </div>
                   <p className="text-base leading-relaxed text-primary">{highlight}</p>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
 
           {/* Features */}
-          <div className="rounded-2xl luxury-gradient p-8 md:p-12 shadow-elegant">
-            <h3 className="mb-8 text-center text-2xl font-bold text-white md:text-3xl">
-              Características Premium
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 text-white animate-fade-in"
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  <div className="h-2 w-2 rounded-full bg-accent flex-shrink-0" />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
