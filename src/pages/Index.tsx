@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Hero } from "@/components/Hero";
 import { PropertyDetails } from "@/components/PropertyDetails";
 import { Description } from "@/components/Description";
@@ -11,6 +12,7 @@ const Index = () => {
   return <main className="min-h-screen">
       <Navbar />
       <ScrollToTop />
+      <FloatingWhatsApp />
       <div id="hero">
         <Hero />
       </div>
