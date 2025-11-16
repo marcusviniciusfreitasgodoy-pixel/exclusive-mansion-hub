@@ -8,7 +8,7 @@ export const Description = () => {
     "Cinco suítes com três closets privativos",
     "Cinco vagas de garagem + quarto de motorista",
     "Condomínio com portaria 24h e segurança total",
-    "Infraestrutura premium e lazer completo",
+    "Suíte Máster com hidromassagem",
     "Acabamentos de altíssimo padrão"
   ];
 
