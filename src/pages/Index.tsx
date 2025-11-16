@@ -43,9 +43,9 @@ const Index = () => {
             CRECI: 11841 | Código do Imóvel: 172850
           </p>
           <div className="mt-6 flex justify-center gap-4 text-xs text-white/40">
-            <a href="#" className="hover:text-accent transition-smooth">Política de Privacidade</a>
+            <a href="https://docs.google.com/document/d/1WKh-v-HKJz5rHLhqzaPRlj34YzSe78NhhiQgTnRShls/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-smooth">Política de Privacidade</a>
             <span>•</span>
-            <a href="#" className="hover:text-accent transition-smooth">Termos de Uso</a>
+            <a href="https://docs.google.com/document/d/1JqColkt5uzQnajZDWVPTdy423kJlVDEpQepGRGlGFp8/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-smooth">Termos de Uso</a>
           </div>
         </div>
       </footer>
