@@ -2,42 +2,70 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Phone, Mail, MapPin } from "lucide-react";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import logo from "@/assets/logo-principal.png";
-export const Contact = () => {
-  const {
-    toast
-  } = useToast();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: ""
-  });
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
 
-    // WhatsApp message
-    const message = `Olá! Tenho interesse na Cobertura Duplex Frente-Mar.\n\nNome: ${formData.name}\nEmail: ${formData.email}\nTelefone: ${formData.phone}\nMensagem: ${formData.message}`;
-    const whatsappUrl = `https://wa.me/5521964075124?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
-    toast({
-      title: "Redirecionando para WhatsApp",
-      description: "Você será direcionado para continuar a conversa."
-    });
-    setFormData({
+const contactSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Nome é obrigatório")
+    .max(100, "Nome muito longo (máximo 100 caracteres)"),
+  email: z
+    .string()
+    .trim()
+    .email("Email inválido")
+    .max(255, "Email muito longo (máximo 255 caracteres)"),
+  phone: z
+    .string()
+    .trim()
+    .min(10, "Telefone deve ter no mínimo 10 dígitos")
+    .max(20, "Telefone muito longo (máximo 20 caracteres)")
+    .regex(/^[\d\s\-\(\)+]+$/, "Telefone deve conter apenas números, espaços e símbolos válidos"),
+  message: z
+    .string()
+    .trim()
+    .min(1, "Mensagem é obrigatória")
+    .max(1000, "Mensagem muito longa (máximo 1000 caracteres)"),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
+export const Contact = () => {
+  const { toast } = useToast();
+  
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
       name: "",
       email: "",
       phone: "",
-      message: ""
+      message: "",
+    },
+  });
+
+  const handleSubmit = (data: ContactFormData) => {
+    // WhatsApp message
+    const message = `Olá! Tenho interesse na Cobertura Duplex Frente-Mar.\n\nNome: ${data.name}\nEmail: ${data.email}\nTelefone: ${data.phone}\nMensagem: ${data.message}`;
+    const whatsappUrl = `https://wa.me/5521964075124?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+    
+    toast({
+      title: "Redirecionando para WhatsApp",
+      description: "Você será direcionado para continuar a conversa.",
     });
-  };
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    
+    form.reset();
   };
   return <section className="relative py-24 bg-luxury-cream">
       <div className="container mx-auto px-6">
@@ -112,43 +140,97 @@ Barra da Tijuca, Rio de Janeiro<br />
             <div className="animate-fade-in" style={{
             animationDelay: "0.2s"
           }}>
-              <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-white p-8 shadow-elegant">
-                <div>
-                  <label htmlFor="name" className="mb-2 block text-sm font-medium text-primary">
-                    Nome Completo *
-                  </label>
-                  <Input id="name" name="name" type="text" required value={formData.name} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
-                </div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 rounded-2xl bg-white p-8 shadow-elegant">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-primary">
+                          Nome Completo *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            className="border-border focus:border-accent transition-smooth" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div>
-                  <label htmlFor="email" className="mb-2 block text-sm font-medium text-primary">
-                    E-mail *
-                  </label>
-                  <Input id="email" name="email" type="email" required value={formData.email} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
-                </div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-primary">
+                          E-mail *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="email"
+                            className="border-border focus:border-accent transition-smooth" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div>
-                  <label htmlFor="phone" className="mb-2 block text-sm font-medium text-primary">
-                    Telefone / WhatsApp *
-                  </label>
-                  <Input id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} className="border-border focus:border-accent transition-smooth" />
-                </div>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-primary">
+                          Telefone / WhatsApp *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="tel"
+                            className="border-border focus:border-accent transition-smooth" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div>
-                  <label htmlFor="message" className="mb-2 block text-sm font-medium text-primary">
-                    Mensagem
-                  </label>
-                  <Textarea id="message" name="message" rows={4} value={formData.message} onChange={handleChange} className="border-border focus:border-accent transition-smooth resize-none" placeholder="Conte-nos mais sobre seu interesse..." />
-                </div>
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-primary">
+                          Mensagem *
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            className="border-border focus:border-accent transition-smooth resize-none" 
+                            placeholder="Conte-nos mais sobre seu interesse..." 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button type="submit" className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6">
-                  Enviar Mensagem via WhatsApp
-                </Button>
+                  <Button type="submit" className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6">
+                    Enviar Mensagem via WhatsApp
+                  </Button>
 
-                <p className="text-center text-xs text-muted-foreground">
-                  Ao enviar, você concorda com nossa política de privacidade
-                </p>
-              </form>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Ao enviar, você concorda com nossa política de privacidade
+                  </p>
+                </form>
+              </Form>
             </div>
           </div>
         </div>
