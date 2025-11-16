@@ -117,27 +117,6 @@ export const Gallery = () => {
             </div>
           </div>
 
-          {/* Thumbnails */}
-          <div className="mt-6 grid grid-cols-4 gap-3 md:grid-cols-6 lg:grid-cols-9">
-            {images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`aspect-square overflow-hidden rounded-lg transition-elegant ${
-                  index === currentIndex
-                    ? "ring-2 ring-accent ring-offset-2 ring-offset-primary"
-                    : "opacity-60 hover:opacity-100"
-                }`}
-              >
-                <img
-                  src={image.url}
-                  alt={image.alt}
-                  className="h-full w-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-
         </div>
       </div>
     </section>
