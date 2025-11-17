@@ -5,11 +5,13 @@ import videoThumbnailInterior from "@/assets/video-thumbnail-interior.jpg";
 export const VideoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingSecond, setIsPlayingSecond] = useState(false);
+  const [isPlayingThird, setIsPlayingThird] = useState(false);
   const [isPlayingNarration, setIsPlayingNarration] = useState(false);
 
   // YouTube Shorts video
   const videoUrl = "https://www.youtube.com/embed/qumxudth3mk";
   const videoUrlSecond = "https://www.youtube.com/embed/UaRbQ7U_IGE";
+  const videoUrlThird = "https://www.youtube.com/embed/vNY2KsXWkH8";
   const videoUrlNarration = "https://www.youtube.com/embed/SEpp55jgOqA";
   return <section className="relative py-24 bg-white">
       <div className="container mx-auto px-6">
@@ -25,8 +27,8 @@ export const VideoSection = () => {
           </p>
         </div>
 
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-8 md:grid-cols-2 justify-items-center">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3 justify-items-center">
             {/* Main Video */}
             <div className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md">
               {!isPlaying ? <div className="relative h-full w-full">
@@ -52,6 +54,18 @@ export const VideoSection = () => {
                     
                   </div>
                 </div> : <iframe src={videoUrlSecond} title="Vídeo das Suítes" className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}
+            </div>
+
+            {/* Third Video */}
+            <div className="relative aspect-[9/16] overflow-hidden rounded-xl shadow-elegant animate-fade-in w-full max-w-md">
+              {!isPlayingThird ? <div className="relative h-full w-full">
+                  <img src={videoThumbnailOcean} alt="Tour da cobertura" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <button onClick={() => setIsPlayingThird(true)} className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/90 shadow-gold transition-elegant hover:scale-110" aria-label="Reproduzir tour da cobertura">
+                      <Play className="h-8 w-8 text-primary ml-1" fill="currentColor" />
+                    </button>
+                  </div>
+                </div> : <iframe src={videoUrlThird} title="Tour da Cobertura" className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}
             </div>
 
           </div>
