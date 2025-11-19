@@ -11,7 +11,7 @@ export const VideoSection = () => {
   // YouTube Shorts video
   const videoUrl = "https://www.youtube.com/embed/qumxudth3mk";
   const videoUrlSecond = "https://www.youtube.com/embed/UaRbQ7U_IGE";
-  const videoUrlThird = "https://www.youtube.com/embed/vNY2KsXWkH8";
+  const videoUrlThird = "https://www.youtube.com/embed/VUSRFdmc4cc";
   const videoUrlNarration = "https://www.youtube.com/embed/SEpp55jgOqA";
   return <section className="relative py-24 bg-white">
       <div className="container mx-auto px-6">
