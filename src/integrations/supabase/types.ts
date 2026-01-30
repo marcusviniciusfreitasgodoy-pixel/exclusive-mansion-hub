@@ -494,26 +494,41 @@ export type Database = {
       }
       imoveis: {
         Row: {
+          abastecimento_agua: string | null
           amenities: Json | null
+          aquecimento: Json | null
           area_privativa: number | null
           area_total: number | null
           bairro: string | null
           banheiros: number | null
+          caracteristicas_terreno: Json | null
           cep: string | null
           cidade: string | null
           condicoes_pagamento: string | null
           condominio: number | null
           construtora_id: string
+          corretores: Json | null
           created_at: string | null
+          data_publicacao: string | null
           descricao: string | null
           diferenciais: Json | null
+          distrito: string | null
           endereco: string | null
           estado: string | null
+          estilo_arquitetonico: string | null
+          estrutura_construcao: string | null
           features_exterior: Json | null
           features_interior: Json | null
+          flag_alto_padrao: boolean | null
+          flag_destaque: boolean | null
+          flag_exclusividade: boolean | null
+          flag_lancamento: boolean | null
+          flag_novo_anuncio: boolean | null
+          flag_off_market: boolean | null
           headline: string | null
           id: string
           imagens: Json | null
+          impostos_anuais: number | null
           iptu: number | null
           latitude: number | null
           listing_code: string | null
@@ -521,42 +536,66 @@ export type Database = {
           lot_size: number | null
           lot_size_unit: string | null
           memorial_descritivo: string | null
+          origem_cadastro: string | null
           parking_spaces: number | null
           price_on_request: boolean | null
           price_secondary: number | null
           price_secondary_currency: string | null
           property_type: string | null
+          regiao: string | null
+          seo_descricao: string | null
+          seo_titulo: string | null
+          sistema_esgoto: string | null
           status: Database["public"]["Enums"]["imovel_status"] | null
           suites: number | null
+          tags: Json | null
+          tipo_piso: Json | null
           titulo: string
           tour_360_url: string | null
           updated_at: string | null
           vagas: number | null
+          vagas_descricao: string | null
           valor: number | null
           videos: Json | null
+          vista: Json | null
           year_built: number | null
         }
         Insert: {
+          abastecimento_agua?: string | null
           amenities?: Json | null
+          aquecimento?: Json | null
           area_privativa?: number | null
           area_total?: number | null
           bairro?: string | null
           banheiros?: number | null
+          caracteristicas_terreno?: Json | null
           cep?: string | null
           cidade?: string | null
           condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id: string
+          corretores?: Json | null
           created_at?: string | null
+          data_publicacao?: string | null
           descricao?: string | null
           diferenciais?: Json | null
+          distrito?: string | null
           endereco?: string | null
           estado?: string | null
+          estilo_arquitetonico?: string | null
+          estrutura_construcao?: string | null
           features_exterior?: Json | null
           features_interior?: Json | null
+          flag_alto_padrao?: boolean | null
+          flag_destaque?: boolean | null
+          flag_exclusividade?: boolean | null
+          flag_lancamento?: boolean | null
+          flag_novo_anuncio?: boolean | null
+          flag_off_market?: boolean | null
           headline?: string | null
           id?: string
           imagens?: Json | null
+          impostos_anuais?: number | null
           iptu?: number | null
           latitude?: number | null
           listing_code?: string | null
@@ -564,42 +603,66 @@ export type Database = {
           lot_size?: number | null
           lot_size_unit?: string | null
           memorial_descritivo?: string | null
+          origem_cadastro?: string | null
           parking_spaces?: number | null
           price_on_request?: boolean | null
           price_secondary?: number | null
           price_secondary_currency?: string | null
           property_type?: string | null
+          regiao?: string | null
+          seo_descricao?: string | null
+          seo_titulo?: string | null
+          sistema_esgoto?: string | null
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
+          tags?: Json | null
+          tipo_piso?: Json | null
           titulo: string
           tour_360_url?: string | null
           updated_at?: string | null
           vagas?: number | null
+          vagas_descricao?: string | null
           valor?: number | null
           videos?: Json | null
+          vista?: Json | null
           year_built?: number | null
         }
         Update: {
+          abastecimento_agua?: string | null
           amenities?: Json | null
+          aquecimento?: Json | null
           area_privativa?: number | null
           area_total?: number | null
           bairro?: string | null
           banheiros?: number | null
+          caracteristicas_terreno?: Json | null
           cep?: string | null
           cidade?: string | null
           condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id?: string
+          corretores?: Json | null
           created_at?: string | null
+          data_publicacao?: string | null
           descricao?: string | null
           diferenciais?: Json | null
+          distrito?: string | null
           endereco?: string | null
           estado?: string | null
+          estilo_arquitetonico?: string | null
+          estrutura_construcao?: string | null
           features_exterior?: Json | null
           features_interior?: Json | null
+          flag_alto_padrao?: boolean | null
+          flag_destaque?: boolean | null
+          flag_exclusividade?: boolean | null
+          flag_lancamento?: boolean | null
+          flag_novo_anuncio?: boolean | null
+          flag_off_market?: boolean | null
           headline?: string | null
           id?: string
           imagens?: Json | null
+          impostos_anuais?: number | null
           iptu?: number | null
           latitude?: number | null
           listing_code?: string | null
@@ -607,19 +670,28 @@ export type Database = {
           lot_size?: number | null
           lot_size_unit?: string | null
           memorial_descritivo?: string | null
+          origem_cadastro?: string | null
           parking_spaces?: number | null
           price_on_request?: boolean | null
           price_secondary?: number | null
           price_secondary_currency?: string | null
           property_type?: string | null
+          regiao?: string | null
+          seo_descricao?: string | null
+          seo_titulo?: string | null
+          sistema_esgoto?: string | null
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
+          tags?: Json | null
+          tipo_piso?: Json | null
           titulo?: string
           tour_360_url?: string | null
           updated_at?: string | null
           vagas?: number | null
+          vagas_descricao?: string | null
           valor?: number | null
           videos?: Json | null
+          vista?: Json | null
           year_built?: number | null
         }
         Relationships: [

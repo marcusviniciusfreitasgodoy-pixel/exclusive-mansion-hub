@@ -1,5 +1,14 @@
 // Types for dynamic property page
 
+export interface Corretor {
+  nome: string;
+  cargo?: string;
+  fotoUrl?: string;
+  telefone?: string;
+  email?: string;
+  miniBio?: string;
+}
+
 export interface PropertyBranding {
   imobiliariaLogo: string | null;
   imobiliariaNome: string;
@@ -34,7 +43,7 @@ export interface PropertyData {
   videos: { url: string; tipo?: string }[];
   tour360Url: string | null;
   status: 'ativo' | 'vendido' | 'inativo';
-  // New Sotheby's-inspired fields
+  // Sotheby's-inspired fields
   listingCode: string | null;
   propertyType: string | null;
   yearBuilt: number | null;
@@ -49,6 +58,31 @@ export interface PropertyData {
   priceOnRequest: boolean;
   latitude: number | null;
   longitude: number | null;
+  // New The Agency-inspired fields
+  flagDestaque: boolean;
+  flagNovoAnuncio: boolean;
+  flagExclusividade: boolean;
+  flagOffMarket: boolean;
+  flagLancamento: boolean;
+  flagAltoPadrao: boolean;
+  dataPublicacao: string | null;
+  origemCadastro: string | null;
+  regiao: string | null;
+  distrito: string | null;
+  estiloArquitetonico: string | null;
+  estruturaConstrucao: string | null;
+  tipoPiso: string[];
+  caracteristicasTerreno: string[];
+  vista: string[];
+  aquecimento: string[];
+  sistemaEsgoto: string | null;
+  abastecimentoAgua: string | null;
+  vagasDescricao: string | null;
+  impostosAnuais: number | null;
+  seoTitulo: string | null;
+  seoDescricao: string | null;
+  tags: string[];
+  corretores: Corretor[];
 }
 
 export interface PropertyPageData {

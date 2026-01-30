@@ -74,7 +74,7 @@ export interface Imovel {
   status: ImovelStatus;
   created_at: string;
   updated_at: string;
-  // New Sotheby's-inspired fields
+  // Sotheby's-inspired fields
   listing_code: string | null;
   property_type: string | null;
   year_built: number | null;
@@ -90,6 +90,38 @@ export interface Imovel {
   price_on_request: boolean;
   latitude: number | null;
   longitude: number | null;
+  // New The Agency-inspired fields
+  flag_destaque: boolean;
+  flag_novo_anuncio: boolean;
+  flag_exclusividade: boolean;
+  flag_off_market: boolean;
+  flag_lancamento: boolean;
+  flag_alto_padrao: boolean;
+  data_publicacao: string | null;
+  origem_cadastro: string | null;
+  regiao: string | null;
+  distrito: string | null;
+  estilo_arquitetonico: string | null;
+  estrutura_construcao: string | null;
+  tipo_piso: string[];
+  caracteristicas_terreno: string[];
+  vista: string[];
+  aquecimento: string[];
+  sistema_esgoto: string | null;
+  abastecimento_agua: string | null;
+  vagas_descricao: string | null;
+  impostos_anuais: number | null;
+  seo_titulo: string | null;
+  seo_descricao: string | null;
+  tags: string[];
+  corretores: Array<{
+    nome: string;
+    cargo?: string;
+    fotoUrl?: string;
+    telefone?: string;
+    email?: string;
+    miniBio?: string;
+  }>;
 }
 
 export interface ImobiliariaImovelAccess {

@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, X, Camera, Video, View, Images } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Camera, Video, View, Images, Sparkles, Star, Building, Clock } from "lucide-react";
 import type { PropertyData, PropertyBranding } from "@/types/property-page";
 import useEmblaCarousel from "embla-carousel-react";
 
@@ -10,9 +10,10 @@ interface PropertyHeroNewProps {
   property: PropertyData;
   branding: PropertyBranding;
   onContactClick: () => void;
+  onGalleryOpen?: () => void;
 }
 
-export function PropertyHeroNew({ property, branding, onContactClick }: PropertyHeroNewProps) {
+export function PropertyHeroNew({ property, branding, onContactClick, onGalleryOpen }: PropertyHeroNewProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -48,9 +49,53 @@ export function PropertyHeroNew({ property, branding, onContactClick }: Property
     setLightboxOpen(true);
   };
 
+  const handleGalleryClick = () => {
+    if (onGalleryOpen) {
+      onGalleryOpen();
+    } else {
+      openLightbox(0);
+    }
+  };
+
   const hasVideos = property.videos && property.videos.length > 0;
   const hasTour = !!property.tour360Url;
   const photoCount = images.length;
+
+  // Build badges array based on flags
+  const badges: { label: string; icon: React.ElementType; className: string }[] = [];
+  
+  if (property.flagNovoAnuncio) {
+    badges.push({ label: "NOVO", icon: Sparkles, className: "bg-green-500 text-white" });
+  }
+  if (property.flagDestaque) {
+    badges.push({ label: "DESTAQUE", icon: Star, className: "bg-accent text-primary" });
+  }
+  if (property.flagExclusividade) {
+    badges.push({ label: "EXCLUSIVO", icon: Building, className: "bg-purple-600 text-white" });
+  }
+  if (property.flagOffMarket) {
+    badges.push({ label: "OFF MARKET", icon: Clock, className: "bg-gray-800 text-white" });
+  }
+  if (property.flagLancamento) {
+    badges.push({ label: "LANÇAMENTO", icon: Sparkles, className: "bg-orange-500 text-white" });
+  }
+  if (property.flagAltoPadrao) {
+    badges.push({ label: "ALTO PADRÃO", icon: Star, className: "bg-primary text-white" });
+  }
+
+  const formatCurrency = (value: number | null) => {
+    if (property.priceOnRequest || !value) return "Preço sob consulta";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const formatNumber = (value: number | null) => {
+    if (!value) return null;
+    return new Intl.NumberFormat("pt-BR").format(value);
+  };
 
   return (
     <>
@@ -70,7 +115,7 @@ export function PropertyHeroNew({ property, branding, onContactClick }: Property
                   className="h-full w-full object-cover"
                   loading={index === 0 ? "eager" : "lazy"}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
               </div>
             ))}
           </div>
@@ -96,27 +141,84 @@ export function PropertyHeroNew({ property, branding, onContactClick }: Property
           </>
         )}
 
-        {/* Top Left Badges */}
+        {/* Top Left - Property Badges */}
         <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-          {hasVideos && (
+          {/* Dynamic Flags */}
+          {badges.map((badge, index) => {
+            const Icon = badge.icon;
+            return (
+              <Badge key={index} className={`${badge.className} hover:opacity-90 flex items-center gap-1.5 px-3 py-1.5`}>
+                <Icon className="h-3.5 w-3.5" />
+                {badge.label}
+              </Badge>
+            );
+          })}
+          
+          {/* Media Counters */}
+          <div className="flex flex-wrap gap-2 mt-1">
+            {hasVideos && (
+              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
+                <Video className="h-4 w-4" />
+                VÍDEO
+              </Badge>
+            )}
             <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-              <Video className="h-4 w-4" />
-              VÍDEO
+              <Camera className="h-4 w-4" />
+              {photoCount} FOTOS
             </Badge>
-          )}
-          <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-            <Camera className="h-4 w-4" />
-            {photoCount} FOTOS
-          </Badge>
-          {hasTour && (
-            <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-              <View className="h-4 w-4" />
-              TOUR 360°
-            </Badge>
-          )}
+            {hasTour && (
+              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
+                <View className="h-4 w-4" />
+                TOUR 360°
+              </Badge>
+            )}
+          </div>
         </div>
 
-        {/* Bottom Right Section */}
+        {/* Bottom Left - Info Box */}
+        <div className="absolute bottom-4 left-4 z-20 hidden md:block">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl p-5 shadow-xl max-w-md">
+            <p className="text-sm font-semibold tracking-widest text-accent uppercase mb-1">
+              {property.bairro?.toUpperCase() || "LOCALIZAÇÃO"}
+            </p>
+            <p className="text-lg text-muted-foreground mb-2">
+              {property.endereco || property.titulo}
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              {property.cidade} - {property.estado}, Brasil
+            </p>
+            
+            <p className="text-2xl font-bold text-primary mb-1">
+              {formatCurrency(property.valor)}
+            </p>
+            {property.priceSecondary && (
+              <p className="text-sm text-muted-foreground">
+                ≈ {property.priceSecondaryCurrency} {formatNumber(property.priceSecondary)}
+              </p>
+            )}
+
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleGalleryClick}
+              >
+                <Images className="mr-2 h-4 w-4" />
+                Galeria
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 bg-accent hover:bg-accent/90 text-primary"
+                onClick={onContactClick}
+              >
+                Contato
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Right - Logo & Actions */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-3">
           {/* Logo */}
           {branding.imobiliariaLogo && (
@@ -129,28 +231,30 @@ export function PropertyHeroNew({ property, branding, onContactClick }: Property
             </div>
           )}
           
-          {/* Action Buttons */}
-          <div className="flex gap-2">
+          {/* Mobile Action Buttons */}
+          <div className="flex gap-2 md:hidden">
             <Button
               variant="outline"
+              size="sm"
               className="bg-white/95 backdrop-blur-sm border-0 hover:bg-white text-primary font-semibold"
-              onClick={() => openLightbox(0)}
+              onClick={handleGalleryClick}
             >
               <Images className="mr-2 h-4 w-4" />
-              Ver Galeria
+              Galeria
             </Button>
             <Button
+              size="sm"
               className="bg-accent hover:bg-accent/90 text-primary font-semibold shadow-lg"
               onClick={onContactClick}
             >
-              Falar com Corretor
+              Contato
             </Button>
           </div>
         </div>
 
         {/* Dots Indicator */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 md:bottom-6">
             {images.slice(0, 10).map((_, index) => (
               <button
                 key={index}
