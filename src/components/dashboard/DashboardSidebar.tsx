@@ -23,12 +23,16 @@ import {
   LogOut,
   Link as LinkIcon,
   BarChart3,
+  Calendar,
+  FileText,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
 const construtoraLinks = [
   { title: 'Meus Imóveis', url: '/dashboard/construtora', icon: Home },
   { title: 'Novo Imóvel', url: '/dashboard/construtora/novo-imovel', icon: Plus },
+  { title: 'Visitas Agendadas', url: '/dashboard/construtora/agendamentos', icon: Calendar },
+  { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3 },
   { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users },
@@ -37,6 +41,8 @@ const construtoraLinks = [
 
 const imobiliariaLinks = [
   { title: 'Imóveis Disponíveis', url: '/dashboard/imobiliaria', icon: Home },
+  { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar },
+  { title: 'Feedbacks', url: '/dashboard/imobiliaria/feedbacks', icon: FileText },
   { title: 'Meus Links', url: '/dashboard/imobiliaria/meus-links', icon: LinkIcon },
   { title: 'Meus Leads', url: '/dashboard/imobiliaria/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/dashboard/imobiliaria/analytics', icon: BarChart3 },

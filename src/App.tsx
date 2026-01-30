@@ -18,6 +18,10 @@ import AnalyticsPage from "./pages/dashboard/construtora/Analytics";
 import GerenciarAcessos from "./pages/dashboard/construtora/GerenciarAcessos";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import FeedbackCorretorPage from "./pages/dashboard/imobiliaria/FeedbackCorretor";
+import AgendamentosImobiliaria from "./pages/dashboard/imobiliaria/Agendamentos";
+import FeedbacksImobiliaria from "./pages/dashboard/imobiliaria/Feedbacks";
+import AgendamentosConstrutora from "./pages/dashboard/construtora/Agendamentos";
+import FeedbacksConstrutora from "./pages/dashboard/construtora/Feedbacks";
 import FeedbackClientePublico from "./pages/feedback/FeedbackClientePublico";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
@@ -87,11 +91,31 @@ const App = () => (
                 <AnalyticsPage />
               </ProtectedRoute>
             } />
+            <Route path="/dashboard/construtora/agendamentos" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <AgendamentosConstrutora />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/feedbacks" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <FeedbacksConstrutora />
+              </ProtectedRoute>
+            } />
             
             {/* Imobiliaria Dashboard */}
             <Route path="/dashboard/imobiliaria" element={
               <ProtectedRoute allowedRoles={['imobiliaria']}>
                 <ImobiliariaDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/imobiliaria/agendamentos" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <AgendamentosImobiliaria />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/imobiliaria/feedbacks" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <FeedbacksImobiliaria />
               </ProtectedRoute>
             } />
             <Route path="/dashboard/imobiliaria/visitas/:agendamentoId/feedback" element={
