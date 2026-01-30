@@ -20,6 +20,7 @@ import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
 import SeedData from "./pages/admin/SeedData";
+import Diagnostico from "./pages/admin/Diagnostico";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
                 <SeedData />
               </ProtectedRoute>
             } />
+            <Route path="/admin/diagnostico" element={<Diagnostico />} />
             
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
