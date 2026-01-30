@@ -17,6 +17,8 @@ import LeadsPage from "./pages/dashboard/construtora/Leads";
 import AnalyticsPage from "./pages/dashboard/construtora/Analytics";
 import GerenciarAcessos from "./pages/dashboard/construtora/GerenciarAcessos";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
+import FeedbackCorretorPage from "./pages/dashboard/imobiliaria/FeedbackCorretor";
+import FeedbackClientePublico from "./pages/feedback/FeedbackClientePublico";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
 import SeedData from "./pages/admin/SeedData";
@@ -92,6 +94,14 @@ const App = () => (
                 <ImobiliariaDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/dashboard/imobiliaria/visitas/:agendamentoId/feedback" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <FeedbackCorretorPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Feedback Público (sem autenticação) */}
+            <Route path="/feedback-visita/:token" element={<FeedbackClientePublico />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
