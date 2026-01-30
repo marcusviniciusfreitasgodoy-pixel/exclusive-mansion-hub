@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import type { PropertyPageData, PropertyData, PropertyBranding } from "@/types/property-page";
+import type { PropertyPageData, PropertyData, PropertyBranding, Corretor } from "@/types/property-page";
 
 interface UsePropertyPageResult {
   data: PropertyPageData | null;
@@ -80,6 +80,30 @@ export function usePropertyPage(): UsePropertyPageResult {
               price_on_request,
               latitude,
               longitude,
+              flag_destaque,
+              flag_novo_anuncio,
+              flag_exclusividade,
+              flag_off_market,
+              flag_lancamento,
+              flag_alto_padrao,
+              data_publicacao,
+              origem_cadastro,
+              regiao,
+              distrito,
+              estilo_arquitetonico,
+              estrutura_construcao,
+              tipo_piso,
+              caracteristicas_terreno,
+              vista,
+              aquecimento,
+              sistema_esgoto,
+              abastecimento_agua,
+              vagas_descricao,
+              impostos_anuais,
+              seo_titulo,
+              seo_descricao,
+              tags,
+              corretores,
               construtoras (
                 nome_empresa,
                 logo_url
@@ -106,21 +130,37 @@ export function usePropertyPage(): UsePropertyPageResult {
           return;
         }
 
-        // Parse JSON fields
-        const diferenciais = Array.isArray(imovel.diferenciais)
-          ? imovel.diferenciais
-          : [];
-        const imagens = Array.isArray(imovel.imagens) ? imovel.imagens : [];
-        const videos = Array.isArray(imovel.videos) ? imovel.videos : [];
-        const featuresInterior = Array.isArray(imovel.features_interior)
-          ? imovel.features_interior
-          : [];
-        const featuresExterior = Array.isArray(imovel.features_exterior)
-          ? imovel.features_exterior
-          : [];
-        const amenities = Array.isArray(imovel.amenities)
-          ? imovel.amenities
-          : [];
+        // Parse JSON fields with safe defaults
+        const parseJsonArray = (field: any): string[] => 
+          Array.isArray(field) ? field : [];
+        
+        const parseImagens = (field: any): { url: string; alt?: string }[] => {
+          if (!Array.isArray(field)) return [];
+          return field.map((img: any) => {
+            if (typeof img === 'string') return { url: img };
+            return { url: img.url || '', alt: img.alt };
+          });
+        };
+
+        const parseVideos = (field: any): { url: string; tipo?: string }[] => {
+          if (!Array.isArray(field)) return [];
+          return field.map((vid: any) => {
+            if (typeof vid === 'string') return { url: vid };
+            return { url: vid.url || '', tipo: vid.tipo };
+          });
+        };
+
+        const parseCorretores = (field: any): Corretor[] => {
+          if (!Array.isArray(field)) return [];
+          return field.map((c: any) => ({
+            nome: c.nome || "",
+            cargo: c.cargo,
+            fotoUrl: c.fotoUrl,
+            telefone: c.telefone,
+            email: c.email,
+            miniBio: c.miniBio,
+          }));
+        };
 
         const property: PropertyData = {
           id: imovel.id,
@@ -141,28 +181,53 @@ export function usePropertyPage(): UsePropertyPageResult {
           banheiros: imovel.banheiros,
           vagas: imovel.vagas,
           descricao: imovel.descricao,
-          diferenciais,
+          diferenciais: parseJsonArray(imovel.diferenciais),
           memorialDescritivo: imovel.memorial_descritivo,
           condicoesPagamento: imovel.condicoes_pagamento,
-          imagens,
-          videos,
+          imagens: parseImagens(imovel.imagens),
+          videos: parseVideos(imovel.videos),
           tour360Url: imovel.tour_360_url,
           status: imovel.status,
-          // New Sotheby's fields
+          // Sotheby's fields
           listingCode: imovel.listing_code,
           propertyType: imovel.property_type,
           yearBuilt: imovel.year_built,
           lotSize: imovel.lot_size,
           lotSizeUnit: imovel.lot_size_unit || 'm²',
           parkingSpaces: imovel.parking_spaces,
-          featuresInterior,
-          featuresExterior,
-          amenities,
+          featuresInterior: parseJsonArray(imovel.features_interior),
+          featuresExterior: parseJsonArray(imovel.features_exterior),
+          amenities: parseJsonArray(imovel.amenities),
           priceSecondary: imovel.price_secondary,
           priceSecondaryCurrency: imovel.price_secondary_currency || 'USD',
           priceOnRequest: imovel.price_on_request || false,
           latitude: imovel.latitude,
           longitude: imovel.longitude,
+          // New The Agency fields
+          flagDestaque: imovel.flag_destaque || false,
+          flagNovoAnuncio: imovel.flag_novo_anuncio || false,
+          flagExclusividade: imovel.flag_exclusividade || false,
+          flagOffMarket: imovel.flag_off_market || false,
+          flagLancamento: imovel.flag_lancamento || false,
+          flagAltoPadrao: imovel.flag_alto_padrao || false,
+          dataPublicacao: imovel.data_publicacao,
+          origemCadastro: imovel.origem_cadastro,
+          regiao: imovel.regiao,
+          distrito: imovel.distrito,
+          estiloArquitetonico: imovel.estilo_arquitetonico,
+          estruturaConstrucao: imovel.estrutura_construcao,
+          tipoPiso: parseJsonArray(imovel.tipo_piso),
+          caracteristicasTerreno: parseJsonArray(imovel.caracteristicas_terreno),
+          vista: parseJsonArray(imovel.vista),
+          aquecimento: parseJsonArray(imovel.aquecimento),
+          sistemaEsgoto: imovel.sistema_esgoto,
+          abastecimentoAgua: imovel.abastecimento_agua,
+          vagasDescricao: imovel.vagas_descricao,
+          impostosAnuais: imovel.impostos_anuais,
+          seoTitulo: imovel.seo_titulo,
+          seoDescricao: imovel.seo_descricao,
+          tags: parseJsonArray(imovel.tags),
+          corretores: parseCorretores(imovel.corretores),
         };
 
         const branding: PropertyBranding = {

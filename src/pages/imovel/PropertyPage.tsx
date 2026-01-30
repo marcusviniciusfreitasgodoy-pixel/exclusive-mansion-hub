@@ -1,13 +1,15 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { usePropertyPage } from "@/hooks/usePropertyPage";
 import { DynamicNavbar } from "@/components/property/DynamicNavbar";
+import { BarraAcoesImovel } from "@/components/property/BarraAcoesImovel";
 import { PropertyHeroNew } from "@/components/property/PropertyHeroNew";
-import { PropertyHeaderInfo } from "@/components/property/PropertyHeaderInfo";
+import { ResumoMetricasImovel } from "@/components/property/ResumoMetricasImovel";
 import { PropertyTabs } from "@/components/property/PropertyTabs";
 import { PropertyOverview } from "@/components/property/PropertyOverview";
 import { PropertyLocation } from "@/components/property/PropertyLocation";
 import { PropertyDetailsNew } from "@/components/property/PropertyDetailsNew";
+import { BlocoCorretoresImovel } from "@/components/property/BlocoCorretoresImovel";
 import { PropertyRecommendations } from "@/components/property/PropertyRecommendations";
 import { PropertyContactSection } from "@/components/property/PropertyContactSection";
 import { DynamicGallery } from "@/components/property/DynamicGallery";
@@ -20,9 +22,20 @@ import { Loader2 } from "lucide-react";
 export default function PropertyPage() {
   const { data, isLoading, error } = usePropertyPage();
   const contactRef = useRef<HTMLDivElement>(null);
+  const [galleryLightboxOpen, setGalleryLightboxOpen] = useState(false);
 
   const scrollToContact = () => {
     const element = document.getElementById("section-contact");
+    if (element) {
+      const offset = 80;
+      const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
+  const openGallery = () => {
+    // Scroll to gallery section and open lightbox
+    const element = document.getElementById("gallery");
     if (element) {
       const offset = 80;
       const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
@@ -60,10 +73,10 @@ export default function PropertyPage() {
   const { property, branding, construtora, imobiliariaId, accessId } = data;
 
   // SEO meta data
-  const title = `${property.headline || property.titulo} - ${branding.imobiliariaNome}`;
-  const description = property.descricao
+  const title = property.seoTitulo || `${property.headline || property.titulo} - ${branding.imobiliariaNome}`;
+  const description = property.seoDescricao || (property.descricao
     ? property.descricao.substring(0, 160)
-    : `${property.titulo} - Imóvel exclusivo em ${property.bairro || property.cidade || "localização privilegiada"}`;
+    : `${property.titulo} - Imóvel exclusivo em ${property.bairro || property.cidade || "localização privilegiada"}`);
   const ogImage = property.imagens?.[0]?.url || "";
 
   // Custom CSS variables for branding
@@ -85,31 +98,45 @@ export default function PropertyPage() {
           <meta name="twitter:title" content={title} />
           <meta name="twitter:description" content={description} />
           {ogImage && <meta name="twitter:image" content={ogImage} />}
+          {property.latitude && property.longitude && (
+            <>
+              <meta name="geo.position" content={`${property.latitude};${property.longitude}`} />
+              <meta name="geo.region" content={`BR-${property.estado}`} />
+              <meta name="geo.placename" content={`${property.cidade}, ${property.bairro}`} />
+            </>
+          )}
         </Helmet>
 
         <main className="min-h-screen bg-background">
           <DynamicNavbar branding={branding} />
           <ScrollToTop />
           
+          {/* Sticky Action Bar (appears after scroll) */}
+          <BarraAcoesImovel 
+            property={property} 
+            onGalleryClick={openGallery}
+          />
+
           {/* Floating WhatsApp */}
           {branding.telefone && (
             <FloatingWhatsApp phoneNumber={branding.telefone.replace(/\D/g, "")} />
           )}
 
-          {/* Hero Section */}
+          {/* Hero Section with Carousel, Badges & Info Box */}
           <PropertyHeroNew 
             property={property} 
             branding={branding} 
             onContactClick={scrollToContact}
+            onGalleryOpen={openGallery}
           />
 
-          {/* Header Info with Metrics */}
-          <PropertyHeaderInfo property={property} />
+          {/* Metrics Summary - replaces PropertyHeaderInfo */}
+          <ResumoMetricasImovel property={property} />
 
           {/* Sticky Tabs Navigation */}
           <PropertyTabs />
 
-          {/* Overview Section */}
+          {/* Overview Section (description + differentials + accordions) */}
           <PropertyOverview property={property} />
 
           {/* Gallery Section - if has multiple images */}
@@ -135,10 +162,16 @@ export default function PropertyPage() {
           {/* Location Section */}
           <PropertyLocation property={property} />
 
-          {/* Details Section */}
+          {/* Structured Details Section (The Agency style) */}
           <PropertyDetailsNew 
             property={property} 
             construtoraNome={construtora.nome}
+          />
+
+          {/* Realtors Section (if configured) */}
+          <BlocoCorretoresImovel 
+            property={property}
+            branding={branding}
           />
 
           {/* Recommendations Section */}

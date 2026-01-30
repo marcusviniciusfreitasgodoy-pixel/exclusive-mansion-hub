@@ -43,11 +43,21 @@ export default function ConstrutoraDashboard() {
       return (data || []).map(imovel => ({
         ...imovel,
         diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais : [],
-        imagens: Array.isArray(imovel.imagens) ? imovel.imagens : [],
-        videos: Array.isArray(imovel.videos) ? imovel.videos : [],
+        imagens: Array.isArray(imovel.imagens) ? imovel.imagens.map((img: any) => 
+          typeof img === 'string' ? { url: img } : { url: img?.url || '', alt: img?.alt }
+        ) : [],
+        videos: Array.isArray(imovel.videos) ? imovel.videos.map((vid: any) => 
+          typeof vid === 'string' ? { url: vid } : { url: vid?.url || '', tipo: vid?.tipo }
+        ) : [],
         features_interior: Array.isArray(imovel.features_interior) ? imovel.features_interior : [],
         features_exterior: Array.isArray(imovel.features_exterior) ? imovel.features_exterior : [],
         amenities: Array.isArray(imovel.amenities) ? imovel.amenities : [],
+        tipo_piso: Array.isArray(imovel.tipo_piso) ? imovel.tipo_piso : [],
+        caracteristicas_terreno: Array.isArray(imovel.caracteristicas_terreno) ? imovel.caracteristicas_terreno : [],
+        vista: Array.isArray(imovel.vista) ? imovel.vista : [],
+        aquecimento: Array.isArray(imovel.aquecimento) ? imovel.aquecimento : [],
+        tags: Array.isArray(imovel.tags) ? imovel.tags : [],
+        corretores: Array.isArray(imovel.corretores) ? imovel.corretores : [],
       })) as Imovel[];
     },
     enabled: !!construtora?.id,
