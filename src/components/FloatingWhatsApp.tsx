@@ -1,12 +1,20 @@
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const FloatingWhatsApp = () => {
-  const whatsappNumber = "5521964075124";
-  const message = "Olá! Gostaria de mais informações sobre o imóvel.";
-  
+interface FloatingWhatsAppProps {
+  phoneNumber?: string;
+  message?: string;
+}
+
+export const FloatingWhatsApp = ({
+  phoneNumber = "5521964075124",
+  message = "Olá! Gostaria de mais informações sobre o imóvel.",
+}: FloatingWhatsAppProps) => {
   const handleClick = () => {
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    const formattedNumber = phoneNumber.startsWith("55") 
+      ? phoneNumber 
+      : `55${phoneNumber}`;
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 

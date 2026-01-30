@@ -290,6 +290,61 @@ export type Database = {
           },
         ]
       }
+      pageviews: {
+        Row: {
+          access_id: string | null
+          created_at: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string
+          ip_address: string | null
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_id?: string | null
+          created_at?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_id?: string | null
+          created_at?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pageviews_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliaria_imovel_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pageviews_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pageviews_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

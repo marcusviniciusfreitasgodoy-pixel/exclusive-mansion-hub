@@ -12,6 +12,7 @@ import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
 import ConstrutoraDashboard from "./pages/dashboard/construtora";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
+import PropertyPage from "./pages/imovel/PropertyPage";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,9 @@ const App = () => (
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
             <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
+            
+            {/* Dynamic Property Page (White Label) */}
+            <Route path="/imovel/:slug" element={<PropertyPage />} />
             
             {/* Construtora Dashboard */}
             <Route path="/dashboard/construtora" element={
