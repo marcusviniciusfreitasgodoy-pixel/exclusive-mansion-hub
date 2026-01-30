@@ -139,20 +139,29 @@ export function usePropertyPage(): UsePropertyPageResult {
           imobiliariaId: accessData.imobiliaria_id,
         });
 
-        // Track pageview
-        await supabase.from("pageviews").insert({
-          imovel_id: imovel.id,
-          imobiliaria_id: accessData.imobiliaria_id,
-          access_id: accessData.id,
-          user_agent: navigator.userAgent,
-          referrer: document.referrer || null,
-        });
+        // Track pageview with localStorage deduplication (24h)
+        const viewKey = `viewed_${imovel.id}_${accessData.imobiliaria_id}`;
+        const lastViewed = localStorage.getItem(viewKey);
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
 
-        // Increment visit counter on access record
-        await supabase
-          .from("imobiliaria_imovel_access")
-          .update({ visitas: (accessData as any).visitas + 1 })
-          .eq("id", accessData.id);
+        if (!lastViewed || (now - parseInt(lastViewed, 10)) > twentyFourHours) {
+          await supabase.from("pageviews").insert({
+            imovel_id: imovel.id,
+            imobiliaria_id: accessData.imobiliaria_id,
+            access_id: accessData.id,
+            user_agent: navigator.userAgent,
+            referrer: document.referrer || null,
+          });
+
+          // Increment visit counter on access record
+          await supabase
+            .from("imobiliaria_imovel_access")
+            .update({ visitas: (accessData as any).visitas + 1 })
+            .eq("id", accessData.id);
+
+          localStorage.setItem(viewKey, now.toString());
+        }
 
       } catch (err) {
         console.error("Error fetching property:", err);

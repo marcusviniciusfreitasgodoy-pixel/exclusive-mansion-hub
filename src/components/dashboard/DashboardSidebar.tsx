@@ -29,8 +29,9 @@ import logo from '@/assets/logo-principal.png';
 const construtoraLinks = [
   { title: 'Meus Imóveis', url: '/dashboard/construtora', icon: Home },
   { title: 'Novo Imóvel', url: '/dashboard/construtora/novo-imovel', icon: Plus },
-  { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
+  { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3 },
+  { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users },
   { title: 'Configurações', url: '/dashboard/construtora/configuracoes', icon: Settings },
 ];
 

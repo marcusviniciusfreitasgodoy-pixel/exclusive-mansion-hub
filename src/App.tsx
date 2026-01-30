@@ -12,6 +12,10 @@ import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
 import ConstrutoraDashboard from "./pages/dashboard/construtora";
 import NovoImovel from "./pages/dashboard/construtora/NovoImovel";
+import EditarImovel from "./pages/dashboard/construtora/EditarImovel";
+import LeadsPage from "./pages/dashboard/construtora/Leads";
+import AnalyticsPage from "./pages/dashboard/construtora/Analytics";
+import GerenciarAcessos from "./pages/dashboard/construtora/GerenciarAcessos";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
@@ -57,6 +61,26 @@ const App = () => (
             <Route path="/dashboard/construtora/novo-imovel" element={
               <ProtectedRoute allowedRoles={['construtora']}>
                 <NovoImovel />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/imovel/:id" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <EditarImovel />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/imovel/:id/acessos" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <GerenciarAcessos />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/leads" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <LeadsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/analytics" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <AnalyticsPage />
               </ProtectedRoute>
             } />
             
