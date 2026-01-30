@@ -10,6 +10,7 @@ export interface PropertyBranding {
 
 export interface PropertyData {
   id: string;
+  construtoraId: string;
   titulo: string;
   endereco: string | null;
   bairro: string | null;
