@@ -37,18 +37,28 @@ export default function ImobiliariaDashboard() {
 
       if (accessError) throw accessError;
       
-      return accessData?.map(access => ({
-        ...access.imovel,
-        access: {
-          id: access.id,
-          imobiliaria_id: access.imobiliaria_id,
-          imovel_id: access.imovel_id,
-          url_slug: access.url_slug,
-          acesso_concedido_em: access.acesso_concedido_em,
-          status: access.status,
-          visitas: access.visitas,
-        }
-      })) as ImovelWithAccess[] || [];
+      return accessData?.map(access => {
+        const imovel = access.imovel as any;
+        return {
+          ...imovel,
+          // Parse JSONB fields properly
+          diferenciais: Array.isArray(imovel?.diferenciais) ? imovel.diferenciais : [],
+          imagens: Array.isArray(imovel?.imagens) ? imovel.imagens : [],
+          videos: Array.isArray(imovel?.videos) ? imovel.videos : [],
+          features_interior: Array.isArray(imovel?.features_interior) ? imovel.features_interior : [],
+          features_exterior: Array.isArray(imovel?.features_exterior) ? imovel.features_exterior : [],
+          amenities: Array.isArray(imovel?.amenities) ? imovel.amenities : [],
+          access: {
+            id: access.id,
+            imobiliaria_id: access.imobiliaria_id,
+            imovel_id: access.imovel_id,
+            url_slug: access.url_slug,
+            acesso_concedido_em: access.acesso_concedido_em,
+            status: access.status,
+            visitas: access.visitas,
+          }
+        };
+      }) as ImovelWithAccess[] || [];
     },
     enabled: !!imobiliaria?.id,
   });

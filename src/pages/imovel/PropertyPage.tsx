@@ -1,13 +1,17 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
+import { useRef } from "react";
 import { usePropertyPage } from "@/hooks/usePropertyPage";
 import { DynamicNavbar } from "@/components/property/DynamicNavbar";
-import { DynamicHero } from "@/components/property/DynamicHero";
-import { DynamicPropertyDetails } from "@/components/property/DynamicPropertyDetails";
-import { DynamicDescription } from "@/components/property/DynamicDescription";
+import { PropertyHeroNew } from "@/components/property/PropertyHeroNew";
+import { PropertyHeaderInfo } from "@/components/property/PropertyHeaderInfo";
+import { PropertyTabs } from "@/components/property/PropertyTabs";
+import { PropertyOverview } from "@/components/property/PropertyOverview";
+import { PropertyLocation } from "@/components/property/PropertyLocation";
+import { PropertyDetailsNew } from "@/components/property/PropertyDetailsNew";
+import { PropertyRecommendations } from "@/components/property/PropertyRecommendations";
+import { PropertyContactSection } from "@/components/property/PropertyContactSection";
 import { DynamicGallery } from "@/components/property/DynamicGallery";
 import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
-import { AgendarVisitaSection } from "@/components/property/AgendarVisitaSection";
-import { DynamicContact } from "@/components/property/DynamicContact";
 import { DynamicFooter } from "@/components/property/DynamicFooter";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
@@ -15,6 +19,16 @@ import { Loader2 } from "lucide-react";
 
 export default function PropertyPage() {
   const { data, isLoading, error } = usePropertyPage();
+  const contactRef = useRef<HTMLDivElement>(null);
+
+  const scrollToContact = () => {
+    const element = document.getElementById("section-contact");
+    if (element) {
+      const offset = 80;
+      const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -46,7 +60,7 @@ export default function PropertyPage() {
   const { property, branding, construtora, imobiliariaId, accessId } = data;
 
   // SEO meta data
-  const title = `${property.titulo} - ${branding.imobiliariaNome}`;
+  const title = `${property.headline || property.titulo} - ${branding.imobiliariaNome}`;
   const description = property.descricao
     ? property.descricao.substring(0, 160)
     : `${property.titulo} - Imóvel exclusivo em ${property.bairro || property.cidade || "localização privilegiada"}`;
@@ -73,56 +87,75 @@ export default function PropertyPage() {
           {ogImage && <meta name="twitter:image" content={ogImage} />}
         </Helmet>
 
-        <main className="min-h-screen">
+        <main className="min-h-screen bg-background">
           <DynamicNavbar branding={branding} />
           <ScrollToTop />
           
-          {/* Floating WhatsApp with imobiliaria phone */}
+          {/* Floating WhatsApp */}
           {branding.telefone && (
             <FloatingWhatsApp phoneNumber={branding.telefone.replace(/\D/g, "")} />
           )}
 
-          <div id="hero">
-            <DynamicHero property={property} branding={branding} />
-          </div>
+          {/* Hero Section */}
+          <PropertyHeroNew 
+            property={property} 
+            branding={branding} 
+            onContactClick={scrollToContact}
+          />
 
-          <div id="details">
-            <DynamicPropertyDetails property={property} />
-          </div>
+          {/* Header Info with Metrics */}
+          <PropertyHeaderInfo property={property} />
 
-          <div id="description">
-            <DynamicDescription property={property} />
-          </div>
+          {/* Sticky Tabs Navigation */}
+          <PropertyTabs />
 
-          {property.imagens && property.imagens.length > 0 && (
-            <div id="gallery">
-              <DynamicGallery images={property.imagens} />
+          {/* Overview Section */}
+          <PropertyOverview property={property} />
+
+          {/* Gallery Section - if has multiple images */}
+          {property.imagens && property.imagens.length > 1 && (
+            <div id="gallery" className="py-12 md:py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <h2 className="text-2xl md:text-3xl font-bold text-primary mb-8">
+                  Galeria de Fotos
+                </h2>
+                <DynamicGallery images={property.imagens} />
+              </div>
             </div>
           )}
 
-          {((property.videos && property.videos.length > 0) ||
-            property.tour360Url) && (
-            <div id="video">
-              <DynamicVideoSection
-                videos={property.videos}
-                tour360Url={property.tour360Url}
-              />
-            </div>
+          {/* Video Section - if has videos or tour */}
+          {((property.videos && property.videos.length > 0) || property.tour360Url) && (
+            <DynamicVideoSection
+              videos={property.videos}
+              tour360Url={property.tour360Url}
+            />
           )}
 
-          <AgendarVisitaSection
-            property={property}
-            branding={branding}
-            imobiliariaId={imobiliariaId}
-            accessId={accessId}
+          {/* Location Section */}
+          <PropertyLocation property={property} />
+
+          {/* Details Section */}
+          <PropertyDetailsNew 
+            property={property} 
+            construtoraNome={construtora.nome}
           />
 
-          <DynamicContact
-            property={property}
-            branding={branding}
+          {/* Recommendations Section */}
+          <PropertyRecommendations 
+            currentProperty={property}
             imobiliariaId={imobiliariaId}
-            accessId={accessId}
           />
+
+          {/* Contact Section */}
+          <div ref={contactRef}>
+            <PropertyContactSection
+              property={property}
+              branding={branding}
+              imobiliariaId={imobiliariaId}
+              accessId={accessId}
+            />
+          </div>
 
           <DynamicFooter branding={branding} construtora={construtora} />
         </main>
