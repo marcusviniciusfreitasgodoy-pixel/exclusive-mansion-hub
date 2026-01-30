@@ -13,6 +13,7 @@ import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
 import ConstrutoraDashboard from "./pages/dashboard/construtora";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import PropertyPage from "./pages/imovel/PropertyPage";
+import TesteConexao from "./pages/TesteConexao";
 
 const queryClient = new QueryClient();
 
@@ -26,8 +27,12 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             
+            {/* Test Routes */}
+            <Route path="/teste-conexao" element={<TesteConexao />} />
+            
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
             <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
             
