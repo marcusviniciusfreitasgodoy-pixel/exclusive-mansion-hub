@@ -3,24 +3,53 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/auth/Login";
+import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
+import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
+import ConstrutoraDashboard from "./pages/dashboard/construtora";
+import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            
+            {/* Auth Routes */}
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
+            <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
+            
+            {/* Construtora Dashboard */}
+            <Route path="/dashboard/construtora" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <ConstrutoraDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Imobiliaria Dashboard */}
+            <Route path="/dashboard/imobiliaria" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <ImobiliariaDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
