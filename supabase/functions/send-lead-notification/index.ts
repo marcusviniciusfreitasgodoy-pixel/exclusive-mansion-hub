@@ -277,7 +277,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (data.imobiliariaEmail) {
       try {
         const imobiliariaResponse = await resend.emails.send({
-          from: "Leads <onboarding@resend.dev>", // Use verified domain in production
+          from: "Leads <leads@godoyprime.com.br>",
           to: [data.imobiliariaEmail],
           subject: `🏠 Novo Lead - ${data.propertyTitle}`,
           html: emailHtml,
@@ -294,7 +294,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (construtoraEmail) {
       try {
         const construtoraResponse = await resend.emails.send({
-          from: "Leads <onboarding@resend.dev>", // Use verified domain in production
+          from: "Leads <leads@godoyprime.com.br>",
           to: [construtoraEmail],
           subject: `🏠 Novo Lead - ${data.propertyTitle} (via ${data.imobiliariaNome})`,
           html: emailHtml,
