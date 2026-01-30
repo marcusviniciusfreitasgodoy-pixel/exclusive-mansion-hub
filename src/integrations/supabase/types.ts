@@ -14,6 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos_visitas: {
+        Row: {
+          access_id: string | null
+          calendly_event_id: string | null
+          calendly_event_url: string | null
+          cancelado_em: string | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone: string
+          confirmado_em: string | null
+          construtora_id: string
+          corretor_email: string | null
+          corretor_nome: string | null
+          created_at: string | null
+          data_confirmada: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string
+          lead_id: string | null
+          lembrete_1h_enviado: boolean | null
+          lembrete_24h_enviado: boolean | null
+          motivo_cancelamento: string | null
+          observacoes: string | null
+          opcao_data_1: string
+          opcao_data_2: string
+          realizado_em: string | null
+          status: Database["public"]["Enums"]["agendamento_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          access_id?: string | null
+          calendly_event_id?: string | null
+          calendly_event_url?: string | null
+          cancelado_em?: string | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone: string
+          confirmado_em?: string | null
+          construtora_id: string
+          corretor_email?: string | null
+          corretor_nome?: string | null
+          created_at?: string | null
+          data_confirmada?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id: string
+          lead_id?: string | null
+          lembrete_1h_enviado?: boolean | null
+          lembrete_24h_enviado?: boolean | null
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          opcao_data_1: string
+          opcao_data_2: string
+          realizado_em?: string | null
+          status?: Database["public"]["Enums"]["agendamento_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          access_id?: string | null
+          calendly_event_id?: string | null
+          calendly_event_url?: string | null
+          cancelado_em?: string | null
+          cliente_email?: string
+          cliente_nome?: string
+          cliente_telefone?: string
+          confirmado_em?: string | null
+          construtora_id?: string
+          corretor_email?: string | null
+          corretor_nome?: string | null
+          created_at?: string | null
+          data_confirmada?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string
+          lead_id?: string | null
+          lembrete_1h_enviado?: boolean | null
+          lembrete_24h_enviado?: boolean | null
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          opcao_data_1?: string
+          opcao_data_2?: string
+          realizado_em?: string | null
+          status?: Database["public"]["Enums"]["agendamento_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_visitas_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliaria_imovel_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_visitas_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_visitas_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_visitas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       construtoras: {
         Row: {
           cnpj: string
@@ -385,6 +508,12 @@ export type Database = {
     }
     Enums: {
       access_status: "active" | "revoked"
+      agendamento_status:
+        | "pendente"
+        | "confirmado"
+        | "realizado"
+        | "cancelado"
+        | "remarcado"
       app_role: "construtora" | "imobiliaria" | "admin"
       construtora_status: "active" | "suspended" | "cancelled"
       imovel_status: "ativo" | "vendido" | "inativo"
@@ -524,6 +653,13 @@ export const Constants = {
   public: {
     Enums: {
       access_status: ["active", "revoked"],
+      agendamento_status: [
+        "pendente",
+        "confirmado",
+        "realizado",
+        "cancelado",
+        "remarcado",
+      ],
       app_role: ["construtora", "imobiliaria", "admin"],
       construtora_status: ["active", "suspended", "cancelled"],
       imovel_status: ["ativo", "vendido", "inativo"],
