@@ -55,14 +55,10 @@ export const Contact = () => {
   });
 
   const handleSubmit = (data: ContactFormData) => {
-    // WhatsApp message
-    const message = `Olá! Tenho interesse na Cobertura Duplex Frente-Mar.\n\nNome: ${data.name}\nEmail: ${data.email}\nTelefone: ${data.phone}\nMensagem: ${data.message}`;
-    const whatsappUrl = `https://wa.me/5521964075124?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
-    
+    // Show success message - in a real app, this would send to an API
     toast({
-      title: "Redirecionando para WhatsApp",
-      description: "Você será direcionado para continuar a conversa.",
+      title: "Mensagem enviada com sucesso!",
+      description: "Entraremos em contato em breve.",
     });
     
     form.reset();
@@ -223,7 +219,7 @@ Barra da Tijuca, Rio de Janeiro<br />
                   />
 
                   <Button type="submit" className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6">
-                    Enviar Mensagem via WhatsApp
+                    Enviar Mensagem
                   </Button>
 
                   <p className="text-center text-xs text-muted-foreground">
