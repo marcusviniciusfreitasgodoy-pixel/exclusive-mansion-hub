@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-principal.png";
 
 const contactSchema = z.object({
@@ -41,6 +42,7 @@ const contactSchema = z.object({
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
+
 export const Contact = () => {
   const { toast } = useToast();
   
@@ -54,14 +56,51 @@ export const Contact = () => {
     },
   });
 
-  const handleSubmit = (data: ContactFormData) => {
-    // Show success message - in a real app, this would send to an API
-    toast({
-      title: "Mensagem enviada com sucesso!",
-      description: "Entraremos em contato em breve.",
-    });
-    
-    form.reset();
+  const handleSubmit = async (data: ContactFormData) => {
+    try {
+      // Send email notification via edge function
+      const response = await supabase.functions.invoke("send-lead-notification", {
+        body: {
+          leadId: `homepage-${Date.now()}`,
+          propertyTitle: "Contato via Site Principal",
+          propertyAddress: "Godoy Prime Realty",
+          propertyValue: null,
+          leadName: data.name,
+          leadEmail: data.email,
+          leadPhone: data.phone,
+          leadMessage: data.message,
+          imobiliariaEmail: "contato@godoyprime.com.br",
+          imobiliariaNome: "Godoy Prime Realty",
+          construtoraId: "00000000-0000-0000-0000-000000000000",
+        },
+      });
+
+      if (response.error) {
+        console.error("Email notification error:", response.error);
+        toast({
+          title: "Erro ao enviar",
+          description: "Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Email notification sent:", response.data);
+
+      toast({
+        title: "Mensagem enviada com sucesso!",
+        description: "Entraremos em contato em breve.",
+      });
+
+      form.reset();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Erro ao enviar",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
   };
   return <section className="relative py-24 bg-luxury-cream">
       <div className="container mx-auto px-6">
@@ -218,8 +257,12 @@ Barra da Tijuca, Rio de Janeiro<br />
                     )}
                   />
 
-                  <Button type="submit" className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6">
-                    Enviar Mensagem
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-accent text-primary hover:bg-accent/90 shadow-gold transition-elegant text-base font-semibold py-6"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? "Enviando..." : "Enviar Mensagem"}
                   </Button>
 
                   <p className="text-center text-xs text-muted-foreground">
