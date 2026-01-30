@@ -11,9 +11,11 @@ import Login from "./pages/auth/Login";
 import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
 import ConstrutoraDashboard from "./pages/dashboard/construtora";
+import NovoImovel from "./pages/dashboard/construtora/NovoImovel";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
+import SeedData from "./pages/admin/SeedData";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,13 @@ const App = () => (
             {/* Test Routes */}
             <Route path="/teste-conexao" element={<TesteConexao />} />
             
+            {/* Admin Routes */}
+            <Route path="/admin/seed-data" element={
+              <ProtectedRoute allowedRoles={['construtora', 'admin']}>
+                <SeedData />
+              </ProtectedRoute>
+            } />
+            
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
             <Route path="/login" element={<Login />} />
@@ -43,6 +52,11 @@ const App = () => (
             <Route path="/dashboard/construtora" element={
               <ProtectedRoute allowedRoles={['construtora']}>
                 <ConstrutoraDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/construtora/novo-imovel" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <NovoImovel />
               </ProtectedRoute>
             } />
             
