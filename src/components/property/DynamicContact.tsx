@@ -74,17 +74,21 @@ export const DynamicContact = ({
   const handleSubmit = async (data: ContactFormData) => {
     try {
       // Save lead to database
-      const { error: leadError } = await supabase.from("leads").insert({
-        imovel_id: property.id,
-        imobiliaria_id: imobiliariaId,
-        access_id: accessId,
-        nome: data.name,
-        email: data.email,
-        telefone: data.phone,
-        mensagem: data.message,
-        origem: "formulario" as const,
-        status: "novo" as const,
-      });
+      const { data: leadData, error: leadError } = await supabase
+        .from("leads")
+        .insert({
+          imovel_id: property.id,
+          imobiliaria_id: imobiliariaId,
+          access_id: accessId,
+          nome: data.name,
+          email: data.email,
+          telefone: data.phone,
+          mensagem: data.message,
+          origem: "formulario" as const,
+          status: "novo" as const,
+        })
+        .select("id")
+        .single();
 
       if (leadError) {
         console.error("Error saving lead:", leadError);
@@ -94,6 +98,38 @@ export const DynamicContact = ({
           variant: "destructive",
         });
         return;
+      }
+
+      // Send email notification via edge function
+      const propertyAddress = [property.endereco, property.bairro, property.cidade]
+        .filter(Boolean)
+        .join(", ");
+
+      try {
+        const response = await supabase.functions.invoke("send-lead-notification", {
+          body: {
+            leadId: leadData.id,
+            propertyTitle: property.titulo,
+            propertyAddress,
+            propertyValue: property.valor,
+            leadName: data.name,
+            leadEmail: data.email,
+            leadPhone: data.phone,
+            leadMessage: data.message,
+            imobiliariaEmail: branding.emailContato,
+            imobiliariaNome: branding.imobiliariaNome,
+            construtoraId: property.construtoraId,
+          },
+        });
+
+        if (response.error) {
+          console.error("Email notification error:", response.error);
+        } else {
+          console.log("Email notification sent:", response.data);
+        }
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the form submission if email fails
       }
 
       // WhatsApp message

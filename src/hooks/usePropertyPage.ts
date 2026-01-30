@@ -98,6 +98,7 @@ export function usePropertyPage(): UsePropertyPageResult {
 
         const property: PropertyData = {
           id: imovel.id,
+          construtoraId: imovel.construtora_id,
           titulo: imovel.titulo,
           endereco: imovel.endereco,
           bairro: imovel.bairro,
