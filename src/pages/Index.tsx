@@ -7,7 +7,9 @@ import { Description } from "@/components/Description";
 import { Gallery } from "@/components/Gallery";
 import { VideoSection } from "@/components/VideoSection";
 import { Contact } from "@/components/Contact";
+import { Link } from "react-router-dom";
 import logoWhite from "@/assets/logo-negativo.png";
+
 const Index = () => {
   return <main className="min-h-screen">
       <Navbar />
@@ -46,6 +48,8 @@ const Index = () => {
             <a href="https://docs.google.com/document/d/1WKh-v-HKJz5rHLhqzaPRlj34YzSe78NhhiQgTnRShls/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-smooth">Política de Privacidade</a>
             <span>•</span>
             <a href="https://docs.google.com/document/d/1JqColkt5uzQnajZDWVPTdy423kJlVDEpQepGRGlGFp8/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-smooth">Termos de Uso</a>
+            <span>•</span>
+            <Link to="/admin/diagnostico" className="hover:text-accent transition-smooth">Diagnóstico</Link>
           </div>
         </div>
       </footer>
