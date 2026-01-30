@@ -132,13 +132,7 @@ export const DynamicContact = ({
         // Don't fail the form submission if email fails
       }
 
-      // WhatsApp message
-      const whatsappNumber = branding.telefone?.replace(/\D/g, "") || "";
-      if (whatsappNumber) {
-        const message = `Olá! Tenho interesse no imóvel: ${property.titulo}\n\nNome: ${data.name}\nEmail: ${data.email}\nTelefone: ${data.phone}\nMensagem: ${data.message}`;
-        const whatsappUrl = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, "_blank");
-      }
+      // Success - don't auto-open WhatsApp, just show success message
 
       toast({
         title: "Mensagem enviada com sucesso!",
