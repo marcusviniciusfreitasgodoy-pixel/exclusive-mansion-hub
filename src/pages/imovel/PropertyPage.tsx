@@ -6,6 +6,7 @@ import { DynamicPropertyDetails } from "@/components/property/DynamicPropertyDet
 import { DynamicDescription } from "@/components/property/DynamicDescription";
 import { DynamicGallery } from "@/components/property/DynamicGallery";
 import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
+import { AgendarVisitaSection } from "@/components/property/AgendarVisitaSection";
 import { DynamicContact } from "@/components/property/DynamicContact";
 import { DynamicFooter } from "@/components/property/DynamicFooter";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -108,6 +109,13 @@ export default function PropertyPage() {
               />
             </div>
           )}
+
+          <AgendarVisitaSection
+            property={property}
+            branding={branding}
+            imobiliariaId={imobiliariaId}
+            accessId={accessId}
+          />
 
           <DynamicContact
             property={property}
