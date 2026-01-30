@@ -43,10 +43,12 @@ export function usePropertyPage(): UsePropertyPageResult {
             imoveis (
               id,
               titulo,
+              headline,
               endereco,
               bairro,
               cidade,
               estado,
+              cep,
               valor,
               condominio,
               iptu,
@@ -58,11 +60,26 @@ export function usePropertyPage(): UsePropertyPageResult {
               descricao,
               diferenciais,
               memorial_descritivo,
+              condicoes_pagamento,
               imagens,
               videos,
               tour_360_url,
               status,
               construtora_id,
+              listing_code,
+              property_type,
+              year_built,
+              lot_size,
+              lot_size_unit,
+              parking_spaces,
+              features_interior,
+              features_exterior,
+              amenities,
+              price_secondary,
+              price_secondary_currency,
+              price_on_request,
+              latitude,
+              longitude,
               construtoras (
                 nome_empresa,
                 logo_url
@@ -95,15 +112,26 @@ export function usePropertyPage(): UsePropertyPageResult {
           : [];
         const imagens = Array.isArray(imovel.imagens) ? imovel.imagens : [];
         const videos = Array.isArray(imovel.videos) ? imovel.videos : [];
+        const featuresInterior = Array.isArray(imovel.features_interior)
+          ? imovel.features_interior
+          : [];
+        const featuresExterior = Array.isArray(imovel.features_exterior)
+          ? imovel.features_exterior
+          : [];
+        const amenities = Array.isArray(imovel.amenities)
+          ? imovel.amenities
+          : [];
 
         const property: PropertyData = {
           id: imovel.id,
           construtoraId: imovel.construtora_id,
           titulo: imovel.titulo,
+          headline: imovel.headline,
           endereco: imovel.endereco,
           bairro: imovel.bairro,
           cidade: imovel.cidade,
           estado: imovel.estado || "RJ",
+          cep: imovel.cep,
           valor: imovel.valor,
           condominio: imovel.condominio,
           iptu: imovel.iptu,
@@ -115,10 +143,26 @@ export function usePropertyPage(): UsePropertyPageResult {
           descricao: imovel.descricao,
           diferenciais,
           memorialDescritivo: imovel.memorial_descritivo,
+          condicoesPagamento: imovel.condicoes_pagamento,
           imagens,
           videos,
           tour360Url: imovel.tour_360_url,
           status: imovel.status,
+          // New Sotheby's fields
+          listingCode: imovel.listing_code,
+          propertyType: imovel.property_type,
+          yearBuilt: imovel.year_built,
+          lotSize: imovel.lot_size,
+          lotSizeUnit: imovel.lot_size_unit || 'm²',
+          parkingSpaces: imovel.parking_spaces,
+          featuresInterior,
+          featuresExterior,
+          amenities,
+          priceSecondary: imovel.price_secondary,
+          priceSecondaryCurrency: imovel.price_secondary_currency || 'USD',
+          priceOnRequest: imovel.price_on_request || false,
+          latitude: imovel.latitude,
+          longitude: imovel.longitude,
         };
 
         const branding: PropertyBranding = {

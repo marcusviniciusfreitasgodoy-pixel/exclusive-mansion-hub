@@ -55,6 +55,7 @@ export interface Imovel {
   bairro: string | null;
   cidade: string | null;
   estado: string;
+  cep: string | null;
   valor: number | null;
   condominio: number | null;
   iptu: number | null;
@@ -66,12 +67,29 @@ export interface Imovel {
   descricao: string | null;
   diferenciais: string[];
   memorial_descritivo: string | null;
+  condicoes_pagamento: string | null;
   imagens: { url: string; alt?: string }[];
   videos: { url: string; tipo?: string }[];
   tour_360_url: string | null;
   status: ImovelStatus;
   created_at: string;
   updated_at: string;
+  // New Sotheby's-inspired fields
+  listing_code: string | null;
+  property_type: string | null;
+  year_built: number | null;
+  lot_size: number | null;
+  lot_size_unit: string;
+  parking_spaces: number | null;
+  features_interior: string[];
+  features_exterior: string[];
+  amenities: string[];
+  headline: string | null;
+  price_secondary: number | null;
+  price_secondary_currency: string;
+  price_on_request: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface ImobiliariaImovelAccess {

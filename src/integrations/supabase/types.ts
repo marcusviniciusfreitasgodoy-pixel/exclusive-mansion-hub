@@ -494,11 +494,14 @@ export type Database = {
       }
       imoveis: {
         Row: {
+          amenities: Json | null
           area_privativa: number | null
           area_total: number | null
           bairro: string | null
           banheiros: number | null
+          cep: string | null
           cidade: string | null
+          condicoes_pagamento: string | null
           condominio: number | null
           construtora_id: string
           created_at: string | null
@@ -506,10 +509,23 @@ export type Database = {
           diferenciais: Json | null
           endereco: string | null
           estado: string | null
+          features_exterior: Json | null
+          features_interior: Json | null
+          headline: string | null
           id: string
           imagens: Json | null
           iptu: number | null
+          latitude: number | null
+          listing_code: string | null
+          longitude: number | null
+          lot_size: number | null
+          lot_size_unit: string | null
           memorial_descritivo: string | null
+          parking_spaces: number | null
+          price_on_request: boolean | null
+          price_secondary: number | null
+          price_secondary_currency: string | null
+          property_type: string | null
           status: Database["public"]["Enums"]["imovel_status"] | null
           suites: number | null
           titulo: string
@@ -518,13 +534,17 @@ export type Database = {
           vagas: number | null
           valor: number | null
           videos: Json | null
+          year_built: number | null
         }
         Insert: {
+          amenities?: Json | null
           area_privativa?: number | null
           area_total?: number | null
           bairro?: string | null
           banheiros?: number | null
+          cep?: string | null
           cidade?: string | null
+          condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id: string
           created_at?: string | null
@@ -532,10 +552,23 @@ export type Database = {
           diferenciais?: Json | null
           endereco?: string | null
           estado?: string | null
+          features_exterior?: Json | null
+          features_interior?: Json | null
+          headline?: string | null
           id?: string
           imagens?: Json | null
           iptu?: number | null
+          latitude?: number | null
+          listing_code?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          lot_size_unit?: string | null
           memorial_descritivo?: string | null
+          parking_spaces?: number | null
+          price_on_request?: boolean | null
+          price_secondary?: number | null
+          price_secondary_currency?: string | null
+          property_type?: string | null
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
           titulo: string
@@ -544,13 +577,17 @@ export type Database = {
           vagas?: number | null
           valor?: number | null
           videos?: Json | null
+          year_built?: number | null
         }
         Update: {
+          amenities?: Json | null
           area_privativa?: number | null
           area_total?: number | null
           bairro?: string | null
           banheiros?: number | null
+          cep?: string | null
           cidade?: string | null
+          condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id?: string
           created_at?: string | null
@@ -558,10 +595,23 @@ export type Database = {
           diferenciais?: Json | null
           endereco?: string | null
           estado?: string | null
+          features_exterior?: Json | null
+          features_interior?: Json | null
+          headline?: string | null
           id?: string
           imagens?: Json | null
           iptu?: number | null
+          latitude?: number | null
+          listing_code?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          lot_size_unit?: string | null
           memorial_descritivo?: string | null
+          parking_spaces?: number | null
+          price_on_request?: boolean | null
+          price_secondary?: number | null
+          price_secondary_currency?: string | null
+          property_type?: string | null
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
           titulo?: string
@@ -570,6 +620,7 @@ export type Database = {
           vagas?: number | null
           valor?: number | null
           videos?: Json | null
+          year_built?: number | null
         }
         Relationships: [
           {

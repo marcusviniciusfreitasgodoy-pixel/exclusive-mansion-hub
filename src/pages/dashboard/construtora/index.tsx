@@ -39,7 +39,16 @@ export default function ConstrutoraDashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Imovel[];
+      // Parse JSONB fields properly
+      return (data || []).map(imovel => ({
+        ...imovel,
+        diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais : [],
+        imagens: Array.isArray(imovel.imagens) ? imovel.imagens : [],
+        videos: Array.isArray(imovel.videos) ? imovel.videos : [],
+        features_interior: Array.isArray(imovel.features_interior) ? imovel.features_interior : [],
+        features_exterior: Array.isArray(imovel.features_exterior) ? imovel.features_exterior : [],
+        amenities: Array.isArray(imovel.amenities) ? imovel.amenities : [],
+      })) as Imovel[];
     },
     enabled: !!construtora?.id,
   });
