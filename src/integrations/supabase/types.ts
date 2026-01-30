@@ -179,6 +179,238 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks_visitas: {
+        Row: {
+          access_id: string | null
+          agendamento_visita_id: string | null
+          assinatura_cliente: string | null
+          assinatura_cliente_data: string | null
+          assinatura_cliente_device: string | null
+          assinatura_cliente_geolocation: Json | null
+          assinatura_cliente_ip: string | null
+          assinatura_corretor: string | null
+          assinatura_corretor_data: string | null
+          assinatura_corretor_device: string | null
+          assinatura_corretor_ip: string | null
+          avaliacao_acabamento: number | null
+          avaliacao_atendimento: number | null
+          avaliacao_custo_beneficio: number | null
+          avaliacao_layout: number | null
+          avaliacao_localizacao: number | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone: string | null
+          completo_em: string | null
+          construtora_id: string
+          corretor_email: string | null
+          corretor_nome: string | null
+          created_at: string | null
+          data_followup: string | null
+          data_visita: string
+          documento_hash: string | null
+          duracao_minutos: number | null
+          feedback_cliente_em: string | null
+          feedback_corretor_em: string | null
+          forma_pagamento_pretendida: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string
+          interesse_compra:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          lead_id: string | null
+          necessita_followup: boolean | null
+          nps_cliente: number | null
+          objecoes: Json | null
+          objecoes_detalhes: string | null
+          observacoes_corretor: string | null
+          orcamento_disponivel: number | null
+          pdf_gerado_em: string | null
+          pdf_url: string | null
+          poder_decisao: Database["public"]["Enums"]["poder_decisao"] | null
+          poder_decisao_detalhes: string | null
+          pontos_negativos: string | null
+          pontos_positivos: string | null
+          prazo_compra: Database["public"]["Enums"]["prazo_compra"] | null
+          proximos_passos: string | null
+          qualificacao_lead:
+            | Database["public"]["Enums"]["qualificacao_lead"]
+            | null
+          score_lead: number | null
+          status: Database["public"]["Enums"]["feedback_status"]
+          sugestoes: string | null
+          token_acesso_cliente: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_id?: string | null
+          agendamento_visita_id?: string | null
+          assinatura_cliente?: string | null
+          assinatura_cliente_data?: string | null
+          assinatura_cliente_device?: string | null
+          assinatura_cliente_geolocation?: Json | null
+          assinatura_cliente_ip?: string | null
+          assinatura_corretor?: string | null
+          assinatura_corretor_data?: string | null
+          assinatura_corretor_device?: string | null
+          assinatura_corretor_ip?: string | null
+          avaliacao_acabamento?: number | null
+          avaliacao_atendimento?: number | null
+          avaliacao_custo_beneficio?: number | null
+          avaliacao_layout?: number | null
+          avaliacao_localizacao?: number | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone?: string | null
+          completo_em?: string | null
+          construtora_id: string
+          corretor_email?: string | null
+          corretor_nome?: string | null
+          created_at?: string | null
+          data_followup?: string | null
+          data_visita: string
+          documento_hash?: string | null
+          duracao_minutos?: number | null
+          feedback_cliente_em?: string | null
+          feedback_corretor_em?: string | null
+          forma_pagamento_pretendida?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id: string
+          interesse_compra?:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          lead_id?: string | null
+          necessita_followup?: boolean | null
+          nps_cliente?: number | null
+          objecoes?: Json | null
+          objecoes_detalhes?: string | null
+          observacoes_corretor?: string | null
+          orcamento_disponivel?: number | null
+          pdf_gerado_em?: string | null
+          pdf_url?: string | null
+          poder_decisao?: Database["public"]["Enums"]["poder_decisao"] | null
+          poder_decisao_detalhes?: string | null
+          pontos_negativos?: string | null
+          pontos_positivos?: string | null
+          prazo_compra?: Database["public"]["Enums"]["prazo_compra"] | null
+          proximos_passos?: string | null
+          qualificacao_lead?:
+            | Database["public"]["Enums"]["qualificacao_lead"]
+            | null
+          score_lead?: number | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          sugestoes?: string | null
+          token_acesso_cliente?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_id?: string | null
+          agendamento_visita_id?: string | null
+          assinatura_cliente?: string | null
+          assinatura_cliente_data?: string | null
+          assinatura_cliente_device?: string | null
+          assinatura_cliente_geolocation?: Json | null
+          assinatura_cliente_ip?: string | null
+          assinatura_corretor?: string | null
+          assinatura_corretor_data?: string | null
+          assinatura_corretor_device?: string | null
+          assinatura_corretor_ip?: string | null
+          avaliacao_acabamento?: number | null
+          avaliacao_atendimento?: number | null
+          avaliacao_custo_beneficio?: number | null
+          avaliacao_layout?: number | null
+          avaliacao_localizacao?: number | null
+          cliente_email?: string
+          cliente_nome?: string
+          cliente_telefone?: string | null
+          completo_em?: string | null
+          construtora_id?: string
+          corretor_email?: string | null
+          corretor_nome?: string | null
+          created_at?: string | null
+          data_followup?: string | null
+          data_visita?: string
+          documento_hash?: string | null
+          duracao_minutos?: number | null
+          feedback_cliente_em?: string | null
+          feedback_corretor_em?: string | null
+          forma_pagamento_pretendida?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string
+          interesse_compra?:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          lead_id?: string | null
+          necessita_followup?: boolean | null
+          nps_cliente?: number | null
+          objecoes?: Json | null
+          objecoes_detalhes?: string | null
+          observacoes_corretor?: string | null
+          orcamento_disponivel?: number | null
+          pdf_gerado_em?: string | null
+          pdf_url?: string | null
+          poder_decisao?: Database["public"]["Enums"]["poder_decisao"] | null
+          poder_decisao_detalhes?: string | null
+          pontos_negativos?: string | null
+          pontos_positivos?: string | null
+          prazo_compra?: Database["public"]["Enums"]["prazo_compra"] | null
+          proximos_passos?: string | null
+          qualificacao_lead?:
+            | Database["public"]["Enums"]["qualificacao_lead"]
+            | null
+          score_lead?: number | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          sugestoes?: string | null
+          token_acesso_cliente?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_visitas_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliaria_imovel_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_agendamento_visita_id_fkey"
+            columns: ["agendamento_visita_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_visitas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imobiliaria_imovel_access: {
         Row: {
           acesso_concedido_em: string | null
@@ -516,7 +748,17 @@ export type Database = {
         | "remarcado"
       app_role: "construtora" | "imobiliaria" | "admin"
       construtora_status: "active" | "suspended" | "cancelled"
+      feedback_status:
+        | "aguardando_corretor"
+        | "aguardando_cliente"
+        | "completo"
+        | "arquivado"
       imovel_status: "ativo" | "vendido" | "inativo"
+      interesse_compra:
+        | "muito_interessado"
+        | "interessado"
+        | "pouco_interessado"
+        | "sem_interesse"
       lead_origem: "formulario" | "whatsapp" | "chat_ia"
       lead_status:
         | "novo"
@@ -525,6 +767,14 @@ export type Database = {
         | "visita_agendada"
         | "perdido"
       plano_construtora: "start" | "pro" | "enterprise"
+      poder_decisao: "total" | "parcial" | "nenhum"
+      prazo_compra:
+        | "0-3_meses"
+        | "3-6_meses"
+        | "6-12_meses"
+        | "acima_12_meses"
+        | "indefinido"
+      qualificacao_lead: "quente" | "morno" | "frio"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -662,7 +912,19 @@ export const Constants = {
       ],
       app_role: ["construtora", "imobiliaria", "admin"],
       construtora_status: ["active", "suspended", "cancelled"],
+      feedback_status: [
+        "aguardando_corretor",
+        "aguardando_cliente",
+        "completo",
+        "arquivado",
+      ],
       imovel_status: ["ativo", "vendido", "inativo"],
+      interesse_compra: [
+        "muito_interessado",
+        "interessado",
+        "pouco_interessado",
+        "sem_interesse",
+      ],
       lead_origem: ["formulario", "whatsapp", "chat_ia"],
       lead_status: [
         "novo",
@@ -672,6 +934,15 @@ export const Constants = {
         "perdido",
       ],
       plano_construtora: ["start", "pro", "enterprise"],
+      poder_decisao: ["total", "parcial", "nenhum"],
+      prazo_compra: [
+        "0-3_meses",
+        "3-6_meses",
+        "6-12_meses",
+        "acima_12_meses",
+        "indefinido",
+      ],
+      qualificacao_lead: ["quente", "morno", "frio"],
     },
   },
 } as const

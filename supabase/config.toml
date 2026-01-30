@@ -2,3 +2,12 @@ project_id = "afntqukanvgcwobwvwuo"
 
 [functions.send-lead-notification]
 verify_jwt = false
+
+[functions.send-visit-notification]
+verify_jwt = false
+
+[functions.send-feedback-request]
+verify_jwt = false
+
+[functions.generate-feedback-pdf]
+verify_jwt = false
