@@ -380,6 +380,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
+      user_owns_imovel: { Args: { _imovel_id: string }; Returns: boolean }
     }
     Enums: {
       access_status: "active" | "revoked"
