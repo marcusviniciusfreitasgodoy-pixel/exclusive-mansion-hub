@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard } from "lucide-react";
+import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard, ImageIcon } from "lucide-react";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoUpload } from "@/components/dashboard/LogoUpload";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -34,6 +35,7 @@ type ConfigFormData = z.infer<typeof configSchema>;
 export default function ConfiguracoesImobiliaria() {
   const { imobiliaria, refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(configSchema),
@@ -55,6 +57,7 @@ export default function ConfiguracoesImobiliaria() {
         telefone: imobiliaria.telefone || "",
         cor_primaria: imobiliaria.cor_primaria || "#1e3a5f",
       });
+      setLogoUrl(imobiliaria.logo_url || null);
     }
   }, [imobiliaria, form]);
 
@@ -71,6 +74,7 @@ export default function ConfiguracoesImobiliaria() {
           email_contato: data.email_contato || null,
           telefone: data.telefone || null,
           cor_primaria: data.cor_primaria || "#1e3a5f",
+          logo_url: logoUrl,
         })
         .eq("id", imobiliaria.id);
 
@@ -78,7 +82,6 @@ export default function ConfiguracoesImobiliaria() {
 
       toast.success("Configurações salvas com sucesso!");
       
-      // Refresh auth context to update imobiliaria data
       if (refreshProfile) {
         await refreshProfile();
       }
@@ -102,6 +105,29 @@ export default function ConfiguracoesImobiliaria() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Logo */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Logo da Imobiliária
+                </CardTitle>
+                <CardDescription>
+                  O logo será exibido nas páginas white-label dos imóveis.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {imobiliaria?.id && (
+                  <LogoUpload
+                    currentLogoUrl={logoUrl}
+                    onLogoChange={setLogoUrl}
+                    folder="imobiliarias"
+                    entityId={imobiliaria.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
             {/* Informações da Empresa */}
             <Card>
               <CardHeader>
