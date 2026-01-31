@@ -47,7 +47,8 @@ export function PropertyContactSection({
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("leads").insert({
+      // Insert lead into database
+      const { data: leadData, error } = await supabase.from("leads").insert({
         imovel_id: property.id,
         imobiliaria_id: imobiliariaId,
         access_id: accessId,
@@ -57,7 +58,7 @@ export function PropertyContactSection({
         mensagem: formData.mensagem || null,
         origem: "formulario",
         status: "novo",
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
@@ -66,19 +67,29 @@ export function PropertyContactSection({
         description: "Entraremos em contato em breve.",
       });
 
-      setFormData({ nome: "", email: "", telefone: "", mensagem: "" });
+      // Send notification with all required fields
+      try {
+        await supabase.functions.invoke("send-lead-notification", {
+          body: {
+            leadId: leadData.id,
+            propertyTitle: property.titulo,
+            propertyAddress: property.endereco || `${property.bairro}, ${property.cidade}`,
+            propertyValue: property.valor,
+            leadName: formData.nome,
+            leadEmail: formData.email,
+            leadPhone: formData.telefone || "",
+            leadMessage: formData.mensagem || "",
+            imobiliariaEmail: branding.emailContato,
+            imobiliariaNome: branding.imobiliariaNome,
+            construtoraId: property.construtoraId,
+          },
+        });
+      } catch (notifError) {
+        console.error("Error sending notification:", notifError);
+        // Don't show error to user since lead was saved successfully
+      }
 
-      // Send notification
-      await supabase.functions.invoke("send-lead-notification", {
-        body: {
-          leadName: formData.nome,
-          leadEmail: formData.email,
-          leadPhone: formData.telefone,
-          leadMessage: formData.mensagem,
-          propertyTitle: property.titulo,
-          imobiliariaEmail: branding.emailContato,
-        },
-      });
+      setFormData({ nome: "", email: "", telefone: "", mensagem: "" });
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast({
