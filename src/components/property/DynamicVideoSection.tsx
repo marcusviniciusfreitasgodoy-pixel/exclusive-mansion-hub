@@ -19,22 +19,42 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
     }));
   };
 
-  // Convert YouTube URLs to embed format
-  const getEmbedUrl = (url: string) => {
+  // Extract YouTube video ID from URL
+  const getYouTubeVideoId = (url: string): string | null => {
     if (url.includes("youtube.com/watch")) {
-      const videoId = new URL(url).searchParams.get("v");
-      return `https://www.youtube.com/embed/${videoId}`;
+      return new URL(url).searchParams.get("v");
     }
     if (url.includes("youtu.be/")) {
-      const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+      return url.split("youtu.be/")[1]?.split("?")[0] || null;
+    }
+    if (url.includes("youtube.com/embed/")) {
+      return url.split("youtube.com/embed/")[1]?.split("?")[0] || null;
+    }
+    if (url.includes("youtube.com/shorts/")) {
+      return url.split("youtube.com/shorts/")[1]?.split("?")[0] || null;
+    }
+    return null;
+  };
+
+  // Get YouTube thumbnail URL (maxresdefault for high quality)
+  const getYouTubeThumbnail = (url: string): string | null => {
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
+      // Try maxresdefault first, fallback to hqdefault
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+    return null;
+  };
+
+  // Convert YouTube URLs to embed format
+  const getEmbedUrl = (url: string) => {
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    if (url.includes("youtube.com/embed")) {
-      return url;
-    }
     if (url.includes("vimeo.com")) {
-      const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
-      return `https://player.vimeo.com/video/${videoId}`;
+      const vimeoId = url.split("vimeo.com/")[1]?.split("?")[0];
+      return `https://player.vimeo.com/video/${vimeoId}`;
     }
     return url;
   };
@@ -78,9 +98,26 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
                           key={globalIndex}
                           className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md"
                         >
-                          {!playingVideos[globalIndex] ? (
-                            <div className="relative h-full w-full bg-primary/10">
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                        {!playingVideos[globalIndex] ? (
+                            <div className="relative h-full w-full">
+                              {getYouTubeThumbnail(video.url) ? (
+                                <img 
+                                  src={getYouTubeThumbnail(video.url)!} 
+                                  alt={`Vídeo ${globalIndex + 1}`}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    // Fallback to hqdefault if maxresdefault fails
+                                    const target = e.target as HTMLImageElement;
+                                    const videoId = getYouTubeVideoId(video.url);
+                                    if (videoId && target.src.includes('maxresdefault')) {
+                                      target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-primary/10" />
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                                 <button
                                   onClick={() => togglePlay(globalIndex)}
                                   className="flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
@@ -122,8 +159,24 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
                           className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in max-w-4xl mx-auto"
                         >
                           {!playingVideos[globalIndex] ? (
-                            <div className="relative h-full w-full bg-primary/10">
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                            <div className="relative h-full w-full">
+                              {getYouTubeThumbnail(video.url) ? (
+                                <img 
+                                  src={getYouTubeThumbnail(video.url)!} 
+                                  alt={`Vídeo ${globalIndex + 1}`}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const videoId = getYouTubeVideoId(video.url);
+                                    if (videoId && target.src.includes('maxresdefault')) {
+                                      target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-primary/10" />
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                                 <button
                                   onClick={() => togglePlay(globalIndex)}
                                   className="flex h-24 w-24 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
