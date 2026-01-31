@@ -3,14 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Save, Mail, Phone, Building2, Palette, Loader2 } from "lucide-react";
+import { Save, Mail, Phone, Building2, Palette, Loader2, ImageIcon } from "lucide-react";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -22,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoUpload } from "@/components/dashboard/LogoUpload";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -35,8 +34,8 @@ type ConfigFormData = z.infer<typeof configSchema>;
 
 export default function ConfiguracoesConstrutora() {
   const { construtora, refreshProfile } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(configSchema),
@@ -58,6 +57,7 @@ export default function ConfiguracoesConstrutora() {
         cor_primaria: construtora.cor_primaria || "#1e3a5f",
         cor_secundaria: construtora.cor_secundaria || "#b8860b",
       });
+      setLogoUrl(construtora.logo_url || null);
     }
   }, [construtora, form]);
 
@@ -74,6 +74,7 @@ export default function ConfiguracoesConstrutora() {
           telefone: data.telefone || null,
           cor_primaria: data.cor_primaria || "#1e3a5f",
           cor_secundaria: data.cor_secundaria || "#b8860b",
+          logo_url: logoUrl,
         })
         .eq("id", construtora.id);
 
@@ -81,7 +82,6 @@ export default function ConfiguracoesConstrutora() {
 
       toast.success("Configurações salvas com sucesso!");
       
-      // Refresh auth context to update construtora data
       if (refreshProfile) {
         await refreshProfile();
       }
@@ -105,6 +105,29 @@ export default function ConfiguracoesConstrutora() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Logo */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Logo da Empresa
+                </CardTitle>
+                <CardDescription>
+                  O logo será exibido nas páginas de imóveis e relatórios.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {construtora?.id && (
+                  <LogoUpload
+                    currentLogoUrl={logoUrl}
+                    onLogoChange={setLogoUrl}
+                    folder="construtoras"
+                    entityId={construtora.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
             {/* Informações da Empresa */}
             <Card>
               <CardHeader>
