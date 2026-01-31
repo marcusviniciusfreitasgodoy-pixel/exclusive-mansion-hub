@@ -98,20 +98,20 @@ export function SofiaAssistentSection({ propertyTitle, onStartChat }: SofiaAssis
           <div className="order-1 lg:order-2 flex justify-center">
             <div className="relative">
               {/* Decorative circles */}
-              <div className="absolute inset-0 -m-4 rounded-full bg-accent/10 animate-pulse" />
-              <div className="absolute inset-0 -m-8 rounded-full bg-accent/5" />
+              <div className="absolute inset-0 -m-3 md:-m-4 rounded-full bg-accent/10 animate-pulse" />
+              <div className="absolute inset-0 -m-6 md:-m-8 rounded-full bg-accent/5" />
               
               {/* Avatar Container */}
-              <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-accent/20">
+              <div className="relative w-32 h-32 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-accent/20">
                 {/* Sofia Avatar Placeholder - can be replaced with actual HeyGen image */}
                 <div className="text-center">
-                  <div className="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 mx-auto rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
-                    <span className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary">
+                  <div className="w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 mx-auto rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
+                    <span className="text-2xl md:text-5xl lg:text-6xl font-bold text-primary">
                       S
                     </span>
                   </div>
-                  <p className="mt-3 text-white font-semibold text-sm md:text-base">Sofia</p>
-                  <p className="text-accent/80 text-xs">Assistente IA</p>
+                  <p className="mt-2 md:mt-3 text-white font-semibold text-xs md:text-base">Sofia</p>
+                  <p className="text-accent/80 text-[10px] md:text-xs">Assistente IA</p>
                 </div>
               </div>
 
