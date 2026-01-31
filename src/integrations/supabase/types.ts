@@ -147,11 +147,13 @@ export type Database = {
           cor_secundaria: string | null
           created_at: string | null
           dominio_customizado: string | null
+          email_contato: string | null
           id: string
           logo_url: string | null
           nome_empresa: string
           plano: Database["public"]["Enums"]["plano_construtora"] | null
           status: Database["public"]["Enums"]["construtora_status"] | null
+          telefone: string | null
           user_id: string
         }
         Insert: {
@@ -160,11 +162,13 @@ export type Database = {
           cor_secundaria?: string | null
           created_at?: string | null
           dominio_customizado?: string | null
+          email_contato?: string | null
           id?: string
           logo_url?: string | null
           nome_empresa: string
           plano?: Database["public"]["Enums"]["plano_construtora"] | null
           status?: Database["public"]["Enums"]["construtora_status"] | null
+          telefone?: string | null
           user_id: string
         }
         Update: {
@@ -173,11 +177,13 @@ export type Database = {
           cor_secundaria?: string | null
           created_at?: string | null
           dominio_customizado?: string | null
+          email_contato?: string | null
           id?: string
           logo_url?: string | null
           nome_empresa?: string
           plano?: Database["public"]["Enums"]["plano_construtora"] | null
           status?: Database["public"]["Enums"]["construtora_status"] | null
+          telefone?: string | null
           user_id?: string
         }
         Relationships: []
