@@ -29,6 +29,7 @@ export type Database = {
           corretor_nome: string | null
           created_at: string | null
           data_confirmada: string | null
+          documento_identificacao_url: string | null
           id: string
           imobiliaria_id: string | null
           imovel_id: string
@@ -57,6 +58,7 @@ export type Database = {
           corretor_nome?: string | null
           created_at?: string | null
           data_confirmada?: string | null
+          documento_identificacao_url?: string | null
           id?: string
           imobiliaria_id?: string | null
           imovel_id: string
@@ -85,6 +87,7 @@ export type Database = {
           corretor_nome?: string | null
           created_at?: string | null
           data_confirmada?: string | null
+          documento_identificacao_url?: string | null
           id?: string
           imobiliaria_id?: string | null
           imovel_id?: string
