@@ -37,6 +37,31 @@ function formatDate(isoDate: string): string {
   });
 }
 
+function formatWhatsAppMessage(
+  clienteNome: string,
+  clienteTelefone: string,
+  imovelTitulo: string,
+  imovelEndereco: string,
+  data1: string,
+  data2: string,
+  origem: string | null
+): string {
+  return `🏠 *Nova Solicitação de Visita*
+
+*Cliente:* ${clienteNome}
+*Telefone:* ${clienteTelefone}
+
+*Imóvel:* ${imovelTitulo}
+*Endereço:* ${imovelEndereco}
+
+*Datas Solicitadas:*
+📅 Opção 1: ${data1}
+📅 Opção 2: ${data2}
+${origem ? `\n*Via:* ${origem}` : ""}
+
+_Acesse o painel para confirmar a visita._`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -61,10 +86,10 @@ const handler = async (req: Request): Promise<Response> => {
     // Criar cliente Supabase para buscar dados
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar dados da construtora
+    // Buscar dados da construtora (incluindo email e telefone)
     const { data: construtora } = await supabase
       .from("construtoras")
-      .select("nome_empresa")
+      .select("nome_empresa, email_contato, telefone")
       .eq("id", construtoraId)
       .single();
 
@@ -93,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8a 100%); border-radius: 12px 12px 0 0; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">📅 Solicitação Recebida!</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">📅 Solicitação de Visita Recebida!</h1>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -102,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
             
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Recebemos sua solicitação de visita para o imóvel:
+              Sua solicitação de visita foi recebida com sucesso! Entraremos em contato em breve para confirmar a melhor data.
             </p>
             
             <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
@@ -125,6 +150,22 @@ const handler = async (req: Request): Promise<Response> => {
               Nossa equipe analisará sua disponibilidade e entrará em contato em breve 
               para confirmar a melhor data.
             </p>
+            
+            ${imobiliaria?.telefone ? `
+            <div style="margin-top: 25px; text-align: center;">
+              <a href="https://wa.me/55${imobiliaria.telefone.replace(/\D/g, "")}" 
+                 style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                📱 Falar via WhatsApp
+              </a>
+            </div>
+            ` : construtora?.telefone ? `
+            <div style="margin-top: 25px; text-align: center;">
+              <a href="https://wa.me/55${construtora.telefone.replace(/\D/g, "")}" 
+                 style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                📱 Falar via WhatsApp
+              </a>
+            </div>
+            ` : ""}
             
             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
             
@@ -200,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="margin-top: 30px; text-align: center;">
               <a href="https://wa.me/55${clienteTelefone.replace(/\D/g, "")}" 
                  style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 10px;">
-                📱 WhatsApp
+                📱 WhatsApp Cliente
               </a>
               <a href="tel:${clienteTelefone}" 
                  style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
@@ -260,6 +301,13 @@ const handler = async (req: Request): Promise<Response> => {
               <li><strong>Opção 2:</strong> ${data2Formatted}</li>
             </ul>
             
+            <div style="margin-top: 30px; text-align: center;">
+              <a href="https://wa.me/55${clienteTelefone.replace(/\D/g, "")}" 
+                 style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                📱 WhatsApp Cliente
+              </a>
+            </div>
+            
             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
             
             <p style="font-size: 14px; color: #888; text-align: center;">
@@ -272,49 +320,123 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailPromises = [];
+    const whatsappLinks: string[] = [];
 
-    // Enviar para o cliente
+    // 1. Enviar email para o CLIENTE
+    console.log("Enviando email para cliente:", clienteEmail);
     emailPromises.push(
       resend.emails.send({
         from: "Agendamento <noreply@godoyprime.com.br>",
         to: [clienteEmail],
         subject: `✅ Solicitação de Visita Recebida - ${imovelTitulo}`,
         html: clienteEmailHtml,
+      }).then(result => {
+        console.log("Email cliente enviado:", result);
+        return result;
+      }).catch(err => {
+        console.error("Erro ao enviar email para cliente:", err);
+        throw err;
       })
     );
 
-    // Enviar para a imobiliária (se houver)
+    // 2. Enviar email para a IMOBILIÁRIA (se houver)
     if (imobiliaria?.email_contato) {
+      console.log("Enviando email para imobiliária:", imobiliaria.email_contato);
       emailPromises.push(
         resend.emails.send({
           from: "Sistema de Visitas <noreply@godoyprime.com.br>",
           to: [imobiliaria.email_contato],
           subject: `🏠 Nova Solicitação de Visita - ${clienteNome}`,
           html: imobiliariaEmailHtml,
+        }).then(result => {
+          console.log("Email imobiliária enviado:", result);
+          return result;
+        }).catch(err => {
+          console.error("Erro ao enviar email para imobiliária:", err);
+          throw err;
+        })
+      );
+
+      // Link WhatsApp para imobiliária
+      if (imobiliaria.telefone) {
+        const whatsappMsg = formatWhatsAppMessage(
+          clienteNome,
+          clienteTelefone,
+          imovelTitulo,
+          imovelEndereco,
+          data1Formatted,
+          data2Formatted,
+          null
+        );
+        whatsappLinks.push(`https://wa.me/55${imobiliaria.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
+      }
+    }
+
+    // 3. Enviar email para a CONSTRUTORA
+    if (construtora?.email_contato) {
+      console.log("Enviando email para construtora:", construtora.email_contato);
+      emailPromises.push(
+        resend.emails.send({
+          from: "Sistema de Visitas <noreply@godoyprime.com.br>",
+          to: [construtora.email_contato],
+          subject: `📊 Nova Solicitação de Visita - ${imovelTitulo}`,
+          html: construtoraEmailHtml,
+        }).then(result => {
+          console.log("Email construtora enviado:", result);
+          return result;
+        }).catch(err => {
+          console.error("Erro ao enviar email para construtora:", err);
+          throw err;
+        })
+      );
+
+      // Link WhatsApp para construtora
+      if (construtora.telefone) {
+        const whatsappMsg = formatWhatsAppMessage(
+          clienteNome,
+          clienteTelefone,
+          imovelTitulo,
+          imovelEndereco,
+          data1Formatted,
+          data2Formatted,
+          imobiliaria?.nome_empresa || null
+        );
+        whatsappLinks.push(`https://wa.me/55${construtora.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
+      }
+    } else {
+      // Fallback: enviar para email fixo se não tiver email cadastrado
+      console.log("Enviando email para construtora (fallback):", "contato@godoyprime.com.br");
+      emailPromises.push(
+        resend.emails.send({
+          from: "Sistema de Visitas <noreply@godoyprime.com.br>",
+          to: ["contato@godoyprime.com.br"],
+          subject: `📊 Nova Solicitação de Visita - ${imovelTitulo}`,
+          html: construtoraEmailHtml,
         })
       );
     }
 
-    // Enviar para a construtora (email fixo por enquanto - idealmente buscar do banco)
-    emailPromises.push(
-      resend.emails.send({
-        from: "Sistema de Visitas <noreply@godoyprime.com.br>",
-        to: ["contato@godoyprime.com.br"],
-        subject: `📊 Nova Solicitação de Visita - ${imovelTitulo}`,
-        html: construtoraEmailHtml,
-      })
-    );
-
     const results = await Promise.allSettled(emailPromises);
     
     const successCount = results.filter(r => r.status === "fulfilled").length;
+    const failedCount = results.filter(r => r.status === "rejected").length;
+    
     console.log(`Emails enviados: ${successCount}/${results.length}`);
+    if (failedCount > 0) {
+      console.log("Emails que falharam:", results.filter(r => r.status === "rejected"));
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         emailsSent: successCount,
-        totalEmails: results.length 
+        totalEmails: results.length,
+        whatsappLinks: whatsappLinks,
+        details: {
+          clienteEmail: clienteEmail,
+          imobiliariaEmail: imobiliaria?.email_contato || null,
+          construtoraEmail: construtora?.email_contato || "contato@godoyprime.com.br",
+        }
       }),
       {
         status: 200,
