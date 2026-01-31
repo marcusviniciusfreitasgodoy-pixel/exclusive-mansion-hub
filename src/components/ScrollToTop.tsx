@@ -31,10 +31,10 @@ export const ScrollToTop = () => {
         <Button
           onClick={scrollToTop}
           size="icon"
-          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-accent text-primary shadow-gold transition-elegant hover:scale-110 hover:bg-accent/90"
+          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-40 h-10 w-10 md:h-12 md:w-12 rounded-full bg-accent text-primary shadow-gold transition-elegant hover:scale-110 hover:bg-accent/90"
           aria-label="Voltar ao topo"
         >
-          <ArrowUp className="h-6 w-6" />
+          <ArrowUp className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       )}
     </>

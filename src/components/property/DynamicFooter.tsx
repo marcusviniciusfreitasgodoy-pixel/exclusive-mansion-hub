@@ -33,11 +33,11 @@ export const DynamicFooter = ({ branding, construtora }: DynamicFooterProps) => 
 
         {/* Powered by Godoy Prime */}
         <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-xs text-white/40">Tecnologia</span>
+          <span className="text-xs text-white/50">Tecnologia</span>
           <img
             src={logoWhite}
             alt="Godoy Prime Realty"
-            className="h-8 object-contain opacity-60"
+            className="h-10 md:h-12 object-contain brightness-110"
           />
         </div>
 
@@ -52,21 +52,21 @@ export const DynamicFooter = ({ branding, construtora }: DynamicFooterProps) => 
           </p>
         )}
 
-        <div className="mt-6 flex justify-center gap-4 text-xs text-white/40">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs">
           <a
             href="https://docs.google.com/document/d/1WKh-v-HKJz5rHLhqzaPRlj34YzSe78NhhiQgTnRShls/edit?usp=sharing"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-accent transition-smooth"
+            className="text-white/60 hover:text-accent transition-smooth"
           >
             Política de Privacidade
           </a>
-          <span>•</span>
+          <span className="hidden sm:inline text-white/40">•</span>
           <a
             href="https://docs.google.com/document/d/1JqColkt5uzQnajZDWVPTdy423kJlVDEpQepGRGlGFp8/edit?usp=sharing"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-accent transition-smooth"
+            className="text-white/60 hover:text-accent transition-smooth"
           >
             Termos de Uso
           </a>
