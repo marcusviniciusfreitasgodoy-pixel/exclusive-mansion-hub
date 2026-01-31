@@ -154,8 +154,8 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
             );
           })()}
 
-          {/* Tour 360 */}
-          {tour360Url && (
+          {/* Tour 360 - only show if URL exists */}
+          {tour360Url && tour360Url.trim() !== '' && (
             <div className="mt-12">
               <h3 className="mb-6 text-center text-2xl font-semibold text-primary">
                 Tour Virtual 360°

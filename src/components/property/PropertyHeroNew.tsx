@@ -225,22 +225,18 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
           </div>
         </div>
 
-        {/* Bottom Right - Logo/Name & Actions */}
+        {/* Bottom Right - Logo & Actions */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-3">
-          {/* Logo or Name */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-            {branding.imobiliariaLogo ? (
+          {/* Logo - always show if available */}
+          {branding.imobiliariaLogo && (
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
               <img
                 src={branding.imobiliariaLogo}
                 alt={branding.imobiliariaNome}
-                className="h-10 md:h-12 w-auto max-w-[150px] object-contain"
+                className="h-10 md:h-14 w-auto max-w-[180px] object-contain"
               />
-            ) : (
-              <span className="text-primary font-semibold text-sm md:text-base">
-                {branding.imobiliariaNome}
-              </span>
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Mobile Action Buttons */}
           <div className="flex gap-2 md:hidden">
