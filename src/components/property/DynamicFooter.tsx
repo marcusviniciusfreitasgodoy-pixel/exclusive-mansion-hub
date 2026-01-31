@@ -1,5 +1,5 @@
 import type { PropertyBranding } from "@/types/property-page";
-import logoWhite from "@/assets/logo-negativo.png";
+import logoWhite from "@/assets/logo-godoy-negativo.png";
 
 interface DynamicFooterProps {
   branding: PropertyBranding;
