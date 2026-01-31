@@ -148,8 +148,8 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
           </>
         )}
 
-        {/* Top Left - Property Badges */}
-        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+        {/* Top Left - Property Badges (below navbar) */}
+        <div className="absolute top-20 md:top-24 left-4 z-20 flex flex-col gap-2">
           {/* Dynamic Flags */}
           {badges.map((badge, index) => {
             const Icon = badge.icon;
@@ -225,18 +225,22 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
           </div>
         </div>
 
-        {/* Bottom Right - Logo & Actions */}
+        {/* Bottom Right - Logo/Name & Actions */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-3">
-          {/* Logo */}
-          {branding.imobiliariaLogo && (
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+          {/* Logo or Name */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+            {branding.imobiliariaLogo ? (
               <img
                 src={branding.imobiliariaLogo}
                 alt={branding.imobiliariaNome}
                 className="h-10 md:h-12 w-auto max-w-[150px] object-contain"
               />
-            </div>
-          )}
+            ) : (
+              <span className="text-primary font-semibold text-sm md:text-base">
+                {branding.imobiliariaNome}
+              </span>
+            )}
+          </div>
           
           {/* Mobile Action Buttons */}
           <div className="flex gap-2 md:hidden">
