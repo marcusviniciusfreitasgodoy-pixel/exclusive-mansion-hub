@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resolveImageUrl } from "@/lib/galleryImages";
 
 interface DynamicGalleryProps {
   images: { url: string; alt?: string }[];
@@ -11,12 +12,18 @@ export const DynamicGallery = ({ images }: DynamicGalleryProps) => {
 
   if (!images || images.length === 0) return null;
 
+  // Resolve all image URLs to bundled assets
+  const resolvedImages = images.map(img => ({
+    ...img,
+    url: resolveImageUrl(img.url)
+  }));
+
   const next = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setCurrentIndex((prev) => (prev + 1) % resolvedImages.length);
   };
 
   const prev = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentIndex((prev) => (prev - 1 + resolvedImages.length) % resolvedImages.length);
   };
 
   return (
@@ -35,13 +42,13 @@ export const DynamicGallery = ({ images }: DynamicGalleryProps) => {
           {/* Main Image */}
           <div className="relative aspect-[16/9] overflow-hidden rounded-2xl shadow-elegant animate-scale-in">
             <img
-              src={images[currentIndex].url}
-              alt={images[currentIndex].alt || `Imagem ${currentIndex + 1}`}
+              src={resolvedImages[currentIndex].url}
+              alt={resolvedImages[currentIndex].alt || `Imagem ${currentIndex + 1}`}
               className="h-full w-full object-cover transition-elegant"
             />
 
             {/* Navigation Buttons */}
-            {images.length > 1 && (
+            {resolvedImages.length > 1 && (
               <div className="absolute inset-0 flex items-center justify-between p-4">
                 <Button
                   variant="outline"
@@ -64,14 +71,14 @@ export const DynamicGallery = ({ images }: DynamicGalleryProps) => {
 
             {/* Counter */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-sm text-white backdrop-blur-sm">
-              {currentIndex + 1} / {images.length}
+              {currentIndex + 1} / {resolvedImages.length}
             </div>
           </div>
 
           {/* Thumbnails */}
-          {images.length > 1 && (
+          {resolvedImages.length > 1 && (
             <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
-              {images.map((image, index) => (
+              {resolvedImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}

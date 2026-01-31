@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, X, Camera, Video, View, Images, Sparkles, Star, Building, Clock } from "lucide-react";
 import type { PropertyData, PropertyBranding } from "@/types/property-page";
 import useEmblaCarousel from "embla-carousel-react";
+import { resolveImageUrl } from "@/lib/galleryImages";
 
 interface PropertyHeroNewProps {
   property: PropertyData;
@@ -19,9 +20,15 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const images = property.imagens?.length > 0 
+  const rawImages = property.imagens?.length > 0 
     ? property.imagens 
     : [{ url: "/placeholder.svg", alt: "Imagem do imóvel" }];
+
+  // Resolve all image URLs to bundled assets
+  const images = rawImages.map(img => ({
+    ...img,
+    url: resolveImageUrl(img.url)
+  }));
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
