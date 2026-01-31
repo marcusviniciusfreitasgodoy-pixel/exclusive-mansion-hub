@@ -8,12 +8,11 @@ interface SofiaAssistentSectionProps {
 
 export function SofiaAssistentSection({ propertyTitle, onStartChat }: SofiaAssistentSectionProps) {
   const handleStartChat = () => {
-    // Scroll to where HeyGen widget would be or trigger chat
-    if (onStartChat) {
+    // Trigger HeyGen widget expansion
+    if (typeof (window as any).openSofiaChat === 'function') {
+      (window as any).openSofiaChat();
+    } else if (onStartChat) {
       onStartChat();
-    } else {
-      // Default behavior: scroll to bottom or open chat widget
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     }
   };
 
