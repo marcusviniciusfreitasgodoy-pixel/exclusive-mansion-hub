@@ -12,6 +12,7 @@ import { PropertyDetailsNew } from "@/components/property/PropertyDetailsNew";
 import { BlocoCorretoresImovel } from "@/components/property/BlocoCorretoresImovel";
 import { PropertyRecommendations } from "@/components/property/PropertyRecommendations";
 import { PropertyContactSection } from "@/components/property/PropertyContactSection";
+import { SofiaAssistentSection } from "@/components/property/SofiaAssistentSection";
 import { DynamicGallery } from "@/components/property/DynamicGallery";
 import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
 import { DynamicFooter } from "@/components/property/DynamicFooter";
@@ -178,6 +179,11 @@ export default function PropertyPage() {
           <PropertyRecommendations 
             currentProperty={property}
             imobiliariaId={imobiliariaId}
+          />
+
+          {/* Sofia AI Assistant Section */}
+          <SofiaAssistentSection 
+            propertyTitle={property.titulo}
           />
 
           {/* Contact Section */}

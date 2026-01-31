@@ -106,7 +106,7 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
 
   return (
     <>
-      <section className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden bg-primary">
+      <section className="relative h-[55vh] sm:h-[60vh] md:h-[80vh] w-full overflow-hidden bg-primary">
         {/* Carousel */}
         <div className="embla h-full" ref={emblaRef}>
           <div className="embla__container flex h-full">
@@ -128,55 +128,57 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
           </div>
         </div>
 
-        {/* Navigation Arrows */}
+        {/* Navigation Arrows - Hidden on very small screens */}
         {images.length > 1 && (
           <>
             <button
               onClick={scrollPrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all"
               aria-label="Foto anterior"
             >
-              <ChevronLeft className="h-6 w-6 text-primary" />
+              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all"
               aria-label="Próxima foto"
             >
-              <ChevronRight className="h-6 w-6 text-primary" />
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </button>
           </>
         )}
 
         {/* Top Left - Property Badges (below navbar) */}
-        <div className="absolute top-20 md:top-24 left-4 z-20 flex flex-col gap-2">
-          {/* Dynamic Flags */}
-          {badges.map((badge, index) => {
+        <div className="absolute top-16 sm:top-20 md:top-24 left-2 sm:left-4 z-20 flex flex-col gap-1.5 sm:gap-2">
+          {/* Dynamic Flags - limit on mobile */}
+          {badges.slice(0, 2).map((badge, index) => {
             const Icon = badge.icon;
             return (
-              <Badge key={index} className={`${badge.className} hover:opacity-90 flex items-center gap-1.5 px-3 py-1.5`}>
-                <Icon className="h-3.5 w-3.5" />
-                {badge.label}
+              <Badge key={index} className={`${badge.className} hover:opacity-90 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs`}>
+                <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="hidden xs:inline">{badge.label}</span>
               </Badge>
             );
           })}
           
           {/* Media Counters */}
-          <div className="flex flex-wrap gap-2 mt-1">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
             {hasVideos && (
-              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-                <Video className="h-4 w-4" />
-                VÍDEO
+              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs">
+                <Video className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">VÍDEO</span>
               </Badge>
             )}
-            <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-              <Camera className="h-4 w-4" />
-              {photoCount} FOTOS
+            <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs">
+              <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
+              {photoCount}
+              <span className="hidden sm:inline">FOTOS</span>
             </Badge>
             {hasTour && (
-              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1.5 px-3 py-1.5">
-                <View className="h-4 w-4" />
-                TOUR 360°
+              <Badge className="bg-primary/90 text-white hover:bg-primary flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs">
+                <View className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">TOUR 360°</span>
+                <span className="sm:hidden">360°</span>
               </Badge>
             )}
           </div>
@@ -227,13 +229,13 @@ export function PropertyHeroNew({ property, branding, onContactClick, onGalleryO
 
         {/* Bottom Right - Logo & Actions */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-3">
-          {/* Logo - always show if available */}
+          {/* Logo - smaller on mobile */}
           {branding.imobiliariaLogo && (
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-lg">
               <img
                 src={branding.imobiliariaLogo}
                 alt={branding.imobiliariaNome}
-                className="h-10 md:h-14 w-auto max-w-[180px] object-contain"
+                className="h-8 sm:h-10 md:h-14 w-auto max-w-[120px] sm:max-w-[150px] md:max-w-[180px] object-contain"
               />
             </div>
           )}
