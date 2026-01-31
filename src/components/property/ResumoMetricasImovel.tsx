@@ -74,39 +74,39 @@ export function ResumoMetricasImovel({ property }: ResumoMetricasImovelProps) {
 
   return (
     <section className="bg-white border-b">
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {/* Title & Address */}
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <p className="text-sm font-semibold tracking-widest text-accent uppercase">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <p className="text-xs sm:text-sm font-semibold tracking-widest text-accent uppercase">
               {property.bairro?.toUpperCase() || "LOCALIZAÇÃO"}
             </p>
-            <Badge variant="outline" className={status.className}>
+            <Badge variant="outline" className={`${status.className} text-xs`}>
               {status.label}
             </Badge>
           </div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary mb-1.5 sm:mb-2 leading-tight">
             {property.headline || property.titulo}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {fullAddress}
           </p>
         </div>
 
         {/* Price */}
-        <div className="mb-6">
-          <p className="text-3xl md:text-4xl font-bold text-primary">
+        <div className="mb-4 sm:mb-6">
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
             {formatCurrency(property.valor)}
           </p>
           {property.priceSecondary && (
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-0.5 sm:mt-1">
               ≈ {property.priceSecondaryCurrency} {formatNumber(property.priceSecondary)}
             </p>
           )}
           {(property.condominio || property.iptu) && (
-            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
               {property.condominio && (
-                <span>Condomínio: {formatCurrency(property.condominio)}</span>
+                <span>Cond: {formatCurrency(property.condominio)}</span>
               )}
               {property.iptu && (
                 <span>IPTU: {formatCurrency(property.iptu)}/ano</span>
@@ -115,20 +115,20 @@ export function ResumoMetricasImovel({ property }: ResumoMetricasImovelProps) {
           )}
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        {/* Metrics Grid - 2 cols on small mobile, 3 on medium, 6 on desktop */}
+        <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
           {metrics.slice(0, 6).map((metric, index) => {
             const Icon = metric.icon;
             return (
               <div
                 key={index}
-                className="rounded-xl bg-muted/50 p-4 text-center transition-all hover:bg-muted"
+                className="rounded-lg sm:rounded-xl bg-muted/50 p-2.5 sm:p-4 text-center transition-all hover:bg-muted"
               >
-                <Icon className="h-5 w-5 mx-auto mb-2 text-accent" />
-                <p className="text-lg md:text-xl font-bold text-primary">
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1.5 sm:mb-2 text-accent" />
+                <p className="text-base sm:text-lg md:text-xl font-bold text-primary truncate">
                   {metric.value}
                 </p>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">
                   {metric.label}
                 </p>
               </div>
