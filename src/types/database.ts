@@ -32,6 +32,8 @@ export interface Construtora {
   dominio_customizado: string | null;
   plano: PlanoConstrutora;
   status: ConstrutorStatus;
+  email_contato: string | null;
+  telefone: string | null;
   created_at: string;
 }
 

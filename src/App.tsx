@@ -22,6 +22,8 @@ import AgendamentosImobiliaria from "./pages/dashboard/imobiliaria/Agendamentos"
 import FeedbacksImobiliaria from "./pages/dashboard/imobiliaria/Feedbacks";
 import AgendamentosConstrutora from "./pages/dashboard/construtora/Agendamentos";
 import FeedbacksConstrutora from "./pages/dashboard/construtora/Feedbacks";
+import ConfiguracoesConstrutora from "./pages/dashboard/construtora/Configuracoes";
+import ConfiguracoesImobiliaria from "./pages/dashboard/imobiliaria/Configuracoes";
 import FeedbackClientePublico from "./pages/feedback/FeedbackClientePublico";
 import PropertyPage from "./pages/imovel/PropertyPage";
 import TesteConexao from "./pages/TesteConexao";
@@ -101,6 +103,11 @@ const App = () => (
                 <FeedbacksConstrutora />
               </ProtectedRoute>
             } />
+            <Route path="/dashboard/construtora/configuracoes" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <ConfiguracoesConstrutora />
+              </ProtectedRoute>
+            } />
             
             {/* Imobiliaria Dashboard */}
             <Route path="/dashboard/imobiliaria" element={
@@ -121,6 +128,11 @@ const App = () => (
             <Route path="/dashboard/imobiliaria/visitas/:agendamentoId/feedback" element={
               <ProtectedRoute allowedRoles={['imobiliaria']}>
                 <FeedbackCorretorPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/imobiliaria/configuracoes" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <ConfiguracoesImobiliaria />
               </ProtectedRoute>
             } />
             
