@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, addDays, isBefore, isSameDay, isAfter, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Clock, User, Mail, Phone, MessageSquare, Loader2, CalendarCheck } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, MessageSquare, Loader2, CalendarCheck, Upload, FileCheck, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -47,6 +47,10 @@ const HORARIOS_DISPONIVEIS = [
   "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
   "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
 ];
+
+// Tipos de documento aceitos
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
@@ -101,6 +105,10 @@ export function AgendarVisitaModal({
   accessId,
 }: AgendarVisitaModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -126,10 +134,79 @@ export function AgendarVisitaModal({
     return false;
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setDocumentError(null);
+    
+    if (!file) {
+      setDocumentFile(null);
+      return;
+    }
+    
+    // Validar tipo de arquivo
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      setDocumentError("Formato inválido. Envie uma imagem (JPG, PNG, WebP) ou PDF.");
+      setDocumentFile(null);
+      return;
+    }
+    
+    // Validar tamanho
+    if (file.size > MAX_FILE_SIZE) {
+      setDocumentError("Arquivo muito grande. Tamanho máximo: 5MB.");
+      setDocumentFile(null);
+      return;
+    }
+    
+    setDocumentFile(file);
+  };
+
+  const removeDocument = () => {
+    setDocumentFile(null);
+    setDocumentError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
+    // Validar documento obrigatório
+    if (!documentFile) {
+      setDocumentError("É obrigatório enviar um documento de identificação (RG ou CNH).");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
+      let documentoUrl: string | null = null;
+      
+      // Upload do documento
+      if (documentFile) {
+        setUploadProgress(true);
+        const fileExt = documentFile.name.split(".").pop()?.toLowerCase();
+        const fileName = `${property.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("imoveis")
+          .upload(`documentos-visita/${fileName}`, documentFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+        
+        if (uploadError) {
+          console.error("Erro ao fazer upload do documento:", uploadError);
+          throw new Error("Não foi possível enviar o documento. Tente novamente.");
+        }
+        
+        // Obter URL pública do documento
+        const { data: publicUrlData } = supabase.storage
+          .from("imoveis")
+          .getPublicUrl(`documentos-visita/${fileName}`);
+        
+        documentoUrl = publicUrlData.publicUrl;
+        setUploadProgress(false);
+      }
+      
       // Combinar data e horário
       const [hora1, minuto1] = data.horario1.split(":").map(Number);
       const [hora2, minuto2] = data.horario2.split(":").map(Number);
@@ -154,6 +231,7 @@ export function AgendarVisitaModal({
           opcao_data_1: opcaoData1.toISOString(),
           opcao_data_2: opcaoData2.toISOString(),
           observacoes: data.observacoes?.trim() || null,
+          documento_identificacao_url: documentoUrl,
           status: "pendente",
         });
 
@@ -188,6 +266,8 @@ export function AgendarVisitaModal({
       });
 
       form.reset();
+      setDocumentFile(null);
+      setDocumentError(null);
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao agendar visita:", error);
@@ -482,15 +562,87 @@ export function AgendarVisitaModal({
               />
             </div>
 
-            <Button 
+            {/* Upload de Documento de Identificação */}
+            <div className="space-y-3 pt-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <FileCheck className="h-4 w-4 text-primary" />
+                Documento de Identificação
+                <span className="text-xs text-destructive ml-1">*obrigatório</span>
+              </h4>
+              
+              <p className="text-sm text-muted-foreground">
+                Para sua segurança, envie uma foto do seu RG ou CNH para validação.
+              </p>
+
+              <div className="space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="documento-upload"
+                />
+                
+                {!documentFile ? (
+                  <label
+                    htmlFor="documento-upload"
+                    className={cn(
+                      "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors",
+                      documentError 
+                        ? "border-destructive bg-destructive/5 hover:bg-destructive/10" 
+                        : "border-muted-foreground/25 bg-muted/50 hover:bg-muted"
+                    )}
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm font-medium text-foreground">
+                      Clique para enviar
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      JPG, PNG, WebP ou PDF (máx. 5MB)
+                    </span>
+                  </label>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 border rounded-lg bg-primary/5 border-primary/20">
+                    <FileCheck className="h-8 w-8 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-foreground">
+                        {documentFile.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {(documentFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeDocument}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                {documentError && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{documentError}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Button
               type="submit" 
               className="w-full h-12 text-base font-semibold"
-              disabled={isSubmitting}
+              disabled={isSubmitting || uploadProgress}
             >
-              {isSubmitting ? (
+              {isSubmitting || uploadProgress ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Enviando...
+                  {uploadProgress ? "Enviando documento..." : "Enviando..."}
                 </>
               ) : (
                 <>
