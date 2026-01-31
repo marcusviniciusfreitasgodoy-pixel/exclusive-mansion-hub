@@ -55,57 +55,104 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
         </div>
 
         <div className="mx-auto max-w-6xl">
-          {/* Videos Grid */}
-          {videos && videos.length > 0 && (
-            <div
-              className={`grid gap-8 ${
-                videos.length === 1
-                  ? "grid-cols-1 max-w-3xl mx-auto"
-                  : videos.length === 2
-                  ? "md:grid-cols-2"
-                  : "md:grid-cols-3"
-              } justify-items-center`}
-            >
-              {videos.map((video, index) => {
-                const isShort = video.tipo === "short" || video.url.includes("shorts");
-                const aspectRatio = isShort ? "aspect-[9/16]" : "aspect-video";
+          {/* Videos Grid - Vertical videos first */}
+          {videos && videos.length > 0 && (() => {
+            const verticalVideos = videos.filter(v => v.tipo === "vertical");
+            const horizontalVideos = videos.filter(v => v.tipo === "horizontal" || v.tipo === undefined);
 
-                return (
-                  <div
-                    key={index}
-                    className={`relative ${aspectRatio} overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full ${
-                      isShort ? "max-w-md" : ""
-                    }`}
-                  >
-                    {!playingVideos[index] ? (
-                      <div className="relative h-full w-full bg-primary/10">
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                          <button
-                            onClick={() => togglePlay(index)}
-                            className="flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
-                            aria-label="Reproduzir vídeo"
-                          >
-                            <Play
-                              className="h-10 w-10 text-primary ml-1"
-                              fill="currentColor"
+            return (
+              <>
+                {/* Vertical Videos (Shorts style) */}
+                {verticalVideos.length > 0 && (
+                  <div className={`grid gap-8 mb-12 ${
+                    verticalVideos.length === 1
+                      ? "grid-cols-1 max-w-md mx-auto"
+                      : verticalVideos.length === 2
+                      ? "md:grid-cols-2 max-w-3xl mx-auto"
+                      : "md:grid-cols-3"
+                  } justify-items-center`}>
+                    {verticalVideos.map((video, index) => {
+                      const globalIndex = index;
+                      return (
+                        <div
+                          key={globalIndex}
+                          className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md"
+                        >
+                          {!playingVideos[globalIndex] ? (
+                            <div className="relative h-full w-full bg-primary/10">
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                                <button
+                                  onClick={() => togglePlay(globalIndex)}
+                                  className="flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
+                                  aria-label="Reproduzir vídeo"
+                                >
+                                  <Play
+                                    className="h-10 w-10 text-primary ml-1"
+                                    fill="currentColor"
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <iframe
+                              src={getEmbedUrl(video.url)}
+                              title={`Vídeo ${globalIndex + 1}`}
+                              className="h-full w-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
                             />
-                          </button>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <iframe
-                        src={getEmbedUrl(video.url)}
-                        title={`Vídeo ${index + 1}`}
-                        className="h-full w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    )}
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                )}
+
+                {/* Horizontal Videos (Regular videos with narration) */}
+                {horizontalVideos.length > 0 && (
+                  <div className="space-y-8">
+                    <h3 className="text-center text-2xl font-semibold text-primary">
+                      Vídeo com Narração
+                    </h3>
+                    {horizontalVideos.map((video, index) => {
+                      const globalIndex = verticalVideos.length + index;
+                      return (
+                        <div
+                          key={globalIndex}
+                          className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in max-w-4xl mx-auto"
+                        >
+                          {!playingVideos[globalIndex] ? (
+                            <div className="relative h-full w-full bg-primary/10">
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                                <button
+                                  onClick={() => togglePlay(globalIndex)}
+                                  className="flex h-24 w-24 items-center justify-center rounded-full bg-accent shadow-gold transition-elegant hover:scale-110"
+                                  aria-label="Reproduzir vídeo"
+                                >
+                                  <Play
+                                    className="h-12 w-12 text-primary ml-1"
+                                    fill="currentColor"
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <iframe
+                              src={getEmbedUrl(video.url)}
+                              title={`Vídeo ${globalIndex + 1}`}
+                              className="h-full w-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* Tour 360 */}
           {tour360Url && (
