@@ -176,7 +176,7 @@ function DefaultTemplate({ data }: { data: NonNullable<ReturnType<typeof useProp
 }
 
 export default function PropertyPage() {
-  const { data, isLoading, error } = usePropertyPage();
+  const { data, isLoading, error, integracoes } = usePropertyPage();
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -191,9 +191,9 @@ export default function PropertyPage() {
   // Render the appropriate template based on template_escolhido
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      {templateType === 'luxo' && <TemplateLuxo data={data} />}
-      {templateType === 'moderno' && <TemplateModerno data={data} />}
-      {templateType === 'classico' && <TemplateClassico data={data} />}
+      {templateType === 'luxo' && <TemplateLuxo data={data} integracoes={integracoes} />}
+      {templateType === 'moderno' && <TemplateModerno data={data} integracoes={integracoes} />}
+      {templateType === 'classico' && <TemplateClassico data={data} integracoes={integracoes} />}
       {!['luxo', 'moderno', 'classico'].includes(templateType) && <DefaultTemplate data={data} />}
     </Suspense>
   );

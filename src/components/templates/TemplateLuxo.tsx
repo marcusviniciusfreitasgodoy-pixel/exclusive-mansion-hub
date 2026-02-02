@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { PropertyPageData } from "@/types/property-page";
+import type { Integracao } from "@/types/integrations";
 import { TemplateWrapper } from "./TemplateWrapper";
 import { getTemplateStyles } from "./templateStyles";
 import { BarraAcoesImovel } from "@/components/property/BarraAcoesImovel";
@@ -18,9 +19,10 @@ import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
 
 interface TemplateLuxoProps {
   data: PropertyPageData;
+  integracoes?: Integracao[];
 }
 
-export default function TemplateLuxo({ data }: TemplateLuxoProps) {
+export default function TemplateLuxo({ data, integracoes = [] }: TemplateLuxoProps) {
   const { property, branding, construtora, imobiliariaId, accessId } = data;
   const contactRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +47,7 @@ export default function TemplateLuxo({ data }: TemplateLuxoProps) {
   };
 
   return (
-    <TemplateWrapper data={data} templateType="luxo">
+    <TemplateWrapper data={data} templateType="luxo" integracoes={integracoes}>
       <style>{`
         [data-template="luxo"] {
           background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);

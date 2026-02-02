@@ -33,6 +33,8 @@ import SeedData from "./pages/admin/SeedData";
 import Diagnostico from "./pages/admin/Diagnostico";
 import PipelineConstrutora from "./pages/dashboard/construtora/Pipeline";
 import PipelineImobiliaria from "./pages/dashboard/imobiliaria/Pipeline";
+import IntegracoesConstrutoraPage from "./pages/dashboard/construtora/Integracoes";
+import IntegracoesImobiliariaPage from "./pages/dashboard/imobiliaria/Integracoes";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +119,11 @@ const App = () => (
                 <PipelineConstrutora />
               </ProtectedRoute>
             } />
+            <Route path="/dashboard/construtora/integracoes" element={
+              <ProtectedRoute allowedRoles={['construtora']}>
+                <IntegracoesConstrutoraPage />
+              </ProtectedRoute>
+            } />
             
             {/* Imobiliaria Dashboard */}
             <Route path="/dashboard/imobiliaria" element={
@@ -168,6 +175,11 @@ const App = () => (
             <Route path="/dashboard/imobiliaria/analytics" element={
               <ProtectedRoute allowedRoles={['imobiliaria']}>
                 <AnalyticsImobiliaria />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/imobiliaria/integracoes" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <IntegracoesImobiliariaPage />
               </ProtectedRoute>
             } />
             

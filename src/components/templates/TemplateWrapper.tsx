@@ -1,19 +1,23 @@
 import { useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import type { PropertyPageData } from "@/types/property-page";
+import type { Integracao } from "@/types/integrations";
 import { getTemplateStyles, applyTemplateStyles } from "./templateStyles";
 import { DynamicNavbar } from "@/components/property/DynamicNavbar";
 import { DynamicFooter } from "@/components/property/DynamicFooter";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
+import { AnalyticsScripts } from "@/components/integrations/AnalyticsScripts";
+
 interface TemplateWrapperProps {
   data: PropertyPageData;
   children: React.ReactNode;
   templateType: "luxo" | "moderno" | "classico";
+  integracoes?: Integracao[];
 }
 
-export function TemplateWrapper({ data, children, templateType }: TemplateWrapperProps) {
+export function TemplateWrapper({ data, children, templateType, integracoes = [] }: TemplateWrapperProps) {
   const { property, branding, construtora } = data;
 
   const styles = getTemplateStyles(
@@ -84,6 +88,9 @@ export function TemplateWrapper({ data, children, templateType }: TemplateWrappe
           <meta name="twitter:description" content={description} />
           {ogImage && <meta name="twitter:image" content={ogImage} />}
         </Helmet>
+
+        {/* Analytics Scripts Injection */}
+        {integracoes.length > 0 && <AnalyticsScripts integracoes={integracoes} />}
 
         <main
           className="min-h-screen"
