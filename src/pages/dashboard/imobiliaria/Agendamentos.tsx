@@ -169,7 +169,7 @@ export default function AgendamentosPage() {
       
       if (updateError) throw updateError;
 
-      // 2. Create feedback record
+      // 2. Create feedback record with status: aguardando_cliente (CLIENT FIRST)
       const { data: feedback, error: feedbackError } = await supabase
         .from('feedbacks_visitas')
         .insert({
@@ -185,20 +185,38 @@ export default function AgendamentosPage() {
           cliente_telefone: agendamento.cliente_telefone,
           corretor_nome: agendamento.corretor_nome,
           corretor_email: agendamento.corretor_email,
-          status: 'aguardando_corretor',
+          status: 'aguardando_cliente', // CHANGED: Cliente responde primeiro
         })
         .select()
         .single();
 
       if (feedbackError) throw feedbackError;
       
+      // 3. Send email to client immediately
+      try {
+        await supabase.functions.invoke('send-feedback-request', {
+          body: {
+            feedbackId: feedback.id,
+            token: feedback.token_acesso_cliente,
+            clienteNome: agendamento.cliente_nome,
+            clienteEmail: agendamento.cliente_email,
+            imovelTitulo: agendamento.imovel?.titulo || 'Imóvel',
+          },
+        });
+      } catch (emailError) {
+        console.warn('Erro ao enviar email para cliente:', emailError);
+      }
+      
       return feedback;
     },
-    onSuccess: (feedback) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agendamentos-imobiliaria'] });
-      toast({ title: 'Visita marcada como realizada!', description: 'Redirecionando para o formulário de feedback...' });
+      toast({ 
+        title: 'Visita marcada como realizada!', 
+        description: 'O cliente receberá um email para avaliar a visita. Você será notificado quando ele responder.' 
+      });
       setRealizeModal({ open: false, agendamento: null });
-      navigate(`/dashboard/imobiliaria/visitas/${feedback.id}/feedback`);
+      // CHANGED: Não redireciona mais para o formulário do corretor - aguarda cliente
     },
     onError: () => {
       toast({ title: 'Erro', description: 'Não foi possível marcar a visita como realizada.', variant: 'destructive' });

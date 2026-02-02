@@ -130,7 +130,7 @@ export default function FeedbackClientePublico() {
     try {
       const signatureData = signatureRef.current?.getSignatureData() || "";
 
-      // Atualizar feedback com dados do cliente
+      // Atualizar feedback com dados do cliente - status muda para aguardando_corretor
       const { error: updateError } = await supabase
         .from("feedbacks_visitas")
         .update({
@@ -149,25 +149,19 @@ export default function FeedbackClientePublico() {
           assinatura_cliente: signatureData,
           assinatura_cliente_data: new Date().toISOString(),
           assinatura_cliente_device: navigator.userAgent,
-          status: "completo",
+          status: "aguardando_corretor", // CHANGED: Agora aguarda corretor completar
           feedback_cliente_em: new Date().toISOString(),
-          completo_em: new Date().toISOString(),
+          // NÃO define completo_em - será definido quando corretor assinar
         })
         .eq("id", feedback.id);
 
       if (updateError) throw updateError;
 
-      // Disparar geração de PDF
-      try {
-        await supabase.functions.invoke("generate-feedback-pdf", {
-          body: { feedbackId: feedback.id },
-        });
-      } catch (pdfError) {
-        console.warn("Erro ao gerar PDF:", pdfError);
-      }
+      // Notificar corretor que é sua vez (via dashboard - email opcional futuro)
+      // NÃO gera PDF ainda - será gerado quando corretor completar
 
       toast.success("Feedback enviado com sucesso!", {
-        description: "Obrigado por sua avaliação.",
+        description: "O corretor será notificado para completar a avaliação.",
       });
 
       setIsComplete(true);
@@ -243,14 +237,17 @@ export default function FeedbackClientePublico() {
     );
   }
 
-  // Se ainda está aguardando corretor
-  if (feedback.status === "aguardando_corretor") {
+  // Se já foi preenchido pelo cliente (aguardando corretor ou completo)
+  if (feedback.status === "aguardando_corretor" && feedback.assinatura_cliente) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-6">
         <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold mb-4">Aguardando Corretor</h1>
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center">
+            <CheckCircle className="h-10 w-10 text-blue-600" />
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Feedback Recebido!</h1>
           <p className="text-muted-foreground">
-            O corretor ainda não preencheu a avaliação. Você receberá um novo email quando for sua vez.
+            Obrigado por sua avaliação! O corretor irá completar o relatório e você receberá uma cópia em breve.
           </p>
         </div>
       </div>

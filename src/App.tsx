@@ -129,6 +129,12 @@ const App = () => (
                 <FeedbackCorretorPage />
               </ProtectedRoute>
             } />
+            {/* Nova rota: corretor acessa feedback existente (cliente já respondeu) */}
+            <Route path="/dashboard/imobiliaria/feedback/:feedbackId" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <FeedbackCorretorPage />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard/imobiliaria/configuracoes" element={
               <ProtectedRoute allowedRoles={['imobiliaria']}>
                 <ConfiguracoesImobiliaria />
