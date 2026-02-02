@@ -58,7 +58,7 @@ export interface FeedbackVisita {
   assinatura_cliente_data: string | null;
   assinatura_cliente_ip: string | null;
   assinatura_cliente_device: string | null;
-  assinatura_cliente_geolocation: { lat: number; lng: number } | null;
+  assinatura_cliente_geolocation: { lat: number; lng: number } | Record<string, unknown> | null;
   assinatura_corretor: string | null;
   assinatura_corretor_data: string | null;
   assinatura_corretor_ip: string | null;

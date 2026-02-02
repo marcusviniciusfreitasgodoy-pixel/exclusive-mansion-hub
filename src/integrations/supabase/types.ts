@@ -41,6 +41,7 @@ export type Database = {
           opcao_data_1: string
           opcao_data_2: string
           realizado_em: string | null
+          respostas_customizadas: Json | null
           status: Database["public"]["Enums"]["agendamento_status"]
           updated_at: string | null
         }
@@ -70,6 +71,7 @@ export type Database = {
           opcao_data_1: string
           opcao_data_2: string
           realizado_em?: string | null
+          respostas_customizadas?: Json | null
           status?: Database["public"]["Enums"]["agendamento_status"]
           updated_at?: string | null
         }
@@ -99,6 +101,7 @@ export type Database = {
           opcao_data_1?: string
           opcao_data_2?: string
           realizado_em?: string | null
+          respostas_customizadas?: Json | null
           status?: Database["public"]["Enums"]["agendamento_status"]
           updated_at?: string | null
         }
@@ -136,6 +139,53 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_formularios: {
+        Row: {
+          ativo: boolean | null
+          campos: Json
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          id: string
+          imobiliaria_id: string
+          nome_formulario: string | null
+          tipo_formulario: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          campos?: Json
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          imobiliaria_id: string
+          nome_formulario?: string | null
+          tipo_formulario: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          campos?: Json
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          imobiliaria_id?: string
+          nome_formulario?: string | null
+          tipo_formulario?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_formularios_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
         ]
@@ -245,6 +295,8 @@ export type Database = {
           qualificacao_lead:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null
+          respostas_cliente_customizadas: Json | null
+          respostas_corretor_customizadas: Json | null
           score_lead: number | null
           status: Database["public"]["Enums"]["feedback_status"]
           sugestoes: string | null
@@ -307,6 +359,8 @@ export type Database = {
           qualificacao_lead?:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null
+          respostas_cliente_customizadas?: Json | null
+          respostas_corretor_customizadas?: Json | null
           score_lead?: number | null
           status?: Database["public"]["Enums"]["feedback_status"]
           sugestoes?: string | null
@@ -369,6 +423,8 @@ export type Database = {
           qualificacao_lead?:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null
+          respostas_cliente_customizadas?: Json | null
+          respostas_corretor_customizadas?: Json | null
           score_lead?: number | null
           status?: Database["public"]["Enums"]["feedback_status"]
           sugestoes?: string | null
