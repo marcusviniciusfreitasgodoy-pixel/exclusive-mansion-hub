@@ -23,22 +23,34 @@ export function TemplateWrapper({ data, children, templateType }: TemplateWrappe
 
   // Load Google Fonts dynamically
   useEffect(() => {
-    const fonts = [
-      styles.fontHeading.split(",")[0].replace(/'/g, ""),
-      styles.fontBody.split(",")[0].replace(/'/g, ""),
-    ].filter((f) => f && !["Georgia", "Arial"].includes(f));
+    const fontHeading = styles.fontHeading.split(",")[0].replace(/'/g, "").trim();
+    const fontBody = styles.fontBody.split(",")[0].replace(/'/g, "").trim();
+    const systemFonts = ["Georgia", "Arial", "sans-serif", "serif"];
 
-    if (fonts.length > 0) {
+    // Remove old font links to prevent duplicates
+    document.querySelectorAll('link[data-template-font]').forEach(el => el.remove());
+
+    // Add heading font
+    if (fontHeading && !systemFonts.includes(fontHeading)) {
       const link = document.createElement("link");
-      link.href = `https://fonts.googleapis.com/css2?${fonts
-        .map((f) => `family=${f.replace(/ /g, "+")}:wght@400;500;600;700`)
-        .join("&")}&display=swap`;
+      link.href = `https://fonts.googleapis.com/css2?family=${fontHeading.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
       link.rel = "stylesheet";
+      link.setAttribute("data-template-font", "heading");
       document.head.appendChild(link);
-      return () => {
-        document.head.removeChild(link);
-      };
     }
+
+    // Add body font only if different from heading
+    if (fontBody && fontBody !== fontHeading && !systemFonts.includes(fontBody)) {
+      const link = document.createElement("link");
+      link.href = `https://fonts.googleapis.com/css2?family=${fontBody.replace(/ /g, "+")}:wght@400;500;600&display=swap`;
+      link.rel = "stylesheet";
+      link.setAttribute("data-template-font", "body");
+      document.head.appendChild(link);
+    }
+
+    return () => {
+      document.querySelectorAll('link[data-template-font]').forEach(el => el.remove());
+    };
   }, [styles.fontHeading, styles.fontBody]);
 
   // SEO meta data
