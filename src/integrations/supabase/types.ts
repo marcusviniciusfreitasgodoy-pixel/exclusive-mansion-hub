@@ -238,6 +238,113 @@ export type Database = {
         }
         Relationships: []
       }
+      conversas_chatbot: {
+        Row: {
+          agendamento_gerado: boolean | null
+          construtora_id: string
+          created_at: string | null
+          duracao_segundos: number | null
+          email_visitante: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string
+          intencao_detectada: string | null
+          lead_gerado: boolean | null
+          lead_id: string | null
+          mensagens: Json
+          nome_visitante: string | null
+          orcamento_estimado: number | null
+          prazo_estimado: string | null
+          primeira_mensagem_em: string | null
+          score_qualificacao: number | null
+          session_id: string
+          status: string | null
+          telefone_visitante: string | null
+          total_mensagens: number | null
+          ultima_mensagem_em: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agendamento_gerado?: boolean | null
+          construtora_id: string
+          created_at?: string | null
+          duracao_segundos?: number | null
+          email_visitante?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id: string
+          intencao_detectada?: string | null
+          lead_gerado?: boolean | null
+          lead_id?: string | null
+          mensagens?: Json
+          nome_visitante?: string | null
+          orcamento_estimado?: number | null
+          prazo_estimado?: string | null
+          primeira_mensagem_em?: string | null
+          score_qualificacao?: number | null
+          session_id: string
+          status?: string | null
+          telefone_visitante?: string | null
+          total_mensagens?: number | null
+          ultima_mensagem_em?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agendamento_gerado?: boolean | null
+          construtora_id?: string
+          created_at?: string | null
+          duracao_segundos?: number | null
+          email_visitante?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string
+          intencao_detectada?: string | null
+          lead_gerado?: boolean | null
+          lead_id?: string | null
+          mensagens?: Json
+          nome_visitante?: string | null
+          orcamento_estimado?: number | null
+          prazo_estimado?: string | null
+          primeira_mensagem_em?: string | null
+          score_qualificacao?: number | null
+          session_id?: string
+          status?: string | null
+          telefone_visitante?: string | null
+          total_mensagens?: number | null
+          ultima_mensagem_em?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversas_chatbot_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversas_chatbot_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversas_chatbot_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversas_chatbot_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks_visitas: {
         Row: {
           access_id: string | null

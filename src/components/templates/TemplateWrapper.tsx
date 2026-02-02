@@ -6,7 +6,7 @@ import { DynamicNavbar } from "@/components/property/DynamicNavbar";
 import { DynamicFooter } from "@/components/property/DynamicFooter";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-
+import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
 interface TemplateWrapperProps {
   data: PropertyPageData;
   children: React.ReactNode;
@@ -100,6 +100,14 @@ export function TemplateWrapper({ data, children, templateType }: TemplateWrappe
               phoneNumber={branding.telefone.replace(/\D/g, "")}
             />
           )}
+
+          <ChatbotWidget
+            imovelId={property.id}
+            imobiliariaId={data.imobiliariaId}
+            construtorId={property.construtoraId}
+            imovelTitulo={property.titulo}
+            imobiliariaNome={branding.imobiliariaNome}
+          />
 
           {children}
 
