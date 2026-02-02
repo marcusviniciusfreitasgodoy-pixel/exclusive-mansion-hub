@@ -47,7 +47,7 @@ export default function FeedbacksPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as FeedbackWithDetails[];
+      return (data as unknown) as FeedbackWithDetails[];
     },
     enabled: !!imobiliaria?.id,
   });
