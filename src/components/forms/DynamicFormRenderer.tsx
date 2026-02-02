@@ -90,16 +90,56 @@ export function DynamicFormRenderer({
   }, [initialData]);
 
   const updateField = (nome: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [nome]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [nome]: value };
+      
+      // Limpar valores de campos que ficam ocultos após esta mudança
+      campos.forEach(campo => {
+        if (campo.condicional && campo.nome !== nome) {
+          const campoRef = campos.find(c => c.id === campo.condicional!.campo_id);
+          if (campoRef?.nome === nome) {
+            // Este campo depende do campo que acabamos de alterar
+            const { valor, mostrar_se } = campo.condicional;
+            let shouldShow = true;
+            
+            switch (mostrar_se) {
+              case 'igual':
+                shouldShow = value === valor;
+                break;
+              case 'diferente':
+                shouldShow = value !== valor;
+                break;
+              case 'contem':
+                if (Array.isArray(value)) {
+                  shouldShow = value.includes(valor);
+                } else {
+                  shouldShow = String(value || '').includes(valor);
+                }
+                break;
+            }
+            
+            // Se campo ficou oculto, limpar seu valor
+            if (!shouldShow && newData[campo.nome] !== undefined) {
+              delete newData[campo.nome];
+            }
+          }
+        }
+      });
+      
+      return newData;
+    });
   };
 
-  // Check conditional visibility
+  // Check conditional visibility (supports cascading conditions)
   const isFieldVisible = (campo: CampoFormulario): boolean => {
     if (!campo.condicional) return true;
 
     const { campo_id, valor, mostrar_se } = campo.condicional;
     const campoReferencia = campos.find(c => c.id === campo_id);
     if (!campoReferencia) return true;
+
+    // Primeiro verificar se o campo de referência está visível (para condições encadeadas)
+    if (!isFieldVisible(campoReferencia)) return false;
 
     const valorAtual = formData[campoReferencia.nome];
 
@@ -346,32 +386,39 @@ export function useFormValidation(
 ): { isValid: boolean; errors: Record<string, string> } {
   const errors: Record<string, string> = {};
 
+  // Helper function to check visibility (supports cascading)
+  const isFieldVisibleForValidation = (campo: CampoFormulario): boolean => {
+    if (!campo.condicional) return true;
+
+    const campoReferencia = campos.find(c => c.id === campo.condicional?.campo_id);
+    if (!campoReferencia) return true;
+
+    // Check if reference field is visible first (cascading)
+    if (!isFieldVisibleForValidation(campoReferencia)) return false;
+
+    const valorRef = formData[campoReferencia.nome];
+    const { valor, mostrar_se } = campo.condicional;
+
+    switch (mostrar_se) {
+      case 'igual':
+        return valorRef === valor;
+      case 'diferente':
+        return valorRef !== valor;
+      case 'contem':
+        if (Array.isArray(valorRef)) {
+          return valorRef.includes(valor);
+        }
+        return String(valorRef || '').includes(valor);
+      default:
+        return true;
+    }
+  };
+
   for (const campo of campos) {
     const value = formData[campo.nome];
 
     // Skip if field has conditional and is not visible
-    if (campo.condicional) {
-      const campoReferencia = campos.find(c => c.id === campo.condicional?.campo_id);
-      if (campoReferencia) {
-        const valorRef = formData[campoReferencia.nome];
-        const { valor, mostrar_se } = campo.condicional;
-
-        let isVisible = true;
-        switch (mostrar_se) {
-          case 'igual':
-            isVisible = valorRef === valor;
-            break;
-          case 'diferente':
-            isVisible = valorRef !== valor;
-            break;
-          case 'contem':
-            isVisible = String(valorRef || '').includes(valor);
-            break;
-        }
-
-        if (!isVisible) continue;
-      }
-    }
+    if (!isFieldVisibleForValidation(campo)) continue;
 
     // Check required
     if (campo.obrigatorio) {
