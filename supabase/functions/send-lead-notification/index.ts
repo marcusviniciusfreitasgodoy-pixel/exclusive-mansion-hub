@@ -193,7 +193,8 @@ const handler = async (req: Request): Promise<Response> => {
 </html>
     `;
 
-    // ===== EMAIL PARA A IMOBILIÁRIA =====
+    // ===== EMAIL PARA A IMOBILIÁRIA (Corretor) =====
+    const dashboardUrl = "https://exclusive-mansion-hub.lovable.app/dashboard/imobiliaria/pipeline";
     const imobiliariaEmailHtml = `
 <!DOCTYPE html>
 <html>
@@ -204,35 +205,38 @@ const handler = async (req: Request): Promise<Response> => {
 <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: linear-gradient(135deg, #b8860b 0%, #d4a017 100%); border-radius: 12px 12px 0 0; padding: 30px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Novo Lead Recebido!</h1>
+      <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Você tem um novo lead!</h1>
     </div>
     
     <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <strong>⚡ Ação recomendada:</strong> Entre em contato com o cliente o mais rápido possível!
-      </div>
+      <p style="font-size: 16px; color: #333; line-height: 1.6;">
+        Olá,
+      </p>
       
-      <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin-bottom: 25px; border-radius: 0 8px 8px 0;">
-        <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${safeTitle}</h3>
-        <p style="margin: 0; color: #666;">📍 ${safeAddress}</p>
-        <p style="margin: 10px 0 0; font-size: 18px; font-weight: bold; color: #b8860b;">${formatCurrency(data.propertyValue)}</p>
+      <p style="font-size: 16px; color: #333; line-height: 1.6;">
+        Você tem um novo lead! 🎉
+      </p>
+      
+      <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #666; font-weight: bold;">👤 Cliente:</td>
+            <td style="padding: 8px 0; color: #333;">${safeName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666; font-weight: bold;">🏠 Imóvel:</td>
+            <td style="padding: 8px 0; color: #333;">${safeTitle}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666; font-weight: bold;">📞 Telefone:</td>
+            <td style="padding: 8px 0; color: #333;"><a href="tel:${safePhone}" style="color: #1e3a5f; text-decoration: none;">${safePhone}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666; font-weight: bold;">✉️ E-mail:</td>
+            <td style="padding: 8px 0; color: #333;"><a href="mailto:${safeEmail}" style="color: #1e3a5f; text-decoration: none;">${safeEmail}</a></td>
+          </tr>
+        </table>
       </div>
-
-      <h3 style="color: #1e3a5f; margin-bottom: 15px;">👤 Dados do Cliente:</h3>
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Nome:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeName}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>E-mail:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${safeEmail}">${safeEmail}</a></td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Telefone:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="tel:${safePhone}">${safePhone}</a></td>
-        </tr>
-      </table>
 
       ${safeMessage ? `
       <div style="background: #f0f7ff; border-radius: 8px; padding: 15px; margin: 20px 0;">
@@ -243,19 +247,22 @@ const handler = async (req: Request): Promise<Response> => {
 
       <div style="margin-top: 30px; text-align: center;">
         <a href="https://wa.me/55${data.leadPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${data.leadName}! Recebi seu contato sobre o imóvel ${data.propertyTitle}. Como posso ajudar?`)}" 
-           style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 10px;">
-          📱 WhatsApp
+           style="display: inline-block; background: #25d366; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">
+          📱 Falar no WhatsApp
         </a>
-        <a href="tel:${data.leadPhone}" 
+      </div>
+      
+      <div style="text-align: center; margin-top: 15px;">
+        <a href="${dashboardUrl}" 
            style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-          📞 Ligar
+          📊 Acessar Dashboard
         </a>
       </div>
       
       <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
       
       <p style="font-size: 14px; color: #888; text-align: center;">
-        Acesse seu dashboard para gerenciar todos os leads.
+        ⚡ Dica: Entre em contato o mais rápido possível para aumentar suas chances de conversão!
       </p>
     </div>
   </div>
