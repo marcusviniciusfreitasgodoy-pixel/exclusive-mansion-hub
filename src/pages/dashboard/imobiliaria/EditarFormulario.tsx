@@ -56,6 +56,7 @@ export default function EditarFormulario() {
   const [editingField, setEditingField] = useState<CampoFormulario | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [hasChanges, setHasChanges] = useState(false);
+  const [previewData, setPreviewData] = useState<Record<string, unknown>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -176,6 +177,35 @@ export default function EditarFormulario() {
     setModalOpen(false);
   };
 
+  // Função para verificar visibilidade condicional no preview
+  const isFieldVisibleInPreview = (campo: CampoFormulario): boolean => {
+    if (!campo.condicional) return true;
+
+    const { campo_id, valor, mostrar_se } = campo.condicional;
+    const campoReferencia = campos.find(c => c.id === campo_id);
+    if (!campoReferencia) return true;
+
+    const valorAtual = previewData[campoReferencia.nome];
+
+    switch (mostrar_se) {
+      case 'igual':
+        return valorAtual === valor;
+      case 'diferente':
+        return valorAtual !== valor;
+      case 'contem':
+        if (Array.isArray(valorAtual)) {
+          return valorAtual.includes(valor);
+        }
+        return String(valorAtual || '').includes(valor);
+      default:
+        return true;
+    }
+  };
+
+  const updatePreviewField = (nome: string, value: unknown) => {
+    setPreviewData(prev => ({ ...prev, [nome]: value }));
+  };
+
   if (!tipo || !['agendamento_visita', 'feedback_cliente', 'feedback_corretor'].includes(tipo)) {
     navigate('/dashboard/imobiliaria/configuracoes/formularios');
     return null;
@@ -293,8 +323,15 @@ export default function EditarFormulario() {
                         <h3 className="font-semibold text-lg">{nome}</h3>
                         {campos
                           .sort((a, b) => a.ordem - b.ordem)
+                          .filter(isFieldVisibleInPreview)
                           .map(campo => (
-                            <FieldPreview key={campo.id} campo={campo} />
+                            <FieldPreview 
+                              key={campo.id} 
+                              campo={campo}
+                              value={previewData[campo.nome]}
+                              onChange={(value) => updatePreviewField(campo.nome, value)}
+                              disabled={false}
+                            />
                           ))}
                         {campos.length === 0 && (
                           <p className="text-center py-8 text-muted-foreground">
@@ -317,6 +354,7 @@ export default function EditarFormulario() {
         onOpenChange={setModalOpen}
         field={editingField}
         existingNames={campos.map(c => c.nome)}
+        existingFields={campos.filter(c => c.id !== editingField?.id)}
         onSave={handleSaveField}
       />
     </DashboardLayout>
