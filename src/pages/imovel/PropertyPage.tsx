@@ -1,5 +1,5 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { useRef, useState } from "react";
+import { useRef, useState, lazy, Suspense } from "react";
 import { usePropertyPage } from "@/hooks/usePropertyPage";
 import { DynamicNavbar } from "@/components/property/DynamicNavbar";
 import { BarraAcoesImovel } from "@/components/property/BarraAcoesImovel";
@@ -20,10 +20,42 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Loader2 } from "lucide-react";
 
-export default function PropertyPage() {
-  const { data, isLoading, error } = usePropertyPage();
+// Lazy load templates for better performance
+const TemplateLuxo = lazy(() => import("@/components/templates/TemplateLuxo"));
+const TemplateModerno = lazy(() => import("@/components/templates/TemplateModerno"));
+const TemplateClassico = lazy(() => import("@/components/templates/TemplateClassico"));
+
+function LoadingSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+    </div>
+  );
+}
+
+function ErrorPage({ error }: { error: string | null }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-primary px-6 text-center">
+      <h1 className="mb-4 text-4xl font-bold text-white">
+        Imóvel não encontrado
+      </h1>
+      <p className="text-lg text-white/60">
+        {error || "O imóvel que você está procurando não está disponível."}
+      </p>
+      <a
+        href="/"
+        className="mt-8 inline-block rounded-lg bg-accent px-6 py-3 font-semibold text-primary transition-colors hover:bg-accent/90"
+      >
+        Voltar ao início
+      </a>
+    </div>
+  );
+}
+
+// Legacy/Default template (when no template is specified)
+function DefaultTemplate({ data }: { data: NonNullable<ReturnType<typeof usePropertyPage>['data']> }) {
+  const { property, branding, construtora, imobiliariaId, accessId } = data;
   const contactRef = useRef<HTMLDivElement>(null);
-  const [galleryLightboxOpen, setGalleryLightboxOpen] = useState(false);
 
   const scrollToContact = () => {
     const element = document.getElementById("section-contact");
@@ -35,7 +67,6 @@ export default function PropertyPage() {
   };
 
   const openGallery = () => {
-    // Scroll to gallery section and open lightbox
     const element = document.getElementById("gallery");
     if (element) {
       const offset = 80;
@@ -44,35 +75,6 @@ export default function PropertyPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-primary">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-primary px-6 text-center">
-        <h1 className="mb-4 text-4xl font-bold text-white">
-          Imóvel não encontrado
-        </h1>
-        <p className="text-lg text-white/60">
-          {error || "O imóvel que você está procurando não está disponível."}
-        </p>
-        <a
-          href="/"
-          className="mt-8 inline-block rounded-lg bg-accent px-6 py-3 font-semibold text-primary transition-smooth hover:bg-accent/90"
-        >
-          Voltar ao início
-        </a>
-      </div>
-    );
-  }
-
-  const { property, branding, construtora, imobiliariaId, accessId } = data;
-
   // SEO meta data
   const title = property.seoTitulo || `${property.headline || property.titulo} - ${branding.imobiliariaNome}`;
   const description = property.seoDescricao || (property.descricao
@@ -80,7 +82,6 @@ export default function PropertyPage() {
     : `${property.titulo} - Imóvel exclusivo em ${property.bairro || property.cidade || "localização privilegiada"}`);
   const ogImage = property.imagens?.[0]?.url || "";
 
-  // Custom CSS variables for branding
   const brandingStyles = {
     "--brand-primary": branding.corPrimaria,
   } as React.CSSProperties;
@@ -99,31 +100,21 @@ export default function PropertyPage() {
           <meta name="twitter:title" content={title} />
           <meta name="twitter:description" content={description} />
           {ogImage && <meta name="twitter:image" content={ogImage} />}
-          {property.latitude && property.longitude && (
-            <>
-              <meta name="geo.position" content={`${property.latitude};${property.longitude}`} />
-              <meta name="geo.region" content={`BR-${property.estado}`} />
-              <meta name="geo.placename" content={`${property.cidade}, ${property.bairro}`} />
-            </>
-          )}
         </Helmet>
 
         <main className="min-h-screen bg-background">
           <DynamicNavbar branding={branding} />
           <ScrollToTop />
           
-          {/* Sticky Action Bar (appears after scroll) */}
           <BarraAcoesImovel 
             property={property} 
             onGalleryClick={openGallery}
           />
 
-          {/* Floating WhatsApp */}
           {branding.telefone && (
             <FloatingWhatsApp phoneNumber={branding.telefone.replace(/\D/g, "")} />
           )}
 
-          {/* Hero Section with Carousel, Badges & Info Box */}
           <PropertyHeroNew 
             property={property} 
             branding={branding} 
@@ -131,16 +122,10 @@ export default function PropertyPage() {
             onGalleryOpen={openGallery}
           />
 
-          {/* Metrics Summary - replaces PropertyHeaderInfo */}
           <ResumoMetricasImovel property={property} />
-
-          {/* Sticky Tabs Navigation */}
           <PropertyTabs />
-
-          {/* Overview Section (description + differentials + accordions) */}
           <PropertyOverview property={property} />
 
-          {/* Gallery Section - if has multiple images */}
           {property.imagens && property.imagens.length > 1 && (
             <div id="gallery" className="py-12 md:py-16 bg-muted/30">
               <div className="container mx-auto px-4">
@@ -152,7 +137,6 @@ export default function PropertyPage() {
             </div>
           )}
 
-          {/* Video Section - if has videos or tour */}
           {((property.videos && property.videos.length > 0) || property.tour360Url) && (
             <DynamicVideoSection
               videos={property.videos}
@@ -160,33 +144,22 @@ export default function PropertyPage() {
             />
           )}
 
-          {/* Location Section */}
           <PropertyLocation property={property} />
-
-          {/* Structured Details Section (The Agency style) */}
           <PropertyDetailsNew 
             property={property} 
             construtoraNome={construtora.nome}
           />
-
-          {/* Realtors Section (if configured) */}
           <BlocoCorretoresImovel 
             property={property}
             branding={branding}
           />
-
-          {/* Recommendations Section */}
           <PropertyRecommendations 
             currentProperty={property}
             imobiliariaId={imobiliariaId}
           />
-
-          {/* Sofia AI Assistant Section */}
           <SofiaAssistentSection 
             propertyTitle={property.titulo}
           />
-
-          {/* Contact Section */}
           <div ref={contactRef}>
             <PropertyContactSection
               property={property}
@@ -195,10 +168,33 @@ export default function PropertyPage() {
               accessId={accessId}
             />
           </div>
-
           <DynamicFooter branding={branding} construtora={construtora} />
         </main>
       </div>
     </HelmetProvider>
+  );
+}
+
+export default function PropertyPage() {
+  const { data, isLoading, error } = usePropertyPage();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error || !data) {
+    return <ErrorPage error={error} />;
+  }
+
+  const templateType = data.property.templateEscolhido || 'moderno';
+
+  // Render the appropriate template based on template_escolhido
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      {templateType === 'luxo' && <TemplateLuxo data={data} />}
+      {templateType === 'moderno' && <TemplateModerno data={data} />}
+      {templateType === 'classico' && <TemplateClassico data={data} />}
+      {!['luxo', 'moderno', 'classico'].includes(templateType) && <DefaultTemplate data={data} />}
+    </Suspense>
   );
 }

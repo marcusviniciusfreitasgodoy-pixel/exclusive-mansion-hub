@@ -574,6 +574,7 @@ export type Database = {
           construtora_id: string
           corretores: Json | null
           created_at: string | null
+          customizacao_template: Json | null
           data_publicacao: string | null
           descricao: string | null
           diferenciais: Json | null
@@ -614,6 +615,7 @@ export type Database = {
           status: Database["public"]["Enums"]["imovel_status"] | null
           suites: number | null
           tags: Json | null
+          template_escolhido: string | null
           tipo_piso: Json | null
           titulo: string
           tour_360_url: string | null
@@ -641,6 +643,7 @@ export type Database = {
           construtora_id: string
           corretores?: Json | null
           created_at?: string | null
+          customizacao_template?: Json | null
           data_publicacao?: string | null
           descricao?: string | null
           diferenciais?: Json | null
@@ -681,6 +684,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
           tags?: Json | null
+          template_escolhido?: string | null
           tipo_piso?: Json | null
           titulo: string
           tour_360_url?: string | null
@@ -708,6 +712,7 @@ export type Database = {
           construtora_id?: string
           corretores?: Json | null
           created_at?: string | null
+          customizacao_template?: Json | null
           data_publicacao?: string | null
           descricao?: string | null
           diferenciais?: Json | null
@@ -748,6 +753,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["imovel_status"] | null
           suites?: number | null
           tags?: Json | null
+          template_escolhido?: string | null
           tipo_piso?: Json | null
           titulo?: string
           tour_360_url?: string | null

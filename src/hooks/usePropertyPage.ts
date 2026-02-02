@@ -104,6 +104,8 @@ export function usePropertyPage(): UsePropertyPageResult {
               seo_descricao,
               tags,
               corretores,
+              template_escolhido,
+              customizacao_template,
               construtoras (
                 nome_empresa,
                 logo_url
@@ -228,6 +230,11 @@ export function usePropertyPage(): UsePropertyPageResult {
           seoDescricao: imovel.seo_descricao,
           tags: parseJsonArray(imovel.tags),
           corretores: parseCorretores(imovel.corretores),
+          // Template fields
+          templateEscolhido: imovel.template_escolhido || 'moderno',
+          customizacaoTemplate: typeof imovel.customizacao_template === 'object' 
+            ? imovel.customizacao_template || {} 
+            : {},
         };
 
         const branding: PropertyBranding = {

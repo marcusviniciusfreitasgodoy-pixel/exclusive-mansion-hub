@@ -124,6 +124,22 @@ export interface Imovel {
     email?: string;
     miniBio?: string;
   }>;
+  // Template fields
+  template_escolhido: 'luxo' | 'moderno' | 'classico';
+  customizacao_template: TemplateCustomization;
+}
+
+export type TemplateType = 'luxo' | 'moderno' | 'classico';
+
+export interface TemplateCustomization {
+  cor_primaria?: string;
+  cor_secundaria?: string;
+  cor_texto?: string;
+  fonte_titulos?: string;
+  fonte_corpo?: string;
+  estilo_botoes?: 'rounded' | 'squared' | 'pill';
+  tamanho_hero?: 'fullscreen' | 'grande' | 'medio';
+  animacoes_ativas?: boolean;
 }
 
 export interface ImobiliariaImovelAccess {
