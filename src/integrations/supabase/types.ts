@@ -143,6 +143,50 @@ export type Database = {
           },
         ]
       }
+      atividades_lead: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          lead_id: string
+          metadata: Json | null
+          tipo: string
+          titulo: string | null
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          tipo: string
+          titulo?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          tipo?: string
+          titulo?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_lead_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes_formularios: {
         Row: {
           ativo: boolean | null
@@ -885,42 +929,72 @@ export type Database = {
       leads: {
         Row: {
           access_id: string | null
+          construtora_id: string | null
           created_at: string | null
           email: string
+          estagio_pipeline: string | null
           id: string
           imobiliaria_id: string | null
           imovel_id: string
           mensagem: string | null
           nome: string
+          orcamento: number | null
           origem: Database["public"]["Enums"]["lead_origem"] | null
+          origem_detalhada: string | null
+          prazo_compra: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          score_qualificacao: number | null
           status: Database["public"]["Enums"]["lead_status"] | null
+          tags: Json | null
           telefone: string | null
+          ultimo_contato: string | null
         }
         Insert: {
           access_id?: string | null
+          construtora_id?: string | null
           created_at?: string | null
           email: string
+          estagio_pipeline?: string | null
           id?: string
           imobiliaria_id?: string | null
           imovel_id: string
           mensagem?: string | null
           nome: string
+          orcamento?: number | null
           origem?: Database["public"]["Enums"]["lead_origem"] | null
+          origem_detalhada?: string | null
+          prazo_compra?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          score_qualificacao?: number | null
           status?: Database["public"]["Enums"]["lead_status"] | null
+          tags?: Json | null
           telefone?: string | null
+          ultimo_contato?: string | null
         }
         Update: {
           access_id?: string | null
+          construtora_id?: string | null
           created_at?: string | null
           email?: string
+          estagio_pipeline?: string | null
           id?: string
           imobiliaria_id?: string | null
           imovel_id?: string
           mensagem?: string | null
           nome?: string
+          orcamento?: number | null
           origem?: Database["public"]["Enums"]["lead_origem"] | null
+          origem_detalhada?: string | null
+          prazo_compra?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          score_qualificacao?: number | null
           status?: Database["public"]["Enums"]["lead_status"] | null
+          tags?: Json | null
           telefone?: string | null
+          ultimo_contato?: string | null
         }
         Relationships: [
           {
@@ -928,6 +1002,13 @@ export type Database = {
             columns: ["access_id"]
             isOneToOne: false
             referencedRelation: "imobiliaria_imovel_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
             referencedColumns: ["id"]
           },
           {
@@ -942,6 +1023,50 @@ export type Database = {
             columns: ["imovel_id"]
             isOneToOne: false
             referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_lead: {
+        Row: {
+          anexos: Json | null
+          autor_id: string | null
+          autor_nome: string | null
+          conteudo: string
+          created_at: string | null
+          id: string
+          lead_id: string
+          privada: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          anexos?: Json | null
+          autor_id?: string | null
+          autor_nome?: string | null
+          conteudo: string
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          privada?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          anexos?: Json | null
+          autor_id?: string | null
+          autor_nome?: string | null
+          conteudo?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          privada?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_lead_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -997,6 +1122,85 @@ export type Database = {
             columns: ["imovel_id"]
             isOneToOne: false
             referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas: {
+        Row: {
+          construtora_id: string | null
+          created_at: string | null
+          data_conclusao: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          id: string
+          imobiliaria_id: string | null
+          lead_id: string | null
+          notificacao_enviada: boolean | null
+          notificar_em: string | null
+          prioridade: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          construtora_id?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          lead_id?: string | null
+          notificacao_enviada?: boolean | null
+          notificar_em?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          construtora_id?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          lead_id?: string | null
+          notificacao_enviada?: boolean | null
+          notificar_em?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]

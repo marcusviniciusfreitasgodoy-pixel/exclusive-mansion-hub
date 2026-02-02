@@ -25,12 +25,14 @@ import {
   BarChart3,
   Calendar,
   FileText,
+  Kanban,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
 const construtoraLinks = [
   { title: 'Meus Imóveis', url: '/dashboard/construtora', icon: Home },
   { title: 'Novo Imóvel', url: '/dashboard/construtora/novo-imovel', icon: Plus },
+  { title: 'Pipeline CRM', url: '/dashboard/construtora/pipeline', icon: Kanban },
   { title: 'Visitas Agendadas', url: '/dashboard/construtora/agendamentos', icon: Calendar },
   { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
@@ -41,6 +43,7 @@ const construtoraLinks = [
 
 const imobiliariaLinks = [
   { title: 'Imóveis Disponíveis', url: '/dashboard/imobiliaria', icon: Home },
+  { title: 'Pipeline CRM', url: '/dashboard/imobiliaria/pipeline', icon: Kanban },
   { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar },
   { title: 'Feedbacks', url: '/dashboard/imobiliaria/feedbacks', icon: FileText },
   { title: 'Meus Links', url: '/dashboard/imobiliaria/meus-links', icon: LinkIcon },

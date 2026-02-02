@@ -1,13 +1,15 @@
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './DashboardSidebar';
+import { cn } from '@/lib/utils';
 
-interface DashboardLayoutProps {
+export interface DashboardLayoutProps {
   children: ReactNode;
   title?: string;
+  fullWidth?: boolean;
 }
 
-export function DashboardLayout({ children, title }: DashboardLayoutProps) {
+export function DashboardLayout({ children, title, fullWidth }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -17,7 +19,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             <SidebarTrigger />
             {title && <h1 className="text-xl font-semibold">{title}</h1>}
           </header>
-          <div className="p-6">
+          <div className={cn("p-6", fullWidth && "max-w-none")}>
             {children}
           </div>
         </main>
