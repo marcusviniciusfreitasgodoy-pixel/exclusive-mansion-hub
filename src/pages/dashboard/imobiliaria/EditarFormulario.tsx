@@ -177,13 +177,16 @@ export default function EditarFormulario() {
     setModalOpen(false);
   };
 
-  // Função para verificar visibilidade condicional no preview
+  // Função para verificar visibilidade condicional no preview (suporta cascading)
   const isFieldVisibleInPreview = (campo: CampoFormulario): boolean => {
     if (!campo.condicional) return true;
 
     const { campo_id, valor, mostrar_se } = campo.condicional;
     const campoReferencia = campos.find(c => c.id === campo_id);
     if (!campoReferencia) return true;
+
+    // Verificar se campo de referência está visível (cascading)
+    if (!isFieldVisibleInPreview(campoReferencia)) return false;
 
     const valorAtual = previewData[campoReferencia.nome];
 
@@ -203,7 +206,42 @@ export default function EditarFormulario() {
   };
 
   const updatePreviewField = (nome: string, value: unknown) => {
-    setPreviewData(prev => ({ ...prev, [nome]: value }));
+    setPreviewData(prev => {
+      const newData = { ...prev, [nome]: value };
+      
+      // Limpar valores de campos que ficam ocultos
+      campos.forEach(campo => {
+        if (campo.condicional) {
+          const campoRef = campos.find(c => c.id === campo.condicional!.campo_id);
+          if (campoRef?.nome === nome) {
+            const { valor: condValor, mostrar_se } = campo.condicional;
+            let shouldShow = true;
+            
+            switch (mostrar_se) {
+              case 'igual':
+                shouldShow = value === condValor;
+                break;
+              case 'diferente':
+                shouldShow = value !== condValor;
+                break;
+              case 'contem':
+                if (Array.isArray(value)) {
+                  shouldShow = value.includes(condValor);
+                } else {
+                  shouldShow = String(value || '').includes(condValor);
+                }
+                break;
+            }
+            
+            if (!shouldShow && newData[campo.nome] !== undefined) {
+              delete newData[campo.nome];
+            }
+          }
+        }
+      });
+      
+      return newData;
+    });
   };
 
   if (!tipo || !['agendamento_visita', 'feedback_cliente', 'feedback_corretor'].includes(tipo)) {
