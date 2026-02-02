@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2 } from 'lucide-react';
+import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
+import { useImageOptimizer } from '@/hooks/useImageOptimizer';
+import { Progress } from '@/components/ui/progress';
 export const step4Schema = z.object({
   imagens: z.array(z.object({
     url: z.string(),
@@ -46,6 +47,13 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const { construtora } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { 
+    optimizeSingleImage, 
+    getOptimizedExtension, 
+    isProcessing: isOptimizing,
+    progress: optimizeProgress,
+    calculateSavings
+  } = useImageOptimizer();
 
   const [imagens, setImagens] = useState<ImageItem[]>(
     (defaultValues?.imagens?.filter((img): img is ImageItem => !!img.url)) || []
@@ -56,6 +64,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const [tour360Url, setTour360Url] = useState(defaultValues?.tour360Url || '');
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStats, setUploadStats] = useState<{ original: number; optimized: number } | null>(null);
 
   const form = useForm<Step4Data>({
     resolver: zodResolver(step4Schema),
@@ -80,20 +89,30 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
     }
 
     setIsUploading(true);
+    let totalOriginalSize = 0;
+    let totalOptimizedSize = 0;
 
     try {
       const uploadedImages: ImageItem[] = [];
       const tempId = Date.now().toString();
+      const ext = getOptimizedExtension();
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${tempId}-${i}.${fileExt}`;
+        totalOriginalSize += file.size;
+
+        // Otimizar imagem antes do upload
+        const optimizedBlob = await optimizeSingleImage(file);
+        totalOptimizedSize += optimizedBlob.size;
+
+        const fileName = `${tempId}-${i}.${ext}`;
         const filePath = `temp/${fileName}`;
 
         const { data, error } = await supabase.storage
           .from('imoveis')
-          .upload(filePath, file);
+          .upload(filePath, optimizedBlob, {
+            contentType: ext === 'webp' ? 'image/webp' : 'image/jpeg',
+          });
 
         if (error) {
           console.error('Upload error:', error);
@@ -111,7 +130,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
 
         uploadedImages.push({
           url: publicUrl.publicUrl,
-          alt: file.name,
+          alt: file.name.replace(/\.[^/.]+$/, ''),
           isPrimary: imagens.length === 0 && i === 0,
         });
       }
@@ -120,9 +139,13 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
       setImagens(newImagens);
       form.setValue('imagens', newImagens);
 
+      // Calcular economia
+      const savings = calculateSavings(totalOriginalSize, totalOptimizedSize);
+      setUploadStats({ original: totalOriginalSize, optimized: totalOptimizedSize });
+
       toast({
-        title: 'Upload concluído',
-        description: `${uploadedImages.length} imagem(ns) enviada(s) com sucesso.`,
+        title: '✨ Upload otimizado concluído',
+        description: `${uploadedImages.length} imagem(ns) convertida(s) para WebP (${savings})`,
       });
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -233,10 +256,20 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
               className="hidden"
               onChange={handleFileUpload}
             />
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
+            {isUploading || isOptimizing ? (
+              <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
-                <p className="text-muted-foreground">Enviando imagens...</p>
+                <p className="text-muted-foreground">
+                  {isOptimizing ? 'Otimizando imagens...' : 'Enviando imagens...'}
+                </p>
+                {isOptimizing && optimizeProgress > 0 && (
+                  <div className="w-48">
+                    <Progress value={optimizeProgress} className="h-2" />
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      {optimizeProgress}%
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -247,9 +280,24 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
                 <p className="text-xs text-muted-foreground">
                   JPG, PNG ou WebP (máx. 10MB cada)
                 </p>
+                <div className="flex items-center gap-1 text-xs text-primary mt-2">
+                  <Zap className="h-3 w-3" />
+                  <span>Otimização automática WebP</span>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Upload Stats */}
+          {uploadStats && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span>
+                Economia: {((1 - uploadStats.optimized / uploadStats.original) * 100).toFixed(0)}% 
+                ({(uploadStats.original / 1024 / 1024).toFixed(1)}MB → {(uploadStats.optimized / 1024 / 1024).toFixed(1)}MB)
+              </span>
+            </div>
+          )}
 
           {/* Image Grid */}
           {imagens.length > 0 && (
