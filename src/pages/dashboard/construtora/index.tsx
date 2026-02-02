@@ -57,7 +57,18 @@ export default function ConstrutoraDashboard() {
         vista: Array.isArray(imovel.vista) ? imovel.vista : [],
         aquecimento: Array.isArray(imovel.aquecimento) ? imovel.aquecimento : [],
         tags: Array.isArray(imovel.tags) ? imovel.tags : [],
-        corretores: Array.isArray(imovel.corretores) ? imovel.corretores : [],
+        corretores: Array.isArray(imovel.corretores) ? imovel.corretores.map((c: any) => ({
+          nome: c?.nome || '',
+          cargo: c?.cargo,
+          fotoUrl: c?.fotoUrl,
+          telefone: c?.telefone,
+          email: c?.email,
+          miniBio: c?.miniBio,
+        })) : [],
+        template_escolhido: imovel.template_escolhido || 'moderno',
+        customizacao_template: typeof imovel.customizacao_template === 'object' 
+          ? imovel.customizacao_template || {} 
+          : {},
       })) as Imovel[];
     },
     enabled: !!construtora?.id,

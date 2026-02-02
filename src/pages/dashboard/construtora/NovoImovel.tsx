@@ -18,6 +18,7 @@ import { Step2Specifications, step2Schema, type Step2Data } from '@/components/w
 import { Step3Description, step3Schema, type Step3Data } from '@/components/wizard/Step3Description';
 import { Step4Media, step4Schema, type Step4Data } from '@/components/wizard/Step4Media';
 import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
+import type { TemplateType, TemplateCustomization } from '@/types/database';
 
 const STEPS = [
   { id: 1, title: 'Informações Básicas', icon: '📋' },
@@ -40,7 +41,13 @@ export default function NovoImovel() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Form data for all steps
-  const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data>>({});
+  const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data> & {
+    template_escolhido?: TemplateType;
+    customizacao_template?: TemplateCustomization;
+  }>({
+    template_escolhido: 'moderno',
+    customizacao_template: {},
+  });
   const [confirmed, setConfirmed] = useState(false);
 
   // Load draft on mount
@@ -155,6 +162,8 @@ export default function NovoImovel() {
         videos: JSON.stringify(formData.videos || []),
         tour_360_url: formData.tour360Url || null,
         status: formData.status || 'ativo',
+        template_escolhido: formData.template_escolhido || 'moderno',
+        customizacao_template: JSON.stringify(formData.customizacao_template || {}),
       };
 
       console.log('[Publish] Creating imovel:', imovelData);
@@ -364,6 +373,8 @@ export default function NovoImovel() {
               data={formData as ReviewData}
               confirmed={confirmed}
               onConfirmChange={setConfirmed}
+              onTemplateChange={(template) => setFormData(prev => ({ ...prev, template_escolhido: template }))}
+              onCustomizationChange={(custom) => setFormData(prev => ({ ...prev, customizacao_template: custom }))}
             />
           )}
         </CardContent>

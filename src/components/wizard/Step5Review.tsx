@@ -3,6 +3,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Ruler, BedDouble, Bath, Car, Check } from 'lucide-react';
+import { TemplateSelector } from '@/components/templates/TemplateSelector';
+import type { TemplateType, TemplateCustomization } from '@/types/database';
 
 export interface ReviewData {
   titulo?: string;
@@ -27,15 +29,25 @@ export interface ReviewData {
   videos?: { url: string; tipo?: string }[];
   tour360Url?: string;
   status?: 'ativo' | 'inativo';
+  template_escolhido?: TemplateType;
+  customizacao_template?: TemplateCustomization;
 }
 
 interface Step5Props {
   data: ReviewData;
   confirmed: boolean;
   onConfirmChange: (checked: boolean) => void;
+  onTemplateChange?: (template: TemplateType) => void;
+  onCustomizationChange?: (customization: TemplateCustomization) => void;
 }
 
-export function Step5Review({ data, confirmed, onConfirmChange }: Step5Props) {
+export function Step5Review({ 
+  data, 
+  confirmed, 
+  onConfirmChange,
+  onTemplateChange,
+  onCustomizationChange,
+}: Step5Props) {
   const formatCurrency = (value: number | undefined): string => {
     if (!value) return 'Não informado';
     return new Intl.NumberFormat('pt-BR', {
@@ -154,6 +166,20 @@ export function Step5Review({ data, confirmed, onConfirmChange }: Step5Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Template Selector */}
+      {onTemplateChange && onCustomizationChange && (
+        <Card>
+          <CardContent className="pt-6">
+            <TemplateSelector
+              selectedTemplate={data.template_escolhido || 'moderno'}
+              customization={data.customizacao_template || {}}
+              onTemplateChange={onTemplateChange}
+              onCustomizationChange={onCustomizationChange}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Confirmation */}
       <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">

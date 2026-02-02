@@ -83,6 +83,18 @@ export interface PropertyData {
   seoDescricao: string | null;
   tags: string[];
   corretores: Corretor[];
+  // Template fields
+  templateEscolhido: 'luxo' | 'moderno' | 'classico';
+  customizacaoTemplate: {
+    cor_primaria?: string;
+    cor_secundaria?: string;
+    cor_texto?: string;
+    fonte_titulos?: string;
+    fonte_corpo?: string;
+    estilo_botoes?: 'rounded' | 'squared' | 'pill';
+    tamanho_hero?: 'fullscreen' | 'grande' | 'medio';
+    animacoes_ativas?: boolean;
+  };
 }
 
 export interface PropertyPageData {
