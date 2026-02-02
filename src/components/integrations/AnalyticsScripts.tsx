@@ -47,7 +47,9 @@ export function AnalyticsScripts({ integracoes }: AnalyticsScriptsProps) {
         // Map common events to Meta Pixel standard events
         const metaEventMap: Record<string, string> = {
           'lead': 'Lead',
+          'generate_lead': 'Lead',
           'agendamento': 'Schedule',
+          'schedule_visit': 'Schedule',
           'whatsapp_click': 'Contact',
           'pageview': 'PageView',
           'formulario_iniciado': 'InitiateCheckout',
