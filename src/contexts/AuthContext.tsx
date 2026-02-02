@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppRole, Construtora, Imobiliaria } from '@/types/database';
-
+import { criarConfiguracoesFormularioPadrao } from '@/lib/form-helpers';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profileError) return { error: profileError as unknown as Error };
     } else if (userRole === 'imobiliaria') {
       const imobData = profileData as ImobiliariaSignupData;
-      const { error: profileError } = await supabase
+      const { data: imobiliariaData, error: profileError } = await supabase
         .from('imobiliarias')
         .insert({
           user_id: data.user.id,
@@ -163,8 +163,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           creci: imobData.creci,
           telefone: imobData.telefone,
           email_contato: imobData.email_contato
-        });
+        })
+        .select('id')
+        .single();
       if (profileError) return { error: profileError as unknown as Error };
+
+      // Create default form configurations for the new imobiliária
+      if (imobiliariaData?.id) {
+        await criarConfiguracoesFormularioPadrao(imobiliariaData.id, data.user.id);
+      }
     }
 
     return { error: null };
