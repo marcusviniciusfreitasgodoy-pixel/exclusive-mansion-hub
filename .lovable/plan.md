@@ -1,180 +1,242 @@
 
-# Plano: Corrigir Fluxo de Feedback - Cliente Primeiro + Assinatura Dupla
+# Analise Completa para Producao - Godoy Prime Platform
 
-## Contexto do Problema
+## Resumo Executivo
 
-O fluxo atual está invertido: o corretor preenche primeiro e depois o cliente. O correto é:
-1. Cliente avalia a visita primeiro (enquanto a experiencia esta fresca)
-2. Corretor completa com dados de qualificacao do lead
-3. Documento final tem AMBAS as assinaturas
+A aplicacao esta **quase pronta para producao**, mas existem **3 vulnerabilidades criticas de seguranca** que devem ser corrigidas antes do lancamento, alem de alguns ajustes recomendados.
 
 ---
 
-## Mudancas Necessarias
+## 1. Status das Funcionalidades Core
 
-### 1. Alterar Criacao do Feedback (Agendamentos.tsx)
+### Implementado e Funcionando
 
-**Arquivo:** `src/pages/dashboard/imobiliaria/Agendamentos.tsx`
+| Funcionalidade | Status | Observacoes |
+|----------------|--------|-------------|
+| Cadastro de Construtoras | OK | Autenticacao via Supabase Auth |
+| Cadastro de Imobiliarias | OK | Com criacao de formularios padrao |
+| Criacao de Imoveis (Wizard) | OK | 5 etapas com upload de imagens |
+| Templates de Paginas | OK | 3 templates (Luxo, Moderno, Classico) |
+| Sistema White-Label | OK | URLs personalizadas com branding |
+| Gestao de Acessos | OK | Construtora concede acesso a imobiliarias |
+| Formulario de Leads | OK | Com honeypot anti-bot |
+| Agendamento de Visitas | OK | 2 opcoes de data + documento |
+| Sistema de Feedbacks | OK | Fluxo cliente-primeiro + assinaturas |
+| Pipeline CRM | OK | Kanban com drag-and-drop |
+| Analytics Dashboard | OK | KPIs, graficos, funis |
+| Notificacoes por Email | OK | Via Resend + Edge Functions |
+| Lembretes Automaticos | OK | Cron job 24h antes da visita |
+| Integracao GA4/Meta Pixel | OK | Tracking de eventos |
+| SEO Dinamico | OK | Meta tags, Open Graph |
+| Performance | OK | Lazy loading, code splitting, indexes DB |
 
-Quando a visita e marcada como "Realizada":
-- Mudar status inicial de `aguardando_corretor` para `aguardando_cliente`
-- Disparar email para o cliente IMEDIATAMENTE (nao apos corretor preencher)
-- Corretor NAO e redirecionado para formulario - aguarda cliente responder
+### Pendentes (Nao Criticos)
+
+| Funcionalidade | Impacto | Recomendacao |
+|----------------|---------|--------------|
+| Admin Dashboard | Baixo | Implementar apos go-live |
+| PWA/Service Worker | Baixo | Opcional para MVP |
+| Chatbot com IA | Medio | Fase 2 |
+| Rate Limiting | Medio | Configurar via Cloudflare |
+
+---
+
+## 2. Vulnerabilidades de Seguranca
+
+### CRITICAS (Bloquear Producao)
 
 ```text
-ANTES:
-[Marcar Realizada] --> [Criar Feedback status: aguardando_corretor] --> [Redirecionar Corretor p/ Formulario]
++-----------------------------------------------------------------------+
+| ERRO 1: Agendamentos Visiveis Publicamente                            |
++-----------------------------------------------------------------------+
+| Tabela: agendamentos_visitas                                          |
+| Problema: Dados de clientes (nome, email, telefone, documento)        |
+|           podem ser lidos por qualquer pessoa sem autenticacao        |
+| Risco: Roubo de leads, spam, fraude de identidade                     |
+| Correcao: Adicionar politica RLS restritiva para SELECT               |
++-----------------------------------------------------------------------+
 
-DEPOIS:
-[Marcar Realizada] --> [Criar Feedback status: aguardando_cliente] --> [Enviar Email Cliente] --> [Toast: "Cliente notificado"]
++-----------------------------------------------------------------------+
+| ERRO 2: Feedbacks com Dados Financeiros Expostos                      |
++-----------------------------------------------------------------------+
+| Tabela: feedbacks_visitas                                             |
+| Problema: Token permite acesso a orcamento, IP, geolocalizacao        |
+| Risco: Coleta de perfis financeiros de clientes                       |
+| Correcao: Limitar campos expostos via token, restringir SELECT        |
++-----------------------------------------------------------------------+
 ```
 
----
+### ALERTAS (Corrigir em Breve)
 
-### 2. Inverter Logica do Formulario do Cliente (FeedbackClientePublico.tsx)
-
-**Arquivo:** `src/pages/feedback/FeedbackClientePublico.tsx`
-
-- Cliente acessa via token (ja funciona)
-- Apos submissao, mudar status para `aguardando_corretor` (nao `completo`)
-- Remover geracao de PDF neste momento (sera gerado apos corretor assinar)
-
----
-
-### 3. Criar Acesso do Corretor ao Feedback Pendente
-
-**Arquivo:** `src/pages/dashboard/imobiliaria/FeedbackCorretor.tsx`
-
-Modificar para:
-- Aceitar rota por `feedbackId` (nao `agendamentoId`)
-- Carregar feedback existente (com dados do cliente ja preenchidos)
-- Exibir avaliacao do cliente como "somente leitura" no topo
-- Mostrar assinatura do cliente ja capturada
-- Formulario do corretor adiciona seus campos + assinatura
-- Ao submeter: status muda para `completo`, gera PDF com AMBAS assinaturas
+| Alerta | Descricao | Dificuldade |
+|--------|-----------|-------------|
+| Leaked Password Protection | Desabilitado no Supabase Auth | Facil |
+| Extensoes no Schema Public | pg_cron/pg_net em public | Media |
+| Edge Functions Publicas | Sem rate limiting | Media |
+| SECURITY DEFINER Functions | Precisam de testes unitarios | Media |
 
 ---
 
-### 4. Adicionar Notificacao para Corretor
+## 3. Checklist Pre-Producao
 
-Quando cliente submete o feedback:
-- Enviar email/notificacao para o corretor informando que e sua vez
-- Incluir link direto para o formulario do corretor
+### Seguranca (OBRIGATORIO)
 
-**Novo Edge Function:** Atualizar `send-feedback-request` ou criar `send-feedback-corretor-notification`
+- [ ] **Corrigir RLS da tabela agendamentos_visitas**
+  - Adicionar politica que restrinja SELECT apenas para imobiliaria/construtora owner
+  - Manter INSERT publico (necessario para formulario)
 
----
+- [ ] **Corrigir RLS da tabela feedbacks_visitas**
+  - Limitar campos expostos via token (remover IP, device, geolocalizacao do SELECT publico)
+  - Ou criar view que exponha apenas campos necessarios
 
-### 5. Atualizar Listagem de Feedbacks (Dashboard)
+- [ ] **Habilitar Leaked Password Protection**
+  - Acessar Lovable Cloud > Auth > Security
+  - Ativar "Check for leaked passwords"
 
-**Arquivo:** `src/pages/dashboard/imobiliaria/Feedbacks.tsx`
+### Infraestrutura (RECOMENDADO)
 
-- Adicionar aba/filtro para "Aguardando Corretor"
-- Mostrar botao "Preencher Feedback" para itens pendentes
-- Link para `/dashboard/imobiliaria/feedback/:feedbackId`
+- [ ] Configurar dominio personalizado (ex: app.godoyprime.com.br)
+- [ ] Configurar Cloudflare (CDN + Rate Limiting + DDoS Protection)
+- [ ] Verificar dominio no Resend para emails (SPF/DKIM/DMARC)
+- [ ] Criar backup do banco de dados
+- [ ] Testar fluxo completo end-to-end
 
----
+### Testes Funcionais (RECOMENDADO)
 
-### 6. Atualizar Geracao do PDF
-
-**Arquivo:** `supabase/functions/generate-feedback-pdf/index.ts`
-
-- Incluir AMBAS as assinaturas no documento
-- Secao "Avaliacao do Cliente" com assinatura do cliente
-- Secao "Avaliacao do Corretor" com assinatura do corretor
-- Atualizar layout para comportar duas assinaturas
-
----
-
-### 7. Atualizar Rotas
-
-**Arquivo:** `src/App.tsx`
-
-Adicionar rota:
-```
-/dashboard/imobiliaria/feedback/:feedbackId --> FeedbackCorretorPage
-```
+- [ ] Cadastro de construtora
+- [ ] Cadastro de imobiliaria
+- [ ] Criacao de imovel completo
+- [ ] Geracao de link white-label
+- [ ] Preenchimento de lead (como visitante)
+- [ ] Agendamento de visita (como visitante)
+- [ ] Confirmacao de visita (como imobiliaria)
+- [ ] Fluxo de feedback (cliente + corretor)
+- [ ] Geracao de PDF
+- [ ] Lembrete 24h (verificar cron)
 
 ---
 
-## Fluxo Corrigido (Diagrama)
+## 4. Estrutura do Banco de Dados
+
+### Tabelas Principais (15 tabelas)
 
 ```text
-[Visita Confirmada]
-       |
-       v
-[Marcar como Realizada]
-       |
-       v
-[Criar Feedback: status = aguardando_cliente]
-       |
-       v
-[Enviar Email para Cliente com Token]
-       |
-       v
-[Cliente acessa /feedback-visita/:token]
-       |
-       v
-[Cliente preenche: NPS, avaliacoes, pontos +/-, interesse, ASSINATURA]
-       |
-       v
-[Submete --> status = aguardando_corretor]
-       |
-       v
-[Notificar Corretor (email/dashboard)]
-       |
-       v
-[Corretor acessa /dashboard/imobiliaria/feedback/:id]
-       |
-       v
-[Ve dados do cliente (read-only) + preenche qualificacao + ASSINATURA]
-       |
-       v
-[Submete --> status = completo]
-       |
-       v
-[Gerar PDF com AMBAS assinaturas]
-       |
-       v
-[Disponibilizar para download]
+agendamentos_visitas     - Visitas agendadas
+atividades_lead          - Historico de acoes
+configuracoes_formularios - Forms customizaveis
+construtoras             - Cadastro construtoras
+conversas_chatbot        - Logs do chatbot
+feedbacks_visitas        - Avaliacoes pos-visita
+imobiliaria_imovel_access - Links white-label
+imobiliarias             - Cadastro imobiliarias
+imoveis                  - Catalogo de imoveis
+integracoes              - Configs de integracao
+leads                    - Contatos captados
+notas_lead               - Anotacoes internas
+pageviews                - Analytics de visitas
+tarefas                  - Gestao de tarefas
+user_roles               - Perfis de usuario
 ```
 
----
+### Indexes de Performance (25+ indexes criados)
 
-## Secao Tecnica
-
-### Arquivos a Modificar
-
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/pages/dashboard/imobiliaria/Agendamentos.tsx` | Mudar status inicial, enviar email cliente, remover redirect corretor |
-| `src/pages/feedback/FeedbackClientePublico.tsx` | Mudar status final para `aguardando_corretor`, notificar corretor |
-| `src/pages/dashboard/imobiliaria/FeedbackCorretor.tsx` | Refatorar para carregar feedback existente, exibir dados cliente, coletar assinatura corretor |
-| `src/pages/dashboard/imobiliaria/Feedbacks.tsx` | Adicionar filtro e acoes para feedbacks pendentes |
-| `src/App.tsx` | Adicionar rota `/dashboard/imobiliaria/feedback/:feedbackId` |
-| `supabase/functions/generate-feedback-pdf/index.ts` | Incluir ambas assinaturas no PDF |
-| `supabase/functions/send-feedback-request/index.ts` | Ajustar mensagem do email |
-
-### Politicas RLS (ja configuradas)
-
-- `aguardando_cliente`: cliente pode ler/atualizar via token (OK)
-- `aguardando_corretor`: corretor autenticado pode ler/atualizar (OK)
-- `completo`: todos podem ler para download do PDF (OK)
-
-### Campos do Banco (ja existem)
-
-- `assinatura_cliente` / `assinatura_cliente_data` / `assinatura_cliente_device`
-- `assinatura_corretor` / `assinatura_corretor_data` / `assinatura_corretor_device`
-- `feedback_cliente_em` / `feedback_corretor_em` / `completo_em`
-- `status`: `aguardando_corretor | aguardando_cliente | completo | arquivado`
-
-Nao sao necessarias migracoes de banco - a estrutura ja suporta o fluxo correto.
+Os indexes para queries frequentes ja foram implementados (leads por status, pageviews por data, etc).
 
 ---
 
-## Resultado Esperado
+## 5. Edge Functions Implementadas
 
-1. **Cliente responde primeiro** - feedback mais genuino e imediato
-2. **Corretor completa depois** - com visao da avaliacao do cliente
-3. **Documento juridico valido** - duas assinaturas digitais com timestamp
-4. **Rastreabilidade completa** - IP, device, data de cada assinatura
+| Funcao | Proposito | Validacao |
+|--------|-----------|-----------|
+| send-lead-notification | Notifica lead novo | UUID, email, telefone, length |
+| send-visit-notification | Notifica agendamento | UUID, email, telefone, datas |
+| send-feedback-request | Envia link de feedback | UUID, email, token |
+| generate-feedback-pdf | Gera relatorio PDF | UUID, HTML encode |
+| send-visit-reminder | Lembrete 24h (cron) | Query interna |
+| chatbot-message | Respostas do chatbot | Em desenvolvimento |
+
+Todas as funcoes incluem:
+- Validacao de inputs (UUID, email, telefone brasileiro)
+- Sanitizacao HTML (prevencao XSS)
+- Verificacao de existencia no banco
+- Headers CORS configurados
+
+---
+
+## 6. Arquitetura de Seguranca
+
+### Row Level Security (RLS)
+
+```text
+Construtoras:
+- Veem apenas seus proprios imoveis
+- Podem criar/editar/excluir imoveis
+- Veem leads de todos os imoveis proprios
+
+Imobiliarias:
+- Veem apenas imoveis com acesso ativo
+- Veem apenas leads gerados por elas
+- Podem confirmar/cancelar visitas
+
+Publico:
+- Pode ver imoveis ativos (para landing pages)
+- Pode inserir leads e agendamentos
+- Pode acessar feedbacks via token (PROBLEMA)
+```
+
+### Autenticacao
+
+- Supabase Auth com email/senha
+- Sessoes persistentes (localStorage)
+- Roles: construtora, imobiliaria
+- ProtectedRoute com verificacao de role
+
+---
+
+## 7. Plano de Correcao (Estimativa: 2-4 horas)
+
+### Fase 1: Correcoes Criticas
+
+1. **Migracro SQL para RLS de agendamentos_visitas**
+   - Remover SELECT publico ou restringir campos
+   - Manter apenas INSERT publico
+
+2. **Migracao SQL para RLS de feedbacks_visitas**
+   - Criar VIEW com campos limitados para acesso via token
+   - Ou usar funcao SECURITY DEFINER que retorna apenas dados necessarios
+
+3. **Habilitar Leaked Password Protection**
+   - Configuracao no Lovable Cloud
+
+### Fase 2: Melhorias
+
+4. **Mover extensoes para schema separado**
+   - pg_cron e pg_net fora do public
+
+5. **Adicionar CAPTCHA nos formularios**
+   - Alternativa: rate limiting via Cloudflare
+
+---
+
+## 8. Conclusao
+
+### Pronto para Producao?
+
+**NAO AINDA** - Existem 2 vulnerabilidades criticas que expoe dados de clientes.
+
+### Apos Correcoes?
+
+**SIM** - A aplicacao esta robusta, com:
+- Arquitetura multi-tenant funcional
+- Fluxos de negocio completos
+- Performance otimizada
+- Notificacoes automatizadas
+- UI/UX profissional
+
+### Proximos Passos Recomendados
+
+1. Corrigir vulnerabilidades RLS (URGENTE)
+2. Habilitar Leaked Password Protection
+3. Testar fluxo end-to-end
+4. Configurar dominio e Cloudflare
+5. Go-live com monitoramento ativo
