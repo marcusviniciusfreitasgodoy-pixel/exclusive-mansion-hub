@@ -459,17 +459,17 @@ export function FieldModal({
                     />
 
                     {form.watch('condicional_ativo') && (
-                      <div className="space-y-3 pl-6">
+                      <div className="space-y-3 pl-6 border-l-2 border-muted">
                         <FormField
                           control={form.control}
                           name="condicional_campo_id"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Campo</FormLabel>
+                              <FormLabel>Campo de referência</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Selecione..." />
+                                    <SelectValue placeholder="Selecione o campo..." />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -480,6 +480,9 @@ export function FieldModal({
                                   ))}
                                 </SelectContent>
                               </Select>
+                              <FormDescription>
+                                Qual campo determina a visibilidade deste?
+                              </FormDescription>
                             </FormItem>
                           )}
                         />
@@ -497,9 +500,9 @@ export function FieldModal({
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="igual">é igual a</SelectItem>
-                                  <SelectItem value="diferente">é diferente de</SelectItem>
-                                  <SelectItem value="contem">contém</SelectItem>
+                                  <SelectItem value="igual">Igual a</SelectItem>
+                                  <SelectItem value="diferente">Diferente de</SelectItem>
+                                  <SelectItem value="contem">Contém</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
@@ -509,14 +512,42 @@ export function FieldModal({
                         <FormField
                           control={form.control}
                           name="condicional_valor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Valor</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Valor esperado" />
-                              </FormControl>
-                            </FormItem>
-                          )}
+                          render={({ field: formField }) => {
+                            const campoReferenciaId = form.watch('condicional_campo_id');
+                            const campoReferencia = existingFields.find(f => f.id === campoReferenciaId);
+                            const temOpcoes = campoReferencia?.opcoes && campoReferencia.opcoes.length > 0;
+
+                            return (
+                              <FormItem>
+                                <FormLabel>Valor esperado</FormLabel>
+                                {temOpcoes ? (
+                                  <Select onValueChange={formField.onChange} value={formField.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o valor..." />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {campoReferencia.opcoes!.map((opcao, idx) => (
+                                        <SelectItem key={idx} value={opcao}>
+                                          {opcao}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <FormControl>
+                                    <Input {...formField} placeholder="Digite o valor esperado..." />
+                                  </FormControl>
+                                )}
+                                <FormDescription>
+                                  {temOpcoes 
+                                    ? 'Selecione uma das opções do campo de referência'
+                                    : 'Valor que o campo de referência deve ter'}
+                                </FormDescription>
+                              </FormItem>
+                            );
+                          }}
                         />
                       </div>
                     )}
