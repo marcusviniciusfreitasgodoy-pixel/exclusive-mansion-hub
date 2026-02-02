@@ -142,7 +142,7 @@ export default function Login() {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          <Link to="/" className="hover:text-primary">
+          <Link to="/imovel/cobertura-lucio-costa-godoyprime" className="hover:text-primary">
             ← Voltar para o site
           </Link>
         </p>
