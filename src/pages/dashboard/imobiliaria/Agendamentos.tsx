@@ -14,10 +14,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { exportarLeadsCSV } from '@/lib/form-helpers';
 import { 
   Calendar, Clock, Phone, Mail, MapPin, User, 
   CheckCircle, XCircle, Search, MessageSquare,
-  CalendarCheck, AlertCircle
+  CalendarCheck, AlertCircle, Download
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -425,6 +426,40 @@ export default function AgendamentosPage() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            if (!imobiliaria?.id || !filteredAgendamentos.length) return;
+            
+            const leadsParaExportar = filteredAgendamentos.map(a => ({
+              created_at: a.created_at,
+              cliente_nome: a.cliente_nome,
+              cliente_email: a.cliente_email,
+              cliente_telefone: a.cliente_telefone,
+              imovel_titulo: a.imovel?.titulo,
+              status: a.status,
+              respostas_customizadas: (a as any).respostas_customizadas,
+            }));
+            
+            const { blob, filename } = await exportarLeadsCSV(
+              leadsParaExportar,
+              imobiliaria.id,
+              'agendamento_visita'
+            );
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            toast({ title: 'CSV exportado!', description: `${leadsParaExportar.length} registros exportados.` });
+          }}
+          disabled={!filteredAgendamentos.length}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Exportar CSV
+        </Button>
       </div>
 
       {/* Tabs */}
