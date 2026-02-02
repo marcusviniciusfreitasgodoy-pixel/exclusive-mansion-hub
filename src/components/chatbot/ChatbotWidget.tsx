@@ -1,16 +1,26 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, User, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
   timestamp: string;
   role: "user" | "assistant";
   content: string;
+  functionResults?: Array<{
+    tipo: string;
+    lead_id?: string;
+    dados_capturados?: {
+      nome?: string;
+      email?: string;
+      telefone?: string;
+    };
+  }>;
 }
 
 interface ChatbotWidgetProps {
@@ -45,6 +55,7 @@ export function ChatbotWidget({
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [leadCaptured, setLeadCaptured] = useState(false);
   const [sessionId] = useState(getOrCreateSessionId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,22 +128,51 @@ export function ChatbotWidget({
 
       if (error) throw error;
 
+      // Check for function results (lead captured, etc.)
+      if (data?.function_results) {
+        for (const result of data.function_results) {
+          if (result.tipo === "lead_capturado") {
+            setLeadCaptured(true);
+            toast.success("Dados de contato registrados!", {
+              description: "Nossa equipe entrará em contato em breve.",
+              icon: <CheckCircle2 className="h-4 w-4" />,
+            });
+          } else if (result.tipo === "agendamento_criado") {
+            toast.success("Visita agendada!", {
+              description: "Você receberá uma confirmação em breve.",
+              icon: <CheckCircle2 className="h-4 w-4" />,
+            });
+          }
+        }
+      }
+
       const assistantMessage: Message = {
         id: data?.mensagem_id || crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         role: "assistant",
         content: data?.resposta || "Desculpe, ocorreu um erro. Tente novamente.",
+        functionResults: data?.function_results,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chatbot error:", error);
+      
+      let errorContent = "Desculpe, houve um problema na conexão. Por favor, tente novamente em alguns instantes.";
+      
+      // Handle rate limit and payment errors
+      if (error?.message?.includes("429") || error?.status === 429) {
+        errorContent = "Estamos com muitas solicitações. Aguarde alguns segundos e tente novamente.";
+        toast.error("Limite de requisições", { description: "Aguarde um momento." });
+      } else if (error?.message?.includes("402") || error?.status === 402) {
+        errorContent = "Serviço temporariamente indisponível. Entre em contato diretamente conosco.";
+      }
       
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         role: "assistant",
-        content: "Desculpe, houve um problema na conexão. Por favor, tente novamente em alguns instantes.",
+        content: errorContent,
       };
       
       setMessages((prev) => [...prev, errorMessage]);
