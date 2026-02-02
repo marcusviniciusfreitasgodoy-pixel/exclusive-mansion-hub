@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAnalyticsTracking } from "@/components/integrations/AnalyticsScripts";
 import type { PropertyData, PropertyBranding } from "@/types/property-page";
 
 // Horários disponíveis (9h às 18h, intervalos de 30min)
@@ -104,6 +105,7 @@ export function AgendarVisitaModal({
   imobiliariaId,
   accessId,
 }: AgendarVisitaModalProps) {
+  const { trackEvent } = useAnalyticsTracking();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentError, setDocumentError] = useState<string | null>(null);
@@ -270,6 +272,14 @@ export function AgendarVisitaModal({
         console.warn("Erro ao enviar notificações:", notificationError);
         // Não falhar o agendamento se as notificações falharem
       }
+
+      // Track visit scheduling event for GA4
+      trackEvent('schedule_visit', {
+        imovel_id: property.id,
+        imovel_titulo: property.titulo,
+        data_visita_opcao1: opcaoData1.toISOString(),
+        data_visita_opcao2: opcaoData2.toISOString()
+      });
 
       toast.success("Solicitação de visita enviada!", {
         description: "Entraremos em contato para confirmar a melhor data.",
