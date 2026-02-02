@@ -61,6 +61,8 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function FeedbackClientePublico() {
   const { token } = useParams<{ token: string }>();
+  const tokenValue = token?.trim() ?? "";
+  const isValidToken = z.string().uuid().safeParse(tokenValue).success;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const signatureRef = useRef<SignaturePadRef>(null);
@@ -78,13 +80,13 @@ export default function FeedbackClientePublico() {
           imobiliarias(nome_empresa, logo_url),
           construtoras(nome_empresa, logo_url)
         `)
-        .eq("token_acesso_cliente", token)
-        .single();
+        .eq("token_acesso_cliente", tokenValue)
+        .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!token,
+    enabled: isValidToken,
   });
 
   const form = useForm<FormData>({
@@ -179,6 +181,20 @@ export default function FeedbackClientePublico() {
       setIsSubmitting(false);
     }
   };
+
+  if (tokenValue && !isValidToken) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-6">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-bold mb-4">Link inválido</h1>
+          <p className="text-muted-foreground">
+            O link está incompleto. Verifique se a URL está no formato
+            <span className="font-medium"> /feedback-visita/&lt;token&gt;</span> (ex.: um UUID completo).
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
