@@ -273,12 +273,14 @@ export function AgendarVisitaModal({
         // Não falhar o agendamento se as notificações falharem
       }
 
-      // Track visit scheduling event for GA4
+      // Track visit scheduling event for GA4 and Meta Pixel
       trackEvent('schedule_visit', {
+        // GA4 parameters
         imovel_id: property.id,
-        imovel_titulo: property.titulo,
         data_visita_opcao1: opcaoData1.toISOString(),
-        data_visita_opcao2: opcaoData2.toISOString()
+        data_visita_opcao2: opcaoData2.toISOString(),
+        // Meta Pixel parameters
+        content_name: property.titulo
       });
 
       toast.success("Solicitação de visita enviada!", {

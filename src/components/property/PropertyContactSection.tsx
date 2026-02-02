@@ -75,13 +75,15 @@ export function PropertyContactSection({
 
       if (error) throw error;
 
-      // Track lead generation event for GA4
+      // Track lead generation event for GA4 and Meta Pixel
       trackEvent('generate_lead', {
+        // GA4 parameters
         currency: 'BRL',
         value: property.valor,
         imovel_id: property.id,
-        imovel_titulo: property.titulo,
-        origem: 'formulario'
+        origem: 'formulario',
+        // Meta Pixel parameters
+        content_name: property.titulo
       });
 
       toast({
