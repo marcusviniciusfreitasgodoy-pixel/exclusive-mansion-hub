@@ -15,10 +15,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { exportarLeadsCSV } from '@/lib/form-helpers';
+import { RespostasCustomizadas } from '@/components/forms/RespostasCustomizadas';
 import { 
   Calendar, Clock, Phone, Mail, MapPin, User, 
   CheckCircle, XCircle, Search, MessageSquare,
-  CalendarCheck, AlertCircle, Download
+  CalendarCheck, AlertCircle, Download, Eye
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -51,6 +52,7 @@ interface AgendamentoWithDetails {
   confirmado_em: string | null;
   realizado_em: string | null;
   cancelado_em: string | null;
+  respostas_customizadas: Record<string, unknown> | null;
   imovel?: {
     titulo: string;
     endereco: string | null;
@@ -73,6 +75,7 @@ export default function AgendamentosPage() {
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null; opcao: 1 | 2 }>({ open: false, agendamento: null, opcao: 1 });
   const [cancelModal, setCancelModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null }>({ open: false, agendamento: null });
   const [realizeModal, setRealizeModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null }>({ open: false, agendamento: null });
+  const [detailsModal, setDetailsModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null }>({ open: false, agendamento: null });
   const [cancelReason, setCancelReason] = useState('');
 
   const { data: agendamentos, isLoading } = useQuery({
@@ -392,6 +395,13 @@ export default function AgendamentosPage() {
         <Button 
           size="sm" 
           variant="ghost"
+          onClick={() => setDetailsModal({ open: true, agendamento })}
+        >
+          <Eye className="h-3 w-3" />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="ghost"
           onClick={() => openWhatsApp(agendamento.cliente_telefone, agendamento.cliente_nome)}
         >
           <MessageSquare className="h-3 w-3" />
@@ -639,6 +649,111 @@ export default function AgendamentosPage() {
               {realizeMutation.isPending ? 'Processando...' : 'Confirmar e Preencher Feedback'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Modal */}
+      <Dialog open={detailsModal.open} onOpenChange={(open) => !open && setDetailsModal({ open: false, agendamento: null })}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              {detailsModal.agendamento?.cliente_nome}
+            </DialogTitle>
+            <DialogDescription>
+              Detalhes do agendamento de visita
+            </DialogDescription>
+          </DialogHeader>
+          {detailsModal.agendamento && (
+            <div className="space-y-4">
+              {/* Contact Info */}
+              <div className="grid gap-3">
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="flex-1">{detailsModal.agendamento.cliente_email}</span>
+                </div>
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="flex-1">{detailsModal.agendamento.cliente_telefone}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-green-600"
+                    onClick={() => openWhatsApp(detailsModal.agendamento!.cliente_telefone, detailsModal.agendamento!.cliente_nome)}
+                  >
+                    WhatsApp
+                  </Button>
+                </div>
+              </div>
+
+              {/* Property */}
+              <div className="p-3 border rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Imóvel</p>
+                <p className="font-medium">{detailsModal.agendamento.imovel?.titulo}</p>
+                {detailsModal.agendamento.imovel?.endereco && (
+                  <p className="text-sm text-muted-foreground">
+                    {detailsModal.agendamento.imovel.endereco}, {detailsModal.agendamento.imovel.bairro}
+                  </p>
+                )}
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Opção 1</p>
+                  <p>{formatDateTime(detailsModal.agendamento.opcao_data_1)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Opção 2</p>
+                  <p>{formatDateTime(detailsModal.agendamento.opcao_data_2)}</p>
+                </div>
+                {detailsModal.agendamento.data_confirmada && (
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Data Confirmada</p>
+                    <p className="font-medium text-green-700">{formatDateTime(detailsModal.agendamento.data_confirmada)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Observations */}
+              {detailsModal.agendamento.observacoes && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Observações</p>
+                  <div className="p-3 bg-muted rounded-lg text-sm">
+                    {detailsModal.agendamento.observacoes}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Responses */}
+              {imobiliaria?.id && (
+                <RespostasCustomizadas
+                  respostas={detailsModal.agendamento.respostas_customizadas}
+                  tipoFormulario="agendamento_visita"
+                  imobiliariaId={imobiliaria.id}
+                />
+              )}
+
+              {/* Metadata */}
+              <div className="grid grid-cols-2 gap-3 text-sm pt-2 border-t">
+                <div>
+                  <p className="text-muted-foreground">Status</p>
+                  <Badge variant="outline" className={
+                    detailsModal.agendamento.status === 'pendente' ? 'border-yellow-500 text-yellow-700' :
+                    detailsModal.agendamento.status === 'confirmado' ? 'border-green-500 text-green-700' :
+                    detailsModal.agendamento.status === 'realizado' ? 'border-blue-500 text-blue-700' :
+                    'border-red-500 text-red-700'
+                  }>
+                    {detailsModal.agendamento.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Criado em</p>
+                  <p>{formatDateTime(detailsModal.agendamento.created_at)}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
