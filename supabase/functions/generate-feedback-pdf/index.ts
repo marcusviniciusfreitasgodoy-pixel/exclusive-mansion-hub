@@ -1,16 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { 
+  htmlEncode, 
+  isValidUUID,
+  corsHeaders, 
+  errorResponse, 
+  successResponse 
+} from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 interface GeneratePDFRequest {
   feedbackId: string;
@@ -73,6 +74,15 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { feedbackId }: GeneratePDFRequest = await req.json();
 
+    // ===== INPUT VALIDATION =====
+    if (!feedbackId) {
+      return errorResponse("ID do feedback é obrigatório", 400);
+    }
+
+    if (!isValidUUID(feedbackId)) {
+      return errorResponse("ID do feedback inválido", 400);
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Buscar dados completos do feedback
@@ -88,8 +98,18 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (feedbackError || !feedback) {
-      throw new Error("Feedback não encontrado");
+      return errorResponse("Feedback não encontrado", 404);
     }
+
+    // Sanitize all text inputs for HTML
+    const safeClienteNome = htmlEncode(feedback.cliente_nome);
+    const safeClienteEmail = htmlEncode(feedback.cliente_email);
+    const safeCorretorNome = htmlEncode(feedback.corretor_nome || '');
+    const safeImovelTitulo = htmlEncode(feedback.imoveis?.titulo || '');
+    const safePontosPositivos = htmlEncode(feedback.pontos_positivos || '');
+    const safePontosNegativos = htmlEncode(feedback.pontos_negativos || '');
+    const safeObservacoesCorretor = htmlEncode(feedback.observacoes_corretor || '');
+    const safeProximosPassos = htmlEncode(feedback.proximos_passos || '');
 
     const npsInfo = feedback.nps_cliente !== null ? getNPSLabel(feedback.nps_cliente) : null;
     const endereco = [
@@ -97,6 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       feedback.imoveis?.bairro,
       feedback.imoveis?.cidade,
     ].filter(Boolean).join(", ");
+    const safeEndereco = htmlEncode(endereco);
 
     // Gerar HTML do relatório
     const pdfHtml = `
@@ -138,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Header -->
           <div class="header">
             <h1>📋 RELATÓRIO DE VISITA AO IMÓVEL</h1>
-            <p>Documento com Validade Jurídica • ID: ${feedback.id}</p>
+            <p>Documento com Validade Jurídica • ID: ${feedbackId}</p>
           </div>
 
           <!-- Dados do Imóvel -->
@@ -147,7 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="grid">
               <div class="field">
                 <div class="field-label">Título</div>
-                <div class="field-value">${feedback.imoveis?.titulo || "-"}</div>
+                <div class="field-value">${safeImovelTitulo || "-"}</div>
               </div>
               <div class="field">
                 <div class="field-label">Valor</div>
@@ -156,7 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="field">
               <div class="field-label">Endereço</div>
-              <div class="field-value">${endereco || "-"}</div>
+              <div class="field-value">${safeEndereco || "-"}</div>
             </div>
           </div>
 
@@ -174,11 +195,11 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="field">
                 <div class="field-label">Cliente</div>
-                <div class="field-value">${feedback.cliente_nome}</div>
+                <div class="field-value">${safeClienteNome}</div>
               </div>
               <div class="field">
                 <div class="field-label">Corretor</div>
-                <div class="field-value">${feedback.corretor_nome || "-"}</div>
+                <div class="field-value">${safeCorretorNome || "-"}</div>
               </div>
             </div>
           </div>
@@ -226,17 +247,17 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
 
-            ${feedback.pontos_positivos ? `
+            ${safePontosPositivos ? `
             <div class="field" style="margin-top: 15px;">
               <div class="field-label">Pontos Positivos</div>
-              <div class="text-block">${feedback.pontos_positivos}</div>
+              <div class="text-block">${safePontosPositivos}</div>
             </div>
             ` : ""}
 
-            ${feedback.pontos_negativos ? `
+            ${safePontosNegativos ? `
             <div class="field">
               <div class="field-label">Pontos Negativos</div>
-              <div class="text-block">${feedback.pontos_negativos}</div>
+              <div class="text-block">${safePontosNegativos}</div>
             </div>
             ` : ""}
           </div>
@@ -273,21 +294,21 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="field">
                 <div class="field-label">Forma de Pagamento</div>
-                <div class="field-value">${feedback.forma_pagamento_pretendida || "-"}</div>
+                <div class="field-value">${htmlEncode(feedback.forma_pagamento_pretendida) || "-"}</div>
               </div>
             </div>
 
-            ${feedback.observacoes_corretor ? `
+            ${safeObservacoesCorretor ? `
             <div class="field" style="margin-top: 15px;">
               <div class="field-label">Observações do Corretor</div>
-              <div class="text-block">${feedback.observacoes_corretor}</div>
+              <div class="text-block">${safeObservacoesCorretor}</div>
             </div>
             ` : ""}
 
-            ${feedback.proximos_passos ? `
+            ${safeProximosPassos ? `
             <div class="field">
               <div class="field-label">Próximos Passos</div>
-              <div class="text-block">${feedback.proximos_passos}</div>
+              <div class="text-block">${safeProximosPassos}</div>
             </div>
             ` : ""}
           </div>
@@ -307,8 +328,8 @@ const handler = async (req: Request): Promise<Response> => {
                 ${feedback.assinatura_cliente_data ? `
                 <div class="signature-meta">
                   Assinado em: ${formatDate(feedback.assinatura_cliente_data)}<br>
-                  IP: ${feedback.assinatura_cliente_ip || "N/A"}<br>
-                  Dispositivo: ${(feedback.assinatura_cliente_device || "").substring(0, 50)}...
+                  IP: ${htmlEncode(feedback.assinatura_cliente_ip) || "N/A"}<br>
+                  Dispositivo: ${htmlEncode((feedback.assinatura_cliente_device || "").substring(0, 50))}...
                 </div>
                 ` : ""}
               </div>
@@ -323,8 +344,8 @@ const handler = async (req: Request): Promise<Response> => {
                 ${feedback.assinatura_corretor_data ? `
                 <div class="signature-meta">
                   Assinado em: ${formatDate(feedback.assinatura_corretor_data)}<br>
-                  IP: ${feedback.assinatura_corretor_ip || "N/A"}<br>
-                  Dispositivo: ${(feedback.assinatura_corretor_device || "").substring(0, 50)}...
+                  IP: ${htmlEncode(feedback.assinatura_corretor_ip) || "N/A"}<br>
+                  Dispositivo: ${htmlEncode((feedback.assinatura_corretor_device || "").substring(0, 50))}...
                 </div>
                 ` : ""}
               </div>
@@ -335,30 +356,24 @@ const handler = async (req: Request): Promise<Response> => {
           <div class="footer">
             <strong>Este documento possui validade jurídica</strong><br>
             Gerado em: ${formatDate(new Date().toISOString())}<br>
-            ID do Documento: ${feedback.id}<br>
-            ${feedback.documento_hash ? `<div class="hash">Hash SHA-256: ${feedback.documento_hash}</div>` : ""}
+            ID do Documento: ${feedbackId}<br>
+            ${feedback.documento_hash ? `<div class="hash">Hash SHA-256: ${htmlEncode(feedback.documento_hash)}</div>` : ""}
           </div>
         </div>
       </body>
       </html>
     `;
 
-    // Nota: A geração real do PDF seria feita no frontend com jsPDF/html2canvas
-    // Esta edge function prepara os dados e pode ser expandida para usar um serviço de PDF
-
-    // Por enquanto, vamos apenas notificar que o feedback está completo
-    // e enviar emails para todas as partes
-
     // Email para cliente com confirmação
     await resend.emails.send({
       from: "Feedback <noreply@godoyprime.com.br>",
       to: [feedback.cliente_email],
-      subject: `✅ Feedback registrado - ${feedback.imoveis?.titulo}`,
+      subject: `✅ Feedback registrado - ${feedback.imoveis?.titulo || 'Imóvel'}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2>Obrigado pelo seu feedback!</h2>
-          <p>Olá ${feedback.cliente_nome},</p>
-          <p>Seu feedback sobre a visita ao imóvel <strong>${feedback.imoveis?.titulo}</strong> foi registrado com sucesso.</p>
+          <p>Olá ${safeClienteNome},</p>
+          <p>Seu feedback sobre a visita ao imóvel <strong>${safeImovelTitulo}</strong> foi registrado com sucesso.</p>
           <p>Agradecemos por compartilhar sua opinião. Ela é muito importante para nós!</p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
           <p style="color: #888; font-size: 12px;">Este é um email automático, por favor não responda.</p>
@@ -383,11 +398,11 @@ const handler = async (req: Request): Promise<Response> => {
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>Feedback de visita completo!</h2>
-              <p>O cliente <strong>${feedback.cliente_nome}</strong> completou o feedback da visita.</p>
+              <p>O cliente <strong>${safeClienteNome}</strong> completou o feedback da visita.</p>
               <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                 <tr>
                   <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Imóvel:</strong></td>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.imoveis?.titulo}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeImovelTitulo}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>NPS:</strong></td>
@@ -397,10 +412,6 @@ const handler = async (req: Request): Promise<Response> => {
                   <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Interesse:</strong></td>
                   <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.interesse_compra ? getInteresseLabel(feedback.interesse_compra) : "-"}</td>
                 </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Score:</strong></td>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.score_lead}/100</td>
-                </tr>
               </table>
               <p>Acesse o painel para ver o relatório completo.</p>
             </div>
@@ -409,37 +420,57 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Atualizar feedback com data de geração do PDF
-    await supabase
-      .from("feedbacks_visitas")
-      .update({
-        pdf_gerado_em: new Date().toISOString(),
-        // pdf_url será atualizado quando o PDF real for gerado no frontend
-      })
-      .eq("id", feedbackId);
+    // Email para construtora
+    if (feedback.construtoras?.nome_empresa) {
+      const { data: construtora } = await supabase
+        .from("construtoras")
+        .select("email_contato")
+        .eq("id", feedback.construtora_id)
+        .single();
 
-    console.log("Processamento de feedback completo para:", feedbackId);
+      if (construtora?.email_contato) {
+        await resend.emails.send({
+          from: "Sistema <noreply@godoyprime.com.br>",
+          to: [construtora.email_contato],
+          subject: `📊 Feedback completo - ${feedback.cliente_nome}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>Feedback de visita completo!</h2>
+              <p>O cliente <strong>${safeClienteNome}</strong> completou o feedback da visita.</p>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Imóvel:</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeImovelTitulo}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>NPS:</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.nps_cliente}/10</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Qualificação:</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.qualificacao_lead ? getQualificacaoLabel(feedback.qualificacao_lead) : "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Score:</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${feedback.score_lead}/100</td>
+                </tr>
+              </table>
+              <p>Acesse o painel para ver o relatório completo e o PDF gerado.</p>
+            </div>
+          `,
+        });
+      }
+    }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Feedback processado com sucesso",
-        htmlReport: pdfHtml // Retorna HTML para geração de PDF no frontend
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
-  } catch (error: any) {
-    console.error("Erro em generate-feedback-pdf:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return successResponse({
+      success: true,
+      message: "Relatório gerado e notificações enviadas",
+      pdfHtml,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Error in generate-feedback-pdf function:", errorMessage);
+    return errorResponse(errorMessage, 500);
   }
 };
 

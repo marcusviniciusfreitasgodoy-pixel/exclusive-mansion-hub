@@ -1,13 +1,17 @@
 import { Resend } from "resend";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { 
+  htmlEncode, 
+  isValidEmail, 
+  isValidUUID, 
+  isValidBrazilianPhone,
+  sanitizeInput,
+  corsHeaders, 
+  errorResponse, 
+  successResponse 
+} from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 interface LeadNotificationRequest {
   leadId: string;
@@ -41,15 +45,70 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: LeadNotificationRequest = await req.json();
 
+    // ===== INPUT VALIDATION =====
+    
     // Validate required fields
-    if (!data.leadId || !data.propertyTitle || !data.leadName || !data.leadEmail) {
-      throw new Error("Campos obrigatórios não fornecidos");
+    if (!data.leadId || !data.propertyTitle || !data.leadName || !data.leadEmail || !data.construtoraId) {
+      return errorResponse("Campos obrigatórios não fornecidos", 400);
     }
+
+    // Validate UUID formats
+    if (!isValidUUID(data.leadId)) {
+      return errorResponse("ID do lead inválido", 400);
+    }
+    if (!isValidUUID(data.construtoraId)) {
+      return errorResponse("ID da construtora inválido", 400);
+    }
+
+    // Validate email format
+    if (!isValidEmail(data.leadEmail)) {
+      return errorResponse("E-mail do cliente inválido", 400);
+    }
+    if (data.imobiliariaEmail && !isValidEmail(data.imobiliariaEmail)) {
+      return errorResponse("E-mail da imobiliária inválido", 400);
+    }
+
+    // Validate phone if provided
+    if (data.leadPhone && !isValidBrazilianPhone(data.leadPhone)) {
+      return errorResponse("Telefone inválido", 400);
+    }
+
+    // Validate string lengths
+    if (data.leadName.length > 100) {
+      return errorResponse("Nome muito longo (máximo 100 caracteres)", 400);
+    }
+    if (data.propertyTitle.length > 200) {
+      return errorResponse("Título do imóvel muito longo", 400);
+    }
+    if (data.leadMessage && data.leadMessage.length > 2000) {
+      return errorResponse("Mensagem muito longa (máximo 2000 caracteres)", 400);
+    }
+
+    // Sanitize inputs for HTML templates
+    const safeName = htmlEncode(data.leadName);
+    const safeEmail = htmlEncode(data.leadEmail);
+    const safePhone = htmlEncode(data.leadPhone || '');
+    const safeTitle = htmlEncode(data.propertyTitle);
+    const safeAddress = htmlEncode(data.propertyAddress || 'Endereço não informado');
+    const safeMessage = sanitizeInput(data.leadMessage, 2000);
+    const safeImobiliariaNome = htmlEncode(data.imobiliariaNome);
 
     // Create Supabase client to get construtora data
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Verify the lead exists in the database
+    const { data: leadExists, error: leadError } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("id", data.leadId)
+      .single();
+
+    if (leadError || !leadExists) {
+      console.error("Lead not found:", data.leadId);
+      return errorResponse("Lead não encontrado", 404);
+    }
 
     // Get construtora data (including email and phone)
     const { data: construtora, error: construtoraError } = await supabase
@@ -60,6 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (construtoraError) {
       console.error("Error fetching construtora:", construtoraError);
+      return errorResponse("Construtora não encontrada", 404);
     }
 
     // Get imobiliaria phone if available
@@ -89,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <p style="font-size: 16px; color: #333; line-height: 1.6;">
-        Olá <strong>${data.leadName}</strong>,
+        Olá <strong>${safeName}</strong>,
       </p>
       
       <p style="font-size: 16px; color: #333; line-height: 1.6;">
@@ -97,15 +157,15 @@ const handler = async (req: Request): Promise<Response> => {
       </p>
       
       <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-        <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${data.propertyTitle}</h3>
-        <p style="margin: 0; color: #666;">📍 ${data.propertyAddress || "Endereço não informado"}</p>
+        <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${safeTitle}</h3>
+        <p style="margin: 0; color: #666;">📍 ${safeAddress}</p>
         <p style="margin: 10px 0 0; font-size: 18px; font-weight: bold; color: #b8860b;">${formatCurrency(data.propertyValue)}</p>
       </div>
       
-      ${data.leadMessage ? `
+      ${safeMessage ? `
       <div style="background: #f0f7ff; border-radius: 8px; padding: 15px; margin: 20px 0;">
         <h4 style="margin: 0 0 10px 0; color: #1e3a5f; font-size: 14px;">💬 Sua mensagem:</h4>
-        <p style="margin: 0; color: #555; font-style: italic;">"${data.leadMessage}"</p>
+        <p style="margin: 0; color: #555; font-style: italic;">"${safeMessage}"</p>
       </div>
       ` : ""}
       
@@ -125,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
       <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
       
       <p style="font-size: 14px; color: #888; text-align: center;">
-        ${data.imobiliariaNome}
+        ${safeImobiliariaNome}
       </p>
     </div>
   </div>
@@ -153,8 +213,8 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
       
       <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin-bottom: 25px; border-radius: 0 8px 8px 0;">
-        <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${data.propertyTitle}</h3>
-        <p style="margin: 0; color: #666;">📍 ${data.propertyAddress || "Endereço não informado"}</p>
+        <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${safeTitle}</h3>
+        <p style="margin: 0; color: #666;">📍 ${safeAddress}</p>
         <p style="margin: 10px 0 0; font-size: 18px; font-weight: bold; color: #b8860b;">${formatCurrency(data.propertyValue)}</p>
       </div>
 
@@ -162,22 +222,22 @@ const handler = async (req: Request): Promise<Response> => {
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Nome:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.leadName}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeName}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>E-mail:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${data.leadEmail}">${data.leadEmail}</a></td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${safeEmail}">${safeEmail}</a></td>
         </tr>
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Telefone:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="tel:${data.leadPhone}">${data.leadPhone}</a></td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="tel:${safePhone}">${safePhone}</a></td>
         </tr>
       </table>
 
-      ${data.leadMessage ? `
+      ${safeMessage ? `
       <div style="background: #f0f7ff; border-radius: 8px; padding: 15px; margin: 20px 0;">
         <h4 style="margin: 0 0 10px 0; color: #1e3a5f; font-size: 14px;">💬 Mensagem:</h4>
-        <p style="margin: 0; color: #555; font-style: italic;">"${data.leadMessage}"</p>
+        <p style="margin: 0; color: #555; font-style: italic;">"${safeMessage}"</p>
       </div>
       ` : ""}
 
@@ -219,39 +279,39 @@ const handler = async (req: Request): Promise<Response> => {
     
     <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <strong>ℹ️ Informativo:</strong> Um cliente demonstrou interesse ${data.imobiliariaNome !== "Contato via Site Principal" ? `através de <strong>${data.imobiliariaNome}</strong>` : "via site principal"}.
+        <strong>ℹ️ Informativo:</strong> Um cliente demonstrou interesse ${safeImobiliariaNome !== "Contato via Site Principal" ? `através de <strong>${safeImobiliariaNome}</strong>` : "via site principal"}.
       </div>
       
       <h3 style="color: #1e3a5f;">Resumo:</h3>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Cliente:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.leadName}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeName}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Contato:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.leadEmail} | ${data.leadPhone}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeEmail} | ${safePhone}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Imóvel:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.propertyTitle}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeTitle}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Valor:</strong></td>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${formatCurrency(data.propertyValue)}</td>
         </tr>
-        ${data.imobiliariaNome !== "Contato via Site Principal" ? `
+        ${safeImobiliariaNome !== "Contato via Site Principal" ? `
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Via:</strong></td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.imobiliariaNome}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeImobiliariaNome}</td>
         </tr>
         ` : ""}
       </table>
 
-      ${data.leadMessage ? `
+      ${safeMessage ? `
       <div style="background: #f0f7ff; border-radius: 8px; padding: 15px; margin: 20px 0;">
         <h4 style="margin: 0 0 10px 0; color: #1e3a5f; font-size: 14px;">💬 Mensagem:</h4>
-        <p style="margin: 0; color: #555; font-style: italic;">"${data.leadMessage}"</p>
+        <p style="margin: 0; color: #555; font-style: italic;">"${safeMessage}"</p>
       </div>
       ` : ""}
 
@@ -329,32 +389,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Emails enviados: ${emailsSent.length}/3`);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        emailsSent,
-        totalEmails: emailsSent.length,
-        errors: errors.length > 0 ? errors : undefined,
-        details: {
-          clienteEmail: data.leadEmail,
-          imobiliariaEmail: data.imobiliariaEmail || null,
-          construtoraEmail: construtoraEmail,
-        }
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error("Error in send-lead-notification function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+    return successResponse({
+      success: true,
+      emailsSent,
+      totalEmails: emailsSent.length,
+      errors: errors.length > 0 ? errors : undefined,
     });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Error in send-lead-notification function:", errorMessage);
+    return errorResponse(errorMessage, 500);
   }
 };
 

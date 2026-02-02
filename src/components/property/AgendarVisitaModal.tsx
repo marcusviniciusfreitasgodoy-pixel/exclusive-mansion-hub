@@ -184,11 +184,12 @@ export function AgendarVisitaModal({
       if (documentFile) {
         setUploadProgress(true);
         const fileExt = documentFile.name.split(".").pop()?.toLowerCase();
-        const fileName = `${property.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `documentos-visita/${property.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
+        // Upload to private bucket for sensitive identity documents
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("imoveis")
-          .upload(`documentos-visita/${fileName}`, documentFile, {
+          .from("documentos-privados")
+          .upload(fileName, documentFile, {
             cacheControl: "3600",
             upsert: false,
           });
@@ -198,12 +199,9 @@ export function AgendarVisitaModal({
           throw new Error("Não foi possível enviar o documento. Tente novamente.");
         }
         
-        // Obter URL pública do documento
-        const { data: publicUrlData } = supabase.storage
-          .from("imoveis")
-          .getPublicUrl(`documentos-visita/${fileName}`);
-        
-        documentoUrl = publicUrlData.publicUrl;
+        // Store the path reference (not public URL since bucket is private)
+        // Authorized users will generate signed URLs when viewing
+        documentoUrl = `documentos-privados/${fileName}`;
         setUploadProgress(false);
       }
       
