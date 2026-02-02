@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { PropertyPageData, PropertyData, PropertyBranding, Corretor } from "@/types/property-page";
+import type { Integracao } from "@/types/integrations";
 
 interface UsePropertyPageResult {
   data: PropertyPageData | null;
   isLoading: boolean;
   error: string | null;
+  integracoes: Integracao[];
 }
 
 export function usePropertyPage(): UsePropertyPageResult {
@@ -14,6 +16,7 @@ export function usePropertyPage(): UsePropertyPageResult {
   const [data, setData] = useState<PropertyPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [integracoes, setIntegracoes] = useState<Integracao[]>([]);
 
   useEffect(() => {
     if (!slug) {
@@ -256,6 +259,21 @@ export function usePropertyPage(): UsePropertyPageResult {
           imobiliariaId: accessData.imobiliaria_id,
         });
 
+        // Fetch active integrations for the imobiliaria
+        try {
+          const { data: integracoesData } = await supabase
+            .from("integracoes")
+            .select("*")
+            .eq("imobiliaria_id", accessData.imobiliaria_id)
+            .eq("ativa", true);
+          
+          if (integracoesData) {
+            setIntegracoes(integracoesData as unknown as Integracao[]);
+          }
+        } catch (integrationError) {
+          console.warn("Could not fetch integrations:", integrationError);
+        }
+
         // Track pageview with localStorage deduplication (24h)
         const viewKey = `viewed_${imovel.id}_${accessData.imobiliaria_id}`;
         const lastViewed = localStorage.getItem(viewKey);
@@ -291,5 +309,5 @@ export function usePropertyPage(): UsePropertyPageResult {
     fetchPropertyData();
   }, [slug]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, integracoes };
 }

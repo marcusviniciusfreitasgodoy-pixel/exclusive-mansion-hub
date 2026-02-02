@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { PropertyPageData } from "@/types/property-page";
+import type { Integracao } from "@/types/integrations";
 import { TemplateWrapper } from "./TemplateWrapper";
 import { getTemplateStyles } from "./templateStyles";
 import { BarraAcoesImovel } from "@/components/property/BarraAcoesImovel";
@@ -18,9 +19,10 @@ import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
 
 interface TemplateModernoProps {
   data: PropertyPageData;
+  integracoes?: Integracao[];
 }
 
-export default function TemplateModerno({ data }: TemplateModernoProps) {
+export default function TemplateModerno({ data, integracoes = [] }: TemplateModernoProps) {
   const { property, branding, construtora, imobiliariaId, accessId } = data;
   const contactRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +47,7 @@ export default function TemplateModerno({ data }: TemplateModernoProps) {
   };
 
   return (
-    <TemplateWrapper data={data} templateType="moderno">
+    <TemplateWrapper data={data} templateType="moderno" integracoes={integracoes}>
       <style>{`
         [data-template="moderno"] {
           background: #ffffff;

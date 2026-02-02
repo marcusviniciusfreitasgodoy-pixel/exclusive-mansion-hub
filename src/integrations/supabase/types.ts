@@ -926,6 +926,75 @@ export type Database = {
           },
         ]
       }
+      integracoes: {
+        Row: {
+          ativa: boolean | null
+          configuracoes: Json | null
+          construtora_id: string | null
+          created_at: string | null
+          credenciais: Json | null
+          descricao: string | null
+          erro_ultima_tentativa: string | null
+          id: string
+          imobiliaria_id: string | null
+          nome_exibicao: string | null
+          proxima_sincronizacao: string | null
+          tipo_integracao: string
+          total_eventos_enviados: number | null
+          ultima_sincronizacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          configuracoes?: Json | null
+          construtora_id?: string | null
+          created_at?: string | null
+          credenciais?: Json | null
+          descricao?: string | null
+          erro_ultima_tentativa?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          nome_exibicao?: string | null
+          proxima_sincronizacao?: string | null
+          tipo_integracao: string
+          total_eventos_enviados?: number | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          configuracoes?: Json | null
+          construtora_id?: string | null
+          created_at?: string | null
+          credenciais?: Json | null
+          descricao?: string | null
+          erro_ultima_tentativa?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          nome_exibicao?: string | null
+          proxima_sincronizacao?: string | null
+          tipo_integracao?: string
+          total_eventos_enviados?: number | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integracoes_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integracoes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           access_id: string | null
