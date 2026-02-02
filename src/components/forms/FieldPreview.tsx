@@ -170,7 +170,7 @@ export function FieldPreview({ campo, value, onChange, disabled = true }: FieldP
         return (
           <div className="border rounded-lg p-4 bg-muted/30">
             <p className="text-sm text-muted-foreground text-center">
-              [Área de assinatura digital]
+              [Área de assinatura digital - disponível no formulário real]
             </p>
           </div>
         );
