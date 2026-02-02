@@ -1,16 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { 
+  htmlEncode, 
+  isValidEmail, 
+  isValidUUID,
+  corsHeaders, 
+  errorResponse, 
+  successResponse 
+} from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 interface FeedbackRequestData {
   feedbackId: string;
@@ -28,6 +30,54 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: FeedbackRequestData = await req.json();
     const { feedbackId, token, clienteNome, clienteEmail, imovelTitulo } = data;
+
+    // ===== INPUT VALIDATION =====
+    
+    // Validate required fields
+    if (!feedbackId || !token || !clienteNome || !clienteEmail || !imovelTitulo) {
+      return errorResponse("Campos obrigatórios não fornecidos", 400);
+    }
+
+    // Validate UUID formats
+    if (!isValidUUID(feedbackId)) {
+      return errorResponse("ID do feedback inválido", 400);
+    }
+    if (!isValidUUID(token)) {
+      return errorResponse("Token inválido", 400);
+    }
+
+    // Validate email format
+    if (!isValidEmail(clienteEmail)) {
+      return errorResponse("E-mail do cliente inválido", 400);
+    }
+
+    // Validate string lengths
+    if (clienteNome.length > 100) {
+      return errorResponse("Nome muito longo", 400);
+    }
+    if (imovelTitulo.length > 200) {
+      return errorResponse("Título do imóvel muito longo", 400);
+    }
+
+    // Sanitize inputs for HTML templates
+    const safeNome = htmlEncode(clienteNome);
+    const safeTitulo = htmlEncode(imovelTitulo);
+
+    // Create Supabase client to verify feedback exists
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify the feedback exists and has the correct token
+    const { data: feedback, error: feedbackError } = await supabase
+      .from("feedbacks_visitas")
+      .select("id, token_acesso_cliente")
+      .eq("id", feedbackId)
+      .eq("token_acesso_cliente", token)
+      .single();
+
+    if (feedbackError || !feedback) {
+      console.error("Feedback not found or token mismatch:", feedbackId);
+      return errorResponse("Feedback não encontrado ou token inválido", 404);
+    }
 
     // Criar link de feedback
     const feedbackUrl = `${req.headers.get("origin") || "https://id-preview--6c4a0233-f323-4218-9d12-61d1660066ac.lovable.app"}/feedback-visita/${token}`;
@@ -47,11 +97,11 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Olá <strong>${clienteNome}</strong>,
+              Olá <strong>${safeNome}</strong>,
             </p>
             
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Obrigado por visitar o imóvel <strong>${imovelTitulo}</strong>!
+              Obrigado por visitar o imóvel <strong>${safeTitulo}</strong>!
             </p>
             
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
@@ -95,22 +145,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email de feedback enviado:", emailResponse);
 
-    return new Response(
-      JSON.stringify({ success: true, emailId: emailResponse.data?.id }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
-  } catch (error: any) {
-    console.error("Erro em send-feedback-request:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return successResponse({ 
+      success: true, 
+      emailId: emailResponse.data?.id 
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Erro em send-feedback-request:", errorMessage);
+    return errorResponse(errorMessage, 500);
   }
 };
 

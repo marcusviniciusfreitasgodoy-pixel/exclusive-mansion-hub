@@ -1,16 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { 
+  htmlEncode, 
+  isValidEmail, 
+  isValidUUID, 
+  isValidBrazilianPhone,
+  sanitizeInput,
+  corsHeaders, 
+  errorResponse, 
+  successResponse 
+} from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 interface VisitNotificationRequest {
   clienteNome: string;
@@ -70,42 +74,85 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: VisitNotificationRequest = await req.json();
 
-    const {
-      clienteNome,
-      clienteEmail,
-      clienteTelefone,
-      opcaoData1,
-      opcaoData2,
-      observacoes,
-      imovelTitulo,
-      imovelEndereco,
-      imobiliariaId,
-      construtoraId,
-    } = data;
+    // ===== INPUT VALIDATION =====
+    
+    // Validate required fields
+    if (!data.clienteNome || !data.clienteEmail || !data.clienteTelefone || 
+        !data.opcaoData1 || !data.opcaoData2 || !data.imovelTitulo || !data.construtoraId) {
+      return errorResponse("Campos obrigatórios não fornecidos", 400);
+    }
+
+    // Validate UUID formats
+    if (!isValidUUID(data.construtoraId)) {
+      return errorResponse("ID da construtora inválido", 400);
+    }
+    if (data.imobiliariaId && !isValidUUID(data.imobiliariaId)) {
+      return errorResponse("ID da imobiliária inválido", 400);
+    }
+
+    // Validate email format
+    if (!isValidEmail(data.clienteEmail)) {
+      return errorResponse("E-mail do cliente inválido", 400);
+    }
+
+    // Validate phone format
+    if (!isValidBrazilianPhone(data.clienteTelefone)) {
+      return errorResponse("Telefone do cliente inválido", 400);
+    }
+
+    // Validate string lengths
+    if (data.clienteNome.length > 100) {
+      return errorResponse("Nome muito longo (máximo 100 caracteres)", 400);
+    }
+    if (data.imovelTitulo.length > 200) {
+      return errorResponse("Título do imóvel muito longo", 400);
+    }
+    if (data.observacoes && data.observacoes.length > 1000) {
+      return errorResponse("Observações muito longas (máximo 1000 caracteres)", 400);
+    }
+
+    // Validate date formats
+    const date1 = new Date(data.opcaoData1);
+    const date2 = new Date(data.opcaoData2);
+    if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
+      return errorResponse("Formato de data inválido", 400);
+    }
+
+    // Sanitize inputs for HTML templates
+    const safeNome = htmlEncode(data.clienteNome);
+    const safeEmail = htmlEncode(data.clienteEmail);
+    const safeTelefone = htmlEncode(data.clienteTelefone);
+    const safeTitulo = htmlEncode(data.imovelTitulo);
+    const safeEndereco = htmlEncode(data.imovelEndereco || 'Endereço não informado');
+    const safeObservacoes = sanitizeInput(data.observacoes, 1000);
 
     // Criar cliente Supabase para buscar dados
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar dados da construtora (incluindo email e telefone)
-    const { data: construtora } = await supabase
+    // Verify construtora exists
+    const { data: construtora, error: construtoraError } = await supabase
       .from("construtoras")
       .select("nome_empresa, email_contato, telefone")
-      .eq("id", construtoraId)
+      .eq("id", data.construtoraId)
       .single();
+
+    if (construtoraError || !construtora) {
+      return errorResponse("Construtora não encontrada", 404);
+    }
 
     // Buscar dados da imobiliária (se houver)
     let imobiliaria = null;
-    if (imobiliariaId) {
+    if (data.imobiliariaId) {
       const { data: imobData } = await supabase
         .from("imobiliarias")
         .select("nome_empresa, email_contato, telefone")
-        .eq("id", imobiliariaId)
+        .eq("id", data.imobiliariaId)
         .single();
       imobiliaria = imobData;
     }
 
-    const data1Formatted = formatDate(opcaoData1);
-    const data2Formatted = formatDate(opcaoData2);
+    const data1Formatted = formatDate(data.opcaoData1);
+    const data2Formatted = formatDate(data.opcaoData2);
 
     // ===== EMAIL PARA O CLIENTE =====
     const clienteEmailHtml = `
@@ -123,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Olá <strong>${clienteNome}</strong>,
+              Olá <strong>${safeNome}</strong>,
             </p>
             
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
@@ -131,8 +178,8 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
             
             <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-              <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${imovelTitulo}</h3>
-              <p style="margin: 0; color: #666;">📍 ${imovelEndereco}</p>
+              <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${safeTitulo}</h3>
+              <p style="margin: 0; color: #666;">📍 ${safeEndereco}</p>
             </div>
             
             <h3 style="color: #1e3a5f; margin-top: 25px;">Suas opções de horário:</h3>
@@ -170,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
             
             <p style="font-size: 14px; color: #888; text-align: center;">
-              ${imobiliaria ? imobiliaria.nome_empresa : construtora?.nome_empresa || "Equipe de Vendas"}
+              ${imobiliaria ? htmlEncode(imobiliaria.nome_empresa) : htmlEncode(construtora?.nome_empresa || "Equipe de Vendas")}
             </p>
           </div>
         </div>
@@ -201,22 +248,22 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Nome:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${clienteNome}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeNome}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>E-mail:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${clienteEmail}">${clienteEmail}</a></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${safeEmail}">${safeEmail}</a></td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Telefone:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="tel:${clienteTelefone}">${clienteTelefone}</a></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="tel:${safeTelefone}">${safeTelefone}</a></td>
               </tr>
             </table>
             
             <h3 style="color: #1e3a5f; margin-top: 25px; margin-bottom: 15px;">Imóvel:</h3>
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-              <strong>${imovelTitulo}</strong><br>
-              <span style="color: #666;">📍 ${imovelEndereco}</span>
+              <strong>${safeTitulo}</strong><br>
+              <span style="color: #666;">📍 ${safeEndereco}</span>
             </div>
             
             <h3 style="color: #1e3a5f; margin-top: 25px; margin-bottom: 15px;">Opções de Data/Horário:</h3>
@@ -231,19 +278,19 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
             
-            ${observacoes ? `
+            ${safeObservacoes ? `
             <h3 style="color: #1e3a5f; margin-top: 25px; margin-bottom: 15px;">Observações do Cliente:</h3>
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-style: italic;">
-              "${observacoes}"
+              "${safeObservacoes}"
             </div>
             ` : ""}
             
             <div style="margin-top: 30px; text-align: center;">
-              <a href="https://wa.me/55${clienteTelefone.replace(/\D/g, "")}" 
+              <a href="https://wa.me/55${data.clienteTelefone.replace(/\D/g, "")}" 
                  style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 10px;">
                 📱 WhatsApp Cliente
               </a>
-              <a href="tel:${clienteTelefone}" 
+              <a href="tel:${data.clienteTelefone}" 
                  style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                 📞 Ligar
               </a>
@@ -270,27 +317,27 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <strong>ℹ️ Informativo:</strong> Um cliente solicitou visita através de ${imobiliaria ? `<strong>${imobiliaria.nome_empresa}</strong>` : "acesso direto"}.
+              <strong>ℹ️ Informativo:</strong> Um cliente solicitou visita através de ${imobiliaria ? `<strong>${htmlEncode(imobiliaria.nome_empresa)}</strong>` : "acesso direto"}.
             </div>
             
             <h3 style="color: #1e3a5f;">Resumo:</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Cliente:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${clienteNome}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeNome}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Contato:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${clienteEmail} | ${clienteTelefone}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeEmail} | ${safeTelefone}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Imóvel:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${imovelTitulo}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${safeTitulo}</td>
               </tr>
               ${imobiliaria ? `
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Imobiliária:</strong></td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${imobiliaria.nome_empresa}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${htmlEncode(imobiliaria.nome_empresa)}</td>
               </tr>
               ` : ""}
             </table>
@@ -302,7 +349,7 @@ const handler = async (req: Request): Promise<Response> => {
             </ul>
             
             <div style="margin-top: 30px; text-align: center;">
-              <a href="https://wa.me/55${clienteTelefone.replace(/\D/g, "")}" 
+              <a href="https://wa.me/55${data.clienteTelefone.replace(/\D/g, "")}" 
                  style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                 📱 WhatsApp Cliente
               </a>
@@ -323,12 +370,12 @@ const handler = async (req: Request): Promise<Response> => {
     const whatsappLinks: string[] = [];
 
     // 1. Enviar email para o CLIENTE
-    console.log("Enviando email para cliente:", clienteEmail);
+    console.log("Enviando email para cliente:", data.clienteEmail);
     emailPromises.push(
       resend.emails.send({
         from: "Agendamento <noreply@godoyprime.com.br>",
-        to: [clienteEmail],
-        subject: `✅ Solicitação de Visita Recebida - ${imovelTitulo}`,
+        to: [data.clienteEmail],
+        subject: `✅ Solicitação de Visita Recebida - ${data.imovelTitulo}`,
         html: clienteEmailHtml,
       }).then(result => {
         console.log("Email cliente enviado:", result);
@@ -346,7 +393,7 @@ const handler = async (req: Request): Promise<Response> => {
         resend.emails.send({
           from: "Sistema de Visitas <noreply@godoyprime.com.br>",
           to: [imobiliaria.email_contato],
-          subject: `🏠 Nova Solicitação de Visita - ${clienteNome}`,
+          subject: `🏠 Nova Solicitação de Visita - ${data.clienteNome}`,
           html: imobiliariaEmailHtml,
         }).then(result => {
           console.log("Email imobiliária enviado:", result);
@@ -360,10 +407,10 @@ const handler = async (req: Request): Promise<Response> => {
       // Link WhatsApp para imobiliária
       if (imobiliaria.telefone) {
         const whatsappMsg = formatWhatsAppMessage(
-          clienteNome,
-          clienteTelefone,
-          imovelTitulo,
-          imovelEndereco,
+          data.clienteNome,
+          data.clienteTelefone,
+          data.imovelTitulo,
+          data.imovelEndereco,
           data1Formatted,
           data2Formatted,
           null
@@ -379,7 +426,7 @@ const handler = async (req: Request): Promise<Response> => {
         resend.emails.send({
           from: "Sistema de Visitas <noreply@godoyprime.com.br>",
           to: [construtora.email_contato],
-          subject: `📊 Nova Solicitação de Visita - ${imovelTitulo}`,
+          subject: `📊 Nova Solicitação de Visita - ${data.imovelTitulo}`,
           html: construtoraEmailHtml,
         }).then(result => {
           console.log("Email construtora enviado:", result);
@@ -393,10 +440,10 @@ const handler = async (req: Request): Promise<Response> => {
       // Link WhatsApp para construtora
       if (construtora.telefone) {
         const whatsappMsg = formatWhatsAppMessage(
-          clienteNome,
-          clienteTelefone,
-          imovelTitulo,
-          imovelEndereco,
+          data.clienteNome,
+          data.clienteTelefone,
+          data.imovelTitulo,
+          data.imovelEndereco,
           data1Formatted,
           data2Formatted,
           imobiliaria?.nome_empresa || null
@@ -410,7 +457,7 @@ const handler = async (req: Request): Promise<Response> => {
         resend.emails.send({
           from: "Sistema de Visitas <noreply@godoyprime.com.br>",
           to: ["contato@godoyprime.com.br"],
-          subject: `📊 Nova Solicitação de Visita - ${imovelTitulo}`,
+          subject: `📊 Nova Solicitação de Visita - ${data.imovelTitulo}`,
           html: construtoraEmailHtml,
         })
       );
@@ -420,38 +467,19 @@ const handler = async (req: Request): Promise<Response> => {
     
     const successCount = results.filter(r => r.status === "fulfilled").length;
     const failedCount = results.filter(r => r.status === "rejected").length;
-    
-    console.log(`Emails enviados: ${successCount}/${results.length}`);
-    if (failedCount > 0) {
-      console.log("Emails que falharam:", results.filter(r => r.status === "rejected"));
-    }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        emailsSent: successCount,
-        totalEmails: results.length,
-        whatsappLinks: whatsappLinks,
-        details: {
-          clienteEmail: clienteEmail,
-          imobiliariaEmail: imobiliaria?.email_contato || null,
-          construtoraEmail: construtora?.email_contato || "contato@godoyprime.com.br",
-        }
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
-  } catch (error: any) {
-    console.error("Erro em send-visit-notification:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    console.log(`Emails enviados: ${successCount}/${results.length}`);
+
+    return successResponse({
+      success: true,
+      emailsSent: successCount,
+      emailsFailed: failedCount,
+      whatsappLinks,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Error in send-visit-notification function:", errorMessage);
+    return errorResponse(errorMessage, 500);
   }
 };
 
