@@ -379,12 +379,12 @@ export default function TesteConexao() {
                 <ul className="list-disc list-inside text-muted-foreground space-y-1">
                   <li>src/pages/imovel/PropertyPage.tsx - Página /imovel/:slug</li>
                   <li>src/hooks/usePropertyPage.ts - Hook de dados</li>
-                  <li>src/components/property/DynamicHero.tsx</li>
-                  <li>src/components/property/DynamicPropertyDetails.tsx</li>
-                  <li>src/components/property/DynamicDescription.tsx</li>
+                  <li>src/components/property/PropertyHeroNew.tsx</li>
+                  <li>src/components/property/ResumoMetricasImovel.tsx</li>
+                  <li>src/components/property/PropertyOverview.tsx</li>
                   <li>src/components/property/DynamicGallery.tsx</li>
                   <li>src/components/property/DynamicVideoSection.tsx</li>
-                  <li>src/components/property/DynamicContact.tsx</li>
+                  <li>src/components/property/PropertyContactSection.tsx</li>
                   <li>src/components/property/DynamicNavbar.tsx</li>
                   <li>src/components/property/DynamicFooter.tsx</li>
                 </ul>
