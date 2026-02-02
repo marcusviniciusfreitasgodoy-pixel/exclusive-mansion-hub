@@ -215,9 +215,9 @@ export default function FeedbacksPage() {
       <CardFooter className="gap-2 flex-wrap">
         {feedback.status === 'aguardando_corretor' && (
           <Button size="sm" asChild className="flex-1">
-            <Link to={`/dashboard/imobiliaria/visitas/${feedback.id}/feedback`}>
+            <Link to={`/dashboard/imobiliaria/feedback/${feedback.id}`}>
               <FileText className="mr-1 h-3 w-3" />
-              Preencher Feedback
+              Completar Feedback
             </Link>
           </Button>
         )}
