@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Phone, Mail, Calendar, MessageCircle, Send } from "lucide-react";
 import { AgendarVisitaModal } from "./AgendarVisitaModal";
+import { useAnalyticsTracking } from "@/components/integrations/AnalyticsScripts";
 import type { PropertyData, PropertyBranding } from "@/types/property-page";
 
 interface PropertyContactSectionProps {
@@ -23,6 +24,7 @@ export function PropertyContactSection({
   accessId,
 }: PropertyContactSectionProps) {
   const { toast } = useToast();
+  const { trackEvent } = useAnalyticsTracking();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agendarModalOpen, setAgendarModalOpen] = useState(false);
   const [honeypot, setHoneypot] = useState("");
@@ -72,6 +74,15 @@ export function PropertyContactSection({
       }).select("id").single();
 
       if (error) throw error;
+
+      // Track lead generation event for GA4
+      trackEvent('generate_lead', {
+        currency: 'BRL',
+        value: property.valor,
+        imovel_id: property.id,
+        imovel_titulo: property.titulo,
+        origem: 'formulario'
+      });
 
       toast({
         title: "Mensagem enviada!",
