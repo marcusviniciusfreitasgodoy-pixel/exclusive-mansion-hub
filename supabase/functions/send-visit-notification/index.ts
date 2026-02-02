@@ -154,6 +154,11 @@ const handler = async (req: Request): Promise<Response> => {
     const data1Formatted = formatDate(data.opcaoData1);
     const data2Formatted = formatDate(data.opcaoData2);
 
+    // Extrair informações do corretor (se disponível no banco)
+    const corretorNome = imobiliaria?.nome_empresa || construtora?.nome_empresa || "Equipe de Vendas";
+    const corretorTelefone = imobiliaria?.telefone || construtora?.telefone || "";
+    const safeTelefoneCorretor = htmlEncode(corretorTelefone);
+
     // ===== EMAIL PARA O CLIENTE =====
     const clienteEmailHtml = `
       <!DOCTYPE html>
@@ -165,49 +170,50 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8a 100%); border-radius: 12px 12px 0 0; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">📅 Solicitação de Visita Recebida!</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">✅ Sua visita foi confirmada!</h1>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            <p style="font-size: 18px; color: #333; line-height: 1.6; margin-bottom: 25px;">
               Olá <strong>${safeNome}</strong>,
             </p>
             
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Sua solicitação de visita foi recebida com sucesso! Entraremos em contato em breve para confirmar a melhor data.
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">🏠 <strong>Imóvel:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${safeTitulo}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">📅 <strong>Data:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${data1Formatted.split(' às ')[0] || data1Formatted}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">🕐 <strong>Horário:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${data1Formatted.includes(' às ') ? data1Formatted.split(' às ')[1] : 'A confirmar'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">📍 <strong>Endereço:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${safeEndereco}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">👤 <strong>Corretor:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${htmlEncode(corretorNome)}</td>
+              </tr>
+              ${corretorTelefone ? `
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">📞 <strong>Tel:</strong></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${safeTelefoneCorretor}</td>
+              </tr>
+              ` : ''}
+            </table>
+            
+            <p style="font-size: 18px; color: #1e3a5f; text-align: center; font-weight: bold; margin: 25px 0;">
+              Nos vemos lá! 🎉
             </p>
             
-            <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-              <h3 style="margin: 0 0 10px 0; color: #1e3a5f;">${safeTitulo}</h3>
-              <p style="margin: 0; color: #666;">📍 ${safeEndereco}</p>
-            </div>
-            
-            <h3 style="color: #1e3a5f; margin-top: 25px;">Suas opções de horário:</h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 10px; margin: 15px 0;">
-              <div style="background: #e8f4fd; padding: 12px 15px; border-radius: 8px;">
-                <strong>Opção 1:</strong> ${data1Formatted}
-              </div>
-              <div style="background: #e8f4fd; padding: 12px 15px; border-radius: 8px;">
-                <strong>Opção 2:</strong> ${data2Formatted}
-              </div>
-            </div>
-            
-            <p style="font-size: 16px; color: #333; line-height: 1.6; margin-top: 25px;">
-              Nossa equipe analisará sua disponibilidade e entrará em contato em breve 
-              para confirmar a melhor data.
-            </p>
-            
-            ${imobiliaria?.telefone ? `
+            ${corretorTelefone ? `
             <div style="margin-top: 25px; text-align: center;">
-              <a href="https://wa.me/55${imobiliaria.telefone.replace(/\D/g, "")}" 
-                 style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                📱 Falar via WhatsApp
-              </a>
-            </div>
-            ` : construtora?.telefone ? `
-            <div style="margin-top: 25px; text-align: center;">
-              <a href="https://wa.me/55${construtora.telefone.replace(/\D/g, "")}" 
+              <a href="https://wa.me/55${corretorTelefone.replace(/\D/g, "")}" 
                  style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                 📱 Falar via WhatsApp
               </a>
@@ -217,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
             
             <p style="font-size: 14px; color: #888; text-align: center;">
-              ${imobiliaria ? htmlEncode(imobiliaria.nome_empresa) : htmlEncode(construtora?.nome_empresa || "Equipe de Vendas")}
+              ${htmlEncode(corretorNome)}
             </p>
           </div>
         </div>
