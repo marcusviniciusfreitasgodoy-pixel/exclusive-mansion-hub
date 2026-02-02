@@ -9,6 +9,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+
 /**
  * Get default fields for a form type
  */
@@ -280,4 +281,89 @@ export function validarFormulario(
     valid: Object.keys(errors).length === 0,
     errors,
   };
+}
+
+/**
+ * Get custom fields headers for CSV export
+ */
+export async function getCustomFieldsForCSV(
+  imobiliariaId: string,
+  tipoFormulario: TipoFormulario
+): Promise<{ nome: string; label: string }[]> {
+  const { data, error } = await supabase
+    .from('configuracoes_formularios')
+    .select('campos')
+    .eq('imobiliaria_id', imobiliariaId)
+    .eq('tipo_formulario', tipoFormulario)
+    .eq('ativo', true)
+    .maybeSingle();
+
+  if (error || !data) {
+    return [];
+  }
+
+  const campos = data.campos as unknown as CampoFormulario[];
+  
+  // Return only non-blocked (custom) fields
+  return campos
+    .filter((c) => !c.bloqueado)
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((c) => ({ nome: c.nome, label: c.label }));
+}
+
+/**
+ * Export leads to CSV with dynamic custom fields
+ */
+export async function exportarLeadsCSV(
+  leads: Array<{
+    created_at: string;
+    cliente_nome: string;
+    cliente_email: string;
+    cliente_telefone: string;
+    imovel_titulo?: string;
+    status: string;
+    respostas_customizadas?: Record<string, unknown> | null;
+  }>,
+  imobiliariaId: string,
+  tipoFormulario: TipoFormulario = 'agendamento_visita'
+): Promise<{ blob: Blob; filename: string }> {
+  // Get custom field headers
+  const customFields = await getCustomFieldsForCSV(imobiliariaId, tipoFormulario);
+
+  // Build headers
+  const headersFixos = ['Data', 'Cliente', 'Email', 'Telefone', 'Imóvel', 'Status'];
+  const headersDinamicos = customFields.map((c) => c.label);
+  const headers = [...headersFixos, ...headersDinamicos];
+
+  // Build rows
+  const rows = leads.map((lead) => {
+    const linhaPadrao = [
+      format(new Date(lead.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      lead.cliente_nome,
+      lead.cliente_email,
+      lead.cliente_telefone,
+      lead.imovel_titulo || '',
+      lead.status,
+    ];
+
+    const linhaCustomizada = customFields.map((c) => {
+      const valor = lead.respostas_customizadas?.[c.nome];
+      return formatarValor(valor, undefined);
+    });
+
+    return [...linhaPadrao, ...linhaCustomizada];
+  });
+
+  // Generate CSV
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+    ),
+  ].join('\n');
+
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const filename = `leads_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
+
+  return { blob, filename };
 }
