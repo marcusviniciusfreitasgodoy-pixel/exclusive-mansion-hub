@@ -25,6 +25,7 @@ export function PropertyContactSection({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agendarModalOpen, setAgendarModalOpen] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -34,6 +35,16 @@ export function PropertyContactSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Honeypot check - se preenchido, é um bot
+    if (honeypot) {
+      // Simula sucesso para não alertar o bot
+      toast({
+        title: "Mensagem enviada!",
+        description: "Entraremos em contato em breve.",
+      });
+      return;
+    }
     
     if (!formData.nome || !formData.email) {
       toast({
@@ -185,6 +196,19 @@ export function PropertyContactSection({
                 Envie sua mensagem
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Honeypot field - invisível para usuários, bots preenchem automaticamente */}
+                <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input
+                    type="text"
+                    id="website"
+                    name="website"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="nome">Nome completo *</Label>
                   <Input

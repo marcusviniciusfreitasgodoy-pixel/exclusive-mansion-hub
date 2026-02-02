@@ -108,6 +108,7 @@ export function AgendarVisitaModal({
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormData>({
@@ -169,6 +170,17 @@ export function AgendarVisitaModal({
   };
 
   const onSubmit = async (data: FormData) => {
+    // Honeypot check - se preenchido, é um bot
+    if (honeypot) {
+      // Simula sucesso para não alertar o bot
+      toast.success("Solicitação de visita enviada!", {
+        description: "Entraremos em contato para confirmar a melhor data.",
+      });
+      form.reset();
+      onOpenChange(false);
+      return;
+    }
+    
     // Validar documento obrigatório
     if (!documentFile) {
       setDocumentError("É obrigatório enviar um documento de identificação (RG ou CNH).");
@@ -307,6 +319,19 @@ export function AgendarVisitaModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Honeypot field - invisível para usuários, bots preenchem automaticamente */}
+            <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+              <label htmlFor="company_url">Company URL</label>
+              <input
+                type="text"
+                id="company_url"
+                name="company_url"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
             {/* Primeira Opção */}
             <div className="p-4 border rounded-lg bg-background">
               <h4 className="font-medium mb-3 flex items-center gap-2">
