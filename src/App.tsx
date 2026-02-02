@@ -18,6 +18,7 @@ import GerenciarAcessos from "./pages/dashboard/construtora/GerenciarAcessos";
 import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
 import FeedbackCorretorPage from "./pages/dashboard/imobiliaria/FeedbackCorretor";
 import AgendamentosImobiliaria from "./pages/dashboard/imobiliaria/Agendamentos";
+import AnalyticsImobiliaria from "./pages/dashboard/imobiliaria/Analytics";
 import FeedbacksImobiliaria from "./pages/dashboard/imobiliaria/Feedbacks";
 import AgendamentosConstrutora from "./pages/dashboard/construtora/Agendamentos";
 import FeedbacksConstrutora from "./pages/dashboard/construtora/Feedbacks";
@@ -162,6 +163,11 @@ const App = () => (
             <Route path="/dashboard/imobiliaria/pipeline" element={
               <ProtectedRoute allowedRoles={['imobiliaria']}>
                 <PipelineImobiliaria />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/imobiliaria/analytics" element={
+              <ProtectedRoute allowedRoles={['imobiliaria']}>
+                <AnalyticsImobiliaria />
               </ProtectedRoute>
             } />
             
