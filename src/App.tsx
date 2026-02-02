@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,194 +6,233 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PageLoadingSpinner } from "@/components/ui/skeleton-loaders";
 import NotFound from "./pages/NotFound";
+
+// Eager load auth pages (critical path)
 import Login from "./pages/auth/Login";
 import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
-import ConstrutoraDashboard from "./pages/dashboard/construtora";
-import NovoImovel from "./pages/dashboard/construtora/NovoImovel";
-import EditarImovel from "./pages/dashboard/construtora/EditarImovel";
-import LeadsPage from "./pages/dashboard/construtora/Leads";
-import AnalyticsPage from "./pages/dashboard/construtora/Analytics";
-import GerenciarAcessos from "./pages/dashboard/construtora/GerenciarAcessos";
-import ImobiliariaDashboard from "./pages/dashboard/imobiliaria";
-import FeedbackCorretorPage from "./pages/dashboard/imobiliaria/FeedbackCorretor";
-import AgendamentosImobiliaria from "./pages/dashboard/imobiliaria/Agendamentos";
-import AnalyticsImobiliaria from "./pages/dashboard/imobiliaria/Analytics";
-import FeedbacksImobiliaria from "./pages/dashboard/imobiliaria/Feedbacks";
-import AgendamentosConstrutora from "./pages/dashboard/construtora/Agendamentos";
-import FeedbacksConstrutora from "./pages/dashboard/construtora/Feedbacks";
-import ConfiguracoesConstrutora from "./pages/dashboard/construtora/Configuracoes";
-import ConfiguracoesImobiliaria from "./pages/dashboard/imobiliaria/Configuracoes";
-import ConfiguracoesFormularios from "./pages/dashboard/imobiliaria/ConfiguracoesFormularios";
-import EditarFormulario from "./pages/dashboard/imobiliaria/EditarFormulario";
-import FeedbackClientePublico from "./pages/feedback/FeedbackClientePublico";
-import PropertyPage from "./pages/imovel/PropertyPage";
-import TesteConexao from "./pages/TesteConexao";
-import SeedData from "./pages/admin/SeedData";
-import Diagnostico from "./pages/admin/Diagnostico";
-import PipelineConstrutora from "./pages/dashboard/construtora/Pipeline";
-import PipelineImobiliaria from "./pages/dashboard/imobiliaria/Pipeline";
-import IntegracoesConstrutoraPage from "./pages/dashboard/construtora/Integracoes";
-import IntegracoesImobiliariaPage from "./pages/dashboard/imobiliaria/Integracoes";
 
-const queryClient = new QueryClient();
+// Lazy load dashboard pages (code splitting)
+const ConstrutoraDashboard = lazy(() => import("./pages/dashboard/construtora"));
+const NovoImovel = lazy(() => import("./pages/dashboard/construtora/NovoImovel"));
+const EditarImovel = lazy(() => import("./pages/dashboard/construtora/EditarImovel"));
+const LeadsPage = lazy(() => import("./pages/dashboard/construtora/Leads"));
+const AnalyticsPage = lazy(() => import("./pages/dashboard/construtora/Analytics"));
+const GerenciarAcessos = lazy(() => import("./pages/dashboard/construtora/GerenciarAcessos"));
+const AgendamentosConstrutora = lazy(() => import("./pages/dashboard/construtora/Agendamentos"));
+const FeedbacksConstrutora = lazy(() => import("./pages/dashboard/construtora/Feedbacks"));
+const ConfiguracoesConstrutora = lazy(() => import("./pages/dashboard/construtora/Configuracoes"));
+const PipelineConstrutora = lazy(() => import("./pages/dashboard/construtora/Pipeline"));
+const IntegracoesConstrutoraPage = lazy(() => import("./pages/dashboard/construtora/Integracoes"));
+
+const ImobiliariaDashboard = lazy(() => import("./pages/dashboard/imobiliaria"));
+const FeedbackCorretorPage = lazy(() => import("./pages/dashboard/imobiliaria/FeedbackCorretor"));
+const AgendamentosImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Agendamentos"));
+const AnalyticsImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Analytics"));
+const FeedbacksImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Feedbacks"));
+const ConfiguracoesImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Configuracoes"));
+const ConfiguracoesFormularios = lazy(() => import("./pages/dashboard/imobiliaria/ConfiguracoesFormularios"));
+const EditarFormulario = lazy(() => import("./pages/dashboard/imobiliaria/EditarFormulario"));
+const PipelineImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Pipeline"));
+const IntegracoesImobiliariaPage = lazy(() => import("./pages/dashboard/imobiliaria/Integracoes"));
+
+// Lazy load public pages
+const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
+const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClientePublico"));
+
+// Lazy load admin/utility pages
+const TesteConexao = lazy(() => import("./pages/TesteConexao"));
+const SeedData = lazy(() => import("./pages/admin/SeedData"));
+const Diagnostico = lazy(() => import("./pages/admin/Diagnostico"));
+
+// Configure React Query with optimized defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Wrapper component for lazy routes with Suspense
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoadingSpinner />}>
+      {children}
+    </Suspense>
+  );
+}
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Test Routes */}
-            <Route path="/teste-conexao" element={<TesteConexao />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/seed-data" element={
-              <ProtectedRoute allowedRoles={['construtora', 'admin']}>
-                <SeedData />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/diagnostico" element={<Diagnostico />} />
-            
-            {/* Auth Routes */}
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
-            <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
-            
-            {/* Dynamic Property Page (White Label) */}
-            <Route path="/imovel/:slug" element={<PropertyPage />} />
-            
-            {/* Construtora Dashboard */}
-            <Route path="/dashboard/construtora" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <ConstrutoraDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/novo-imovel" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <NovoImovel />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/imovel/:id" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <EditarImovel />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/imovel/:id/acessos" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <GerenciarAcessos />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/leads" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <LeadsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/analytics" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/agendamentos" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <AgendamentosConstrutora />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/feedbacks" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <FeedbacksConstrutora />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/configuracoes" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <ConfiguracoesConstrutora />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/pipeline" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <PipelineConstrutora />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/construtora/integracoes" element={
-              <ProtectedRoute allowedRoles={['construtora']}>
-                <IntegracoesConstrutoraPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Imobiliaria Dashboard */}
-            <Route path="/dashboard/imobiliaria" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <ImobiliariaDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/agendamentos" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <AgendamentosImobiliaria />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/feedbacks" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <FeedbacksImobiliaria />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/visitas/:agendamentoId/feedback" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <FeedbackCorretorPage />
-              </ProtectedRoute>
-            } />
-            {/* Nova rota: corretor acessa feedback existente (cliente já respondeu) */}
-            <Route path="/dashboard/imobiliaria/feedback/:feedbackId" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <FeedbackCorretorPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/configuracoes" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <ConfiguracoesImobiliaria />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/configuracoes/formularios" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <ConfiguracoesFormularios />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/configuracoes/formularios/:tipo/editar" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <EditarFormulario />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/pipeline" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <PipelineImobiliaria />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/analytics" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <AnalyticsImobiliaria />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/imobiliaria/integracoes" element={
-              <ProtectedRoute allowedRoles={['imobiliaria']}>
-                <IntegracoesImobiliariaPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Feedback Público (sem autenticação) */}
-            <Route path="/feedback-visita/:token" element={<FeedbackClientePublico />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              
+              {/* Test Routes */}
+              <Route path="/teste-conexao" element={
+                <LazyRoute><TesteConexao /></LazyRoute>
+              } />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/seed-data" element={
+                <ProtectedRoute allowedRoles={['construtora', 'admin']}>
+                  <LazyRoute><SeedData /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/diagnostico" element={
+                <LazyRoute><Diagnostico /></LazyRoute>
+              } />
+              
+              {/* Auth Routes (eager loaded for fast initial load) */}
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
+              <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
+              
+              {/* Dynamic Property Page (White Label) */}
+              <Route path="/imovel/:slug" element={
+                <LazyRoute><PropertyPage /></LazyRoute>
+              } />
+              
+              {/* Construtora Dashboard */}
+              <Route path="/dashboard/construtora" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><ConstrutoraDashboard /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/novo-imovel" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><NovoImovel /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/imovel/:id" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><EditarImovel /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/imovel/:id/acessos" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><GerenciarAcessos /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/leads" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><LeadsPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/analytics" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><AnalyticsPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/agendamentos" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><AgendamentosConstrutora /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/feedbacks" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><FeedbacksConstrutora /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/configuracoes" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><ConfiguracoesConstrutora /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/pipeline" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><PipelineConstrutora /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/integracoes" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><IntegracoesConstrutoraPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              
+              {/* Imobiliaria Dashboard */}
+              <Route path="/dashboard/imobiliaria" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><ImobiliariaDashboard /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/agendamentos" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><AgendamentosImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/feedbacks" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><FeedbacksImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/visitas/:agendamentoId/feedback" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><FeedbackCorretorPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/feedback/:feedbackId" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><FeedbackCorretorPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/configuracoes" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><ConfiguracoesImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/configuracoes/formularios" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><ConfiguracoesFormularios /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/configuracoes/formularios/:tipo/editar" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><EditarFormulario /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/pipeline" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><PipelineImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/analytics" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><AnalyticsImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/integracoes" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><IntegracoesImobiliariaPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              
+              {/* Feedback Público (sem autenticação) */}
+              <Route path="/feedback-visita/:token" element={
+                <LazyRoute><FeedbackClientePublico /></LazyRoute>
+              } />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
