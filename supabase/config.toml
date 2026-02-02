@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-feedback-pdf]
 verify_jwt = false
+
+[functions.send-visit-reminder]
+verify_jwt = false
