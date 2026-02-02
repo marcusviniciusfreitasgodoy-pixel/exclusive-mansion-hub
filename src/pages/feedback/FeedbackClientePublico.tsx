@@ -68,12 +68,13 @@ export default function FeedbackClientePublico() {
   const signatureRef = useRef<SignaturePadRef>(null);
   const [hasSignature, setHasSignature] = useState(false);
 
-  // Buscar feedback pelo token
+  // Buscar feedback pelo token usando VIEW segura que não expõe dados sensíveis
   const { data: feedback, isLoading, error, refetch } = useQuery({
     queryKey: ["feedback-publico", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("feedbacks_visitas")
+      // Usar VIEW segura para leitura - não expõe IP, device, geolocation, orçamento
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from("feedbacks_visitas_publico")
         .select(`
           *,
           imoveis(titulo, endereco, bairro, cidade, valor),
@@ -83,8 +84,8 @@ export default function FeedbackClientePublico() {
         .eq("token_acesso_cliente", tokenValue)
         .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      if (feedbackError) throw feedbackError;
+      return feedbackData;
     },
     enabled: isValidToken,
   });

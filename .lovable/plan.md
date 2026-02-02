@@ -81,13 +81,14 @@ A aplicacao esta **quase pronta para producao**, mas existem **3 vulnerabilidade
 
 ### Seguranca (OBRIGATORIO)
 
-- [ ] **Corrigir RLS da tabela agendamentos_visitas**
-  - Adicionar politica que restrinja SELECT apenas para imobiliaria/construtora owner
-  - Manter INSERT publico (necessario para formulario)
+- [x] **Corrigir RLS da tabela agendamentos_visitas**
+  - ✅ Verificado: já não existe política de SELECT público
+  - ✅ INSERT público mantido para formulário
 
-- [ ] **Corrigir RLS da tabela feedbacks_visitas**
-  - Limitar campos expostos via token (remover IP, device, geolocalizacao do SELECT publico)
-  - Ou criar view que exponha apenas campos necessarios
+- [x] **Corrigir RLS da tabela feedbacks_visitas**
+  - ✅ Criada VIEW `feedbacks_visitas_publico` que expõe apenas campos seguros
+  - ✅ Removida política que expunha todos os campos via token
+  - ✅ Atualizado código para usar VIEW segura
 
 - [ ] **Habilitar Leaked Password Protection**
   - Acessar Lovable Cloud > Auth > Security
@@ -222,21 +223,36 @@ Publico:
 
 ### Pronto para Producao?
 
-**NAO AINDA** - Existem 2 vulnerabilidades criticas que expoe dados de clientes.
+**QUASE** - Vulnerabilidades críticas corrigidas. Restam 2 warnings de menor prioridade.
 
-### Apos Correcoes?
+### Correcoes Realizadas
 
-**SIM** - A aplicacao esta robusta, com:
-- Arquitetura multi-tenant funcional
-- Fluxos de negocio completos
-- Performance otimizada
-- Notificacoes automatizadas
-- UI/UX profissional
+1. ✅ **RLS de agendamentos_visitas** - Verificado: não havia SELECT público
+2. ✅ **RLS de feedbacks_visitas** - Criada VIEW segura `feedbacks_visitas_publico`
+3. ⚠️ **Leaked Password Protection** - Pendente (configuração manual no Cloud)
+4. ⚠️ **Extensões no schema public** - Alerta de baixa prioridade
 
 ### Proximos Passos Recomendados
 
-1. Corrigir vulnerabilidades RLS (URGENTE)
-2. Habilitar Leaked Password Protection
-3. Testar fluxo end-to-end
-4. Configurar dominio e Cloudflare
-5. Go-live com monitoramento ativo
+1. ✅ ~~Corrigir vulnerabilidades RLS~~ (FEITO)
+2. ⏳ Habilitar Leaked Password Protection (Lovable Cloud > Auth > Security)
+3. ⏳ Testar fluxo end-to-end
+4. ⏳ Configurar dominio e Cloudflare
+5. ⏳ Go-live com monitoramento ativo
+
+### O que foi protegido
+
+A VIEW `feedbacks_visitas_publico` agora expõe APENAS:
+- Dados básicos do feedback (id, token, status, data)
+- Nome do cliente e email (necessários para UI)
+- Avaliações e comentários
+- Assinatura do cliente
+- PDF gerado
+
+**NÃO EXPÕE MAIS:**
+- IP do cliente
+- Device/User Agent
+- Geolocalização
+- Orçamento disponível
+- Dados financeiros
+- Email do corretor

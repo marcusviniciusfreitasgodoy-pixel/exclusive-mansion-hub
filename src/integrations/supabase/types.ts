@@ -1297,7 +1297,124 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      feedbacks_visitas_publico: {
+        Row: {
+          assinatura_cliente: string | null
+          assinatura_cliente_data: string | null
+          avaliacao_acabamento: number | null
+          avaliacao_atendimento: number | null
+          avaliacao_custo_beneficio: number | null
+          avaliacao_layout: number | null
+          avaliacao_localizacao: number | null
+          cliente_email: string | null
+          cliente_nome: string | null
+          construtora_id: string | null
+          corretor_nome: string | null
+          data_visita: string | null
+          feedback_cliente_em: string | null
+          id: string | null
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          interesse_compra:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          nps_cliente: number | null
+          objecoes: Json | null
+          objecoes_detalhes: string | null
+          pdf_url: string | null
+          pontos_negativos: string | null
+          pontos_positivos: string | null
+          respostas_cliente_customizadas: Json | null
+          status: Database["public"]["Enums"]["feedback_status"] | null
+          sugestoes: string | null
+          token_acesso_cliente: string | null
+        }
+        Insert: {
+          assinatura_cliente?: string | null
+          assinatura_cliente_data?: string | null
+          avaliacao_acabamento?: number | null
+          avaliacao_atendimento?: number | null
+          avaliacao_custo_beneficio?: number | null
+          avaliacao_layout?: number | null
+          avaliacao_localizacao?: number | null
+          cliente_email?: string | null
+          cliente_nome?: string | null
+          construtora_id?: string | null
+          corretor_nome?: string | null
+          data_visita?: string | null
+          feedback_cliente_em?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          interesse_compra?:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          nps_cliente?: number | null
+          objecoes?: Json | null
+          objecoes_detalhes?: string | null
+          pdf_url?: string | null
+          pontos_negativos?: string | null
+          pontos_positivos?: string | null
+          respostas_cliente_customizadas?: Json | null
+          status?: Database["public"]["Enums"]["feedback_status"] | null
+          sugestoes?: string | null
+          token_acesso_cliente?: string | null
+        }
+        Update: {
+          assinatura_cliente?: string | null
+          assinatura_cliente_data?: string | null
+          avaliacao_acabamento?: number | null
+          avaliacao_atendimento?: number | null
+          avaliacao_custo_beneficio?: number | null
+          avaliacao_layout?: number | null
+          avaliacao_localizacao?: number | null
+          cliente_email?: string | null
+          cliente_nome?: string | null
+          construtora_id?: string | null
+          corretor_nome?: string | null
+          data_visita?: string | null
+          feedback_cliente_em?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          interesse_compra?:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          nps_cliente?: number | null
+          objecoes?: Json | null
+          objecoes_detalhes?: string | null
+          pdf_url?: string | null
+          pontos_negativos?: string | null
+          pontos_positivos?: string | null
+          respostas_cliente_customizadas?: Json | null
+          status?: Database["public"]["Enums"]["feedback_status"] | null
+          sugestoes?: string | null
+          token_acesso_cliente?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_visitas_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_visitas_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_construtora_id: { Args: { _user_id: string }; Returns: string }
