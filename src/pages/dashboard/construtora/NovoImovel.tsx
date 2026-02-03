@@ -181,25 +181,33 @@ export default function NovoImovel() {
 
       console.log('[Publish] Imovel created:', imovel.id);
 
-      // Create white-label access for the construtora itself
-      // First, we need to check if there's an imobiliaria for this user or create a default access
-      const { data: access, error: accessError } = await supabase
-        .from('imobiliaria_imovel_access')
-        .insert({
-          imovel_id: imovel.id,
-          imobiliaria_id: construtora.id, // Using construtora ID as a workaround
-          url_slug: slug,
-          status: 'active',
-          visitas: 0,
-        })
-        .select()
-        .single();
+      // Find an imobiliaria to create the public access
+      // First, try to find an imobiliaria associated with this user
+      const { data: imobiliarias } = await supabase
+        .from('imobiliarias')
+        .select('id')
+        .limit(1);
 
-      if (accessError) {
-        console.warn('[Publish] Could not create access:', accessError);
-        // Don't fail the whole operation
+      if (imobiliarias && imobiliarias.length > 0) {
+        const { data: access, error: accessError } = await supabase
+          .from('imobiliaria_imovel_access')
+          .insert({
+            imovel_id: imovel.id,
+            imobiliaria_id: imobiliarias[0].id,
+            url_slug: slug,
+            status: 'active',
+            visitas: 0,
+          })
+          .select()
+          .single();
+
+        if (accessError) {
+          console.warn('[Publish] Could not create access:', accessError);
+        } else {
+          console.log('[Publish] Access created with slug:', slug);
+        }
       } else {
-        console.log('[Publish] Access created with slug:', slug);
+        console.warn('[Publish] No imobiliaria found to create access');
       }
 
       // Clear draft
