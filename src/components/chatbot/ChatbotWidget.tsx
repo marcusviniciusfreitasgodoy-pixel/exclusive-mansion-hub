@@ -271,11 +271,11 @@ export function ChatbotWidget({
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - positioned on the LEFT to avoid WhatsApp overlap */}
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl",
+          "fixed bottom-6 left-4 md:left-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl",
           isOpen && "hidden"
         )}
         aria-label="Abrir chat com Sofia"
@@ -283,9 +283,9 @@ export function ChatbotWidget({
         <MessageCircle className="h-6 w-6" />
       </button>
 
-      {/* Chat Window */}
+      {/* Chat Window - positioned on the LEFT */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[520px] w-[400px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
+        <div className="fixed bottom-6 left-4 md:left-8 z-50 flex h-[520px] w-[400px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between border-b bg-primary px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-3">
