@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Building2, Eye, Users } from 'lucide-react';
+import { TrendingUp, Building2, Eye, Users, Home } from 'lucide-react';
 
 interface ImobiliariaEvolutionChartProps {
   construtoraId: string;
@@ -27,19 +27,39 @@ type AggregationType = 'daily' | 'weekly';
 export function ImobiliariaEvolutionChart({ construtoraId, startDate, periodDays }: ImobiliariaEvolutionChartProps) {
   const [metric, setMetric] = useState<MetricType>('leads');
   const [aggregation, setAggregation] = useState<AggregationType>(periodDays > 30 ? 'weekly' : 'daily');
+  const [selectedImovelId, setSelectedImovelId] = useState<string>('all');
+
+  // Fetch all properties for this construtora
+  const { data: imoveisOptions } = useQuery({
+    queryKey: ['imoveis-options', construtoraId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('imoveis')
+        .select('id, titulo')
+        .eq('construtora_id', construtoraId)
+        .order('titulo');
+      return data || [];
+    },
+    enabled: !!construtoraId,
+  });
 
   const { data: evolutionData, isLoading } = useQuery({
-    queryKey: ['imobiliaria-evolution', construtoraId, startDate.toISOString(), metric],
+    queryKey: ['imobiliaria-evolution', construtoraId, startDate.toISOString(), metric, selectedImovelId],
     queryFn: async () => {
-      // Get all imoveis for this construtora
-      const { data: imoveis } = await supabase
-        .from('imoveis')
-        .select('id')
-        .eq('construtora_id', construtoraId);
+      // Get imoveis based on filter
+      let imovelIds: string[] = [];
+      
+      if (selectedImovelId === 'all') {
+        const { data: imoveis } = await supabase
+          .from('imoveis')
+          .select('id')
+          .eq('construtora_id', construtoraId);
+        imovelIds = imoveis?.map(i => i.id) || [];
+      } else {
+        imovelIds = [selectedImovelId];
+      }
 
-      if (!imoveis?.length) return { chartData: [], imobiliarias: [] };
-
-      const imovelIds = imoveis.map(i => i.id);
+      if (!imovelIds.length) return { chartData: [], imobiliarias: [] };
 
       // Get all active access records with imobiliaria names
       const { data: accessRecords } = await supabase
@@ -215,36 +235,56 @@ export function ImobiliariaEvolutionChart({ construtoraId, startDate, periodDays
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Evolução por Imobiliária
-            </CardTitle>
-            <CardDescription>
-              Comparativo temporal de performance das parceiras
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Tabs value={metric} onValueChange={(v) => setMetric(v as MetricType)}>
-              <TabsList className="h-9">
-                <TabsTrigger value="leads" className="text-xs px-3">
-                  <Users className="h-3.5 w-3.5 mr-1" />
-                  Leads
-                </TabsTrigger>
-                <TabsTrigger value="views" className="text-xs px-3">
-                  <Eye className="h-3.5 w-3.5 mr-1" />
-                  Views
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Select value={aggregation} onValueChange={(v) => setAggregation(v as AggregationType)}>
-              <SelectTrigger className="w-[100px] h-9">
-                <SelectValue />
-              </SelectTrigger>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Evolução por Imobiliária
+              </CardTitle>
+              <CardDescription>
+                Comparativo temporal de performance das parceiras
+              </CardDescription>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Tabs value={metric} onValueChange={(v) => setMetric(v as MetricType)}>
+                <TabsList className="h-9">
+                  <TabsTrigger value="leads" className="text-xs px-3">
+                    <Users className="h-3.5 w-3.5 mr-1" />
+                    Leads
+                  </TabsTrigger>
+                  <TabsTrigger value="views" className="text-xs px-3">
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    Views
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Select value={aggregation} onValueChange={(v) => setAggregation(v as AggregationType)}>
+                <SelectTrigger className="w-[100px] h-9">
+                  <SelectValue />
+                </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily">Diário</SelectItem>
                 <SelectItem value="weekly">Semanal</SelectItem>
+              </SelectContent>
+            </Select>
+            </div>
+          </div>
+          
+          {/* Property Filter */}
+          <div className="flex items-center gap-2">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedImovelId} onValueChange={setSelectedImovelId}>
+              <SelectTrigger className="w-full sm:w-[280px] h-9">
+                <SelectValue placeholder="Filtrar por imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os imóveis</SelectItem>
+                {imoveisOptions?.map((imovel) => (
+                  <SelectItem key={imovel.id} value={imovel.id}>
+                    {imovel.titulo.length > 40 ? imovel.titulo.substring(0, 40) + '...' : imovel.titulo}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
