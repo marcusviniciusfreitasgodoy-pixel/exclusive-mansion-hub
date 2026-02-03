@@ -93,7 +93,7 @@ export default function Login() {
         <div className="text-center">
           <img src={logo} alt="Logo" className="mx-auto h-16" />
           <h1 className="mt-6 text-3xl font-bold text-secondary">Entrar</h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-primary-foreground">
             Acesse sua conta para gerenciar seus imóveis
           </p>
         </div>
