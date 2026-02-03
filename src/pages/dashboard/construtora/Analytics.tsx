@@ -482,7 +482,7 @@ export default function AnalyticsPage() {
         />
         <KPICard
           title="NPS Médio"
-          value={kpis?.avgNps !== null ? kpis.avgNps.toFixed(1) : 'N/A'}
+          value={kpis?.avgNps != null ? kpis.avgNps.toFixed(1) : 'N/A'}
           icon={Star}
           subtitle="satisfação dos clientes"
         />
