@@ -59,9 +59,9 @@ function TemplateLuxoPreview() {
           SOTHEBY'S REALTY
         </span>
         <nav className="hidden md:flex gap-6 text-sm font-medium">
-          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Buy</span>
-          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Sell</span>
-          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Rent</span>
+          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Comprar</span>
+          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Vender</span>
+          <span className="hover:text-[#D4AF37] transition-colors cursor-pointer">Alugar</span>
         </nav>
       </header>
 
@@ -77,7 +77,7 @@ function TemplateLuxoPreview() {
             {formatCurrency(sampleProperty.valor)}
           </p>
           <Button className="bg-[#D4AF37] text-black hover:bg-[#c9a430] rounded-lg px-8 py-3 font-semibold uppercase tracking-wide">
-            Contact Agent
+            Falar com Corretor
           </Button>
         </div>
       </section>
@@ -98,7 +98,6 @@ function TemplateLuxoPreview() {
         </div>
       </section>
 
-      {/* Details Grid */}
       <section className="p-6 bg-white">
         <div className="grid md:grid-cols-2 gap-8">
           <div>
@@ -135,19 +134,19 @@ function TemplateLuxoPreview() {
       <footer className="bg-black text-white p-6">
         <div className="grid md:grid-cols-4 gap-6 text-sm">
           <div>
-            <h4 className="font-serif text-[#D4AF37] mb-2">Navigation</h4>
+            <h4 className="font-serif text-[#D4AF37] mb-2">Navegação</h4>
             <div className="space-y-1 text-gray-400">
-              <p>Buy</p>
-              <p>Sell</p>
-              <p>Rent</p>
+              <p>Comprar</p>
+              <p>Vender</p>
+              <p>Alugar</p>
             </div>
           </div>
           <div>
-            <h4 className="font-serif text-[#D4AF37] mb-2">Contact</h4>
+            <h4 className="font-serif text-[#D4AF37] mb-2">Contato</h4>
             <p className="text-gray-400">+55 21 99999-9999</p>
           </div>
           <div>
-            <h4 className="font-serif text-[#D4AF37] mb-2">Social</h4>
+            <h4 className="font-serif text-[#D4AF37] mb-2">Redes Sociais</h4>
             <div className="flex gap-3 text-[#D4AF37]">
               <span>FB</span>
               <span>IG</span>
@@ -159,11 +158,11 @@ function TemplateLuxoPreview() {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="E-mail"
                 className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm flex-1"
               />
               <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-[#c9a430]">
-                Go
+                Ir
               </Button>
             </div>
           </div>
@@ -183,10 +182,10 @@ function TemplateModernoPreview() {
           THE AGENCY
         </span>
         <nav className="hidden md:flex gap-6 text-sm font-medium text-gray-600">
-          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Buy</span>
-          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Sell</span>
-          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Rent</span>
-          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Agents</span>
+          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Comprar</span>
+          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Vender</span>
+          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Alugar</span>
+          <span className="hover:text-[#1E3A8A] transition-colors cursor-pointer">Corretores</span>
         </nav>
       </header>
 
@@ -202,7 +201,7 @@ function TemplateModernoPreview() {
             {formatCurrency(sampleProperty.valor)}
           </p>
           <Button className="bg-[#1E3A8A] text-white hover:bg-[#1e3a8a]/90 rounded-xl px-6 py-2 w-fit shadow-lg">
-            Request Info
+            Solicitar Informações
           </Button>
         </div>
       </section>
@@ -244,21 +243,21 @@ function TemplateModernoPreview() {
       <section className="p-6 bg-white">
         <div className="grid md:grid-cols-3 gap-6">
           <div>
-            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Lifestyle</h3>
+            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Estilo de Vida</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
               {sampleProperty.descricao.slice(0, 150)}...
             </p>
           </div>
           <div>
-            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Specs</h3>
+            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Especificações</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Bed className="w-4 h-4 text-[#10B981]" />
-                <span className="text-sm text-gray-600">{sampleProperty.quartos} Bedrooms</span>
+                <span className="text-sm text-gray-600">{sampleProperty.quartos} Quartos</span>
               </div>
               <div className="flex items-center gap-2">
                 <Bath className="w-4 h-4 text-[#10B981]" />
-                <span className="text-sm text-gray-600">{sampleProperty.banheiros} Bathrooms</span>
+                <span className="text-sm text-gray-600">{sampleProperty.banheiros} Banheiros</span>
               </div>
               <div className="flex items-center gap-2">
                 <Maximize className="w-4 h-4 text-[#10B981]" />
@@ -267,7 +266,7 @@ function TemplateModernoPreview() {
             </div>
           </div>
           <div>
-            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Amenities</h3>
+            <h3 className="font-sans text-lg font-semibold text-[#1E3A8A] mb-3">Comodidades</h3>
             <div className="flex flex-wrap gap-2">
               {sampleProperty.amenidades.slice(0, 4).map((a) => (
                 <Badge key={a} variant="outline" className="text-[#10B981] border-[#10B981] text-xs">
@@ -285,13 +284,13 @@ function TemplateModernoPreview() {
           <div>
             <h4 className="font-semibold text-[#1E3A8A] mb-2">Links</h4>
             <div className="space-y-1 text-gray-600">
-              <p>About</p>
-              <p>Agents</p>
-              <p>Listings</p>
+              <p>Sobre</p>
+              <p>Corretores</p>
+              <p>Imóveis</p>
             </div>
           </div>
           <div>
-            <h4 className="font-semibold text-[#1E3A8A] mb-2">Social</h4>
+            <h4 className="font-semibold text-[#1E3A8A] mb-2">Redes Sociais</h4>
             <div className="flex gap-3 text-[#10B981]">
               <span>Instagram</span>
               <span>LinkedIn</span>
@@ -302,11 +301,11 @@ function TemplateModernoPreview() {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder="Seu e-mail"
                 className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-sm flex-1"
               />
               <Button size="sm" className="bg-[#1E3A8A] text-white hover:bg-[#1e3a8a]/90 rounded-lg">
-                Subscribe
+                Assinar
               </Button>
             </div>
           </div>

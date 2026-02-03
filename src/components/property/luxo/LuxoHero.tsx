@@ -159,7 +159,7 @@ export function LuxoHero({ property, branding, onContactClick, onGalleryOpen }: 
             borderRadius: "8px",
           }}
         >
-          Contact Agent
+          Falar com Corretor
         </Button>
       </div>
 

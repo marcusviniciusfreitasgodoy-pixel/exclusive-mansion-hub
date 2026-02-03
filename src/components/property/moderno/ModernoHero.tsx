@@ -161,7 +161,7 @@ export function ModernoHero({ property, branding, onContactClick, onGalleryOpen 
             borderRadius: "12px",
           }}
         >
-          Request Info
+          Solicitar Informações
         </Button>
       </div>
 
