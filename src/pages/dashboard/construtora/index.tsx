@@ -39,37 +39,59 @@ export default function ConstrutoraDashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      // Helper to parse JSONB that may come as string or array
+      const parseJsonArray = (value: any): any[] => {
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      };
+
       // Parse JSONB fields properly
-      return (data || []).map(imovel => ({
-        ...imovel,
-        diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais : [],
-        imagens: Array.isArray(imovel.imagens) ? imovel.imagens.map((img: any) => 
-          typeof img === 'string' ? { url: img } : { url: img?.url || '', alt: img?.alt }
-        ) : [],
-        videos: Array.isArray(imovel.videos) ? imovel.videos.map((vid: any) => 
-          typeof vid === 'string' ? { url: vid } : { url: vid?.url || '', tipo: vid?.tipo }
-        ) : [],
-        features_interior: Array.isArray(imovel.features_interior) ? imovel.features_interior : [],
-        features_exterior: Array.isArray(imovel.features_exterior) ? imovel.features_exterior : [],
-        amenities: Array.isArray(imovel.amenities) ? imovel.amenities : [],
-        tipo_piso: Array.isArray(imovel.tipo_piso) ? imovel.tipo_piso : [],
-        caracteristicas_terreno: Array.isArray(imovel.caracteristicas_terreno) ? imovel.caracteristicas_terreno : [],
-        vista: Array.isArray(imovel.vista) ? imovel.vista : [],
-        aquecimento: Array.isArray(imovel.aquecimento) ? imovel.aquecimento : [],
-        tags: Array.isArray(imovel.tags) ? imovel.tags : [],
-        corretores: Array.isArray(imovel.corretores) ? imovel.corretores.map((c: any) => ({
-          nome: c?.nome || '',
-          cargo: c?.cargo,
-          fotoUrl: c?.fotoUrl,
-          telefone: c?.telefone,
-          email: c?.email,
-          miniBio: c?.miniBio,
-        })) : [],
-        template_escolhido: imovel.template_escolhido || 'moderno',
-        customizacao_template: typeof imovel.customizacao_template === 'object' 
-          ? imovel.customizacao_template || {} 
-          : {},
-      })) as Imovel[];
+      return (data || []).map(imovel => {
+        const imagensArray = parseJsonArray(imovel.imagens);
+        const videosArray = parseJsonArray(imovel.videos);
+        const diferenciaisArray = parseJsonArray(imovel.diferenciais);
+        const corretoresArray = parseJsonArray(imovel.corretores);
+
+        return {
+          ...imovel,
+          diferenciais: diferenciaisArray,
+          imagens: imagensArray.map((img: any) => 
+            typeof img === 'string' ? { url: img } : { url: img?.url || '', alt: img?.alt }
+          ),
+          videos: videosArray.map((vid: any) => 
+            typeof vid === 'string' ? { url: vid } : { url: vid?.url || '', tipo: vid?.tipo }
+          ),
+          features_interior: parseJsonArray(imovel.features_interior),
+          features_exterior: parseJsonArray(imovel.features_exterior),
+          amenities: parseJsonArray(imovel.amenities),
+          tipo_piso: parseJsonArray(imovel.tipo_piso),
+          caracteristicas_terreno: parseJsonArray(imovel.caracteristicas_terreno),
+          vista: parseJsonArray(imovel.vista),
+          aquecimento: parseJsonArray(imovel.aquecimento),
+          tags: parseJsonArray(imovel.tags),
+          corretores: corretoresArray.map((c: any) => ({
+            nome: c?.nome || '',
+            cargo: c?.cargo,
+            fotoUrl: c?.fotoUrl,
+            telefone: c?.telefone,
+            email: c?.email,
+            miniBio: c?.miniBio,
+          })),
+          template_escolhido: imovel.template_escolhido || 'moderno',
+          customizacao_template: typeof imovel.customizacao_template === 'object' 
+            ? imovel.customizacao_template || {} 
+            : {},
+        };
+      }) as Imovel[];
     },
     enabled: !!construtora?.id,
   });
