@@ -1135,6 +1135,85 @@ export type Database = {
           },
         ]
       }
+      midias_pendentes: {
+        Row: {
+          access_id: string
+          alt: string | null
+          created_at: string | null
+          enviado_em: string | null
+          id: string
+          imobiliaria_id: string
+          imovel_id: string
+          motivo_rejeicao: string | null
+          nome_arquivo_original: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          status: Database["public"]["Enums"]["midia_status"] | null
+          tamanho_bytes: number | null
+          tipo: Database["public"]["Enums"]["midia_tipo"]
+          url: string
+          video_tipo: string | null
+        }
+        Insert: {
+          access_id: string
+          alt?: string | null
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          imobiliaria_id: string
+          imovel_id: string
+          motivo_rejeicao?: string | null
+          nome_arquivo_original?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["midia_status"] | null
+          tamanho_bytes?: number | null
+          tipo: Database["public"]["Enums"]["midia_tipo"]
+          url: string
+          video_tipo?: string | null
+        }
+        Update: {
+          access_id?: string
+          alt?: string | null
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          imobiliaria_id?: string
+          imovel_id?: string
+          motivo_rejeicao?: string | null
+          nome_arquivo_original?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["midia_status"] | null
+          tamanho_bytes?: number | null
+          tipo?: Database["public"]["Enums"]["midia_tipo"]
+          url?: string
+          video_tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "midias_pendentes_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliaria_imovel_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "midias_pendentes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "midias_pendentes_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notas_lead: {
         Row: {
           anexos: Json | null
@@ -1496,6 +1575,8 @@ export type Database = {
         | "qualificado"
         | "visita_agendada"
         | "perdido"
+      midia_status: "pendente" | "aprovado" | "rejeitado"
+      midia_tipo: "imagem" | "video"
       plano_construtora: "start" | "pro" | "enterprise"
       poder_decisao: "total" | "parcial" | "nenhum"
       prazo_compra:
@@ -1663,6 +1744,8 @@ export const Constants = {
         "visita_agendada",
         "perdido",
       ],
+      midia_status: ["pendente", "aprovado", "rejeitado"],
+      midia_tipo: ["imagem", "video"],
       plano_construtora: ["start", "pro", "enterprise"],
       poder_decisao: ["total", "parcial", "nenhum"],
       prazo_compra: [

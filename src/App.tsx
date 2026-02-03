@@ -27,6 +27,7 @@ const FeedbacksConstrutora = lazy(() => import("./pages/dashboard/construtora/Fe
 const ConfiguracoesConstrutora = lazy(() => import("./pages/dashboard/construtora/Configuracoes"));
 const PipelineConstrutora = lazy(() => import("./pages/dashboard/construtora/Pipeline"));
 const IntegracoesConstrutoraPage = lazy(() => import("./pages/dashboard/construtora/Integracoes"));
+const AprovarMidias = lazy(() => import("./pages/dashboard/construtora/AprovarMidias"));
 
 const ImobiliariaDashboard = lazy(() => import("./pages/dashboard/imobiliaria"));
 const FeedbackCorretorPage = lazy(() => import("./pages/dashboard/imobiliaria/FeedbackCorretor"));
@@ -38,6 +39,7 @@ const ConfiguracoesFormularios = lazy(() => import("./pages/dashboard/imobiliari
 const EditarFormulario = lazy(() => import("./pages/dashboard/imobiliaria/EditarFormulario"));
 const PipelineImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Pipeline"));
 const IntegracoesImobiliariaPage = lazy(() => import("./pages/dashboard/imobiliaria/Integracoes"));
+const MinhasMidias = lazy(() => import("./pages/dashboard/imobiliaria/MinhasMidias"));
 
 // Lazy load public pages
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
@@ -166,6 +168,11 @@ const App = () => (
                   <LazyRoute><IntegracoesConstrutoraPage /></LazyRoute>
                 </ProtectedRoute>
               } />
+              <Route path="/dashboard/construtora/aprovar-midias" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><AprovarMidias /></LazyRoute>
+                </ProtectedRoute>
+              } />
               
               {/* Imobiliaria Dashboard */}
               <Route path="/dashboard/imobiliaria" element={
@@ -221,6 +228,11 @@ const App = () => (
               <Route path="/dashboard/imobiliaria/integracoes" element={
                 <ProtectedRoute allowedRoles={['imobiliaria']}>
                   <LazyRoute><IntegracoesImobiliariaPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/minhas-midias" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><MinhasMidias /></LazyRoute>
                 </ProtectedRoute>
               } />
               
