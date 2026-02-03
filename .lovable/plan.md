@@ -1,258 +1,212 @@
 
-# Analise Completa para Producao - Godoy Prime Platform
+# Plano: Chatbot Sofia com Suporte a Voz e Base de Conhecimento
 
-## Resumo Executivo
-
-A aplicacao esta **quase pronta para producao**, mas existem **3 vulnerabilidades criticas de seguranca** que devem ser corrigidas antes do lancamento, alem de alguns ajustes recomendados.
-
----
-
-## 1. Status das Funcionalidades Core
-
-### Implementado e Funcionando
-
-| Funcionalidade | Status | Observacoes |
-|----------------|--------|-------------|
-| Cadastro de Construtoras | OK | Autenticacao via Supabase Auth |
-| Cadastro de Imobiliarias | OK | Com criacao de formularios padrao |
-| Criacao de Imoveis (Wizard) | OK | 5 etapas com upload de imagens |
-| Templates de Paginas | OK | 3 templates (Luxo, Moderno, Classico) |
-| Sistema White-Label | OK | URLs personalizadas com branding |
-| Gestao de Acessos | OK | Construtora concede acesso a imobiliarias |
-| Formulario de Leads | OK | Com honeypot anti-bot |
-| Agendamento de Visitas | OK | 2 opcoes de data + documento |
-| Sistema de Feedbacks | OK | Fluxo cliente-primeiro + assinaturas |
-| Pipeline CRM | OK | Kanban com drag-and-drop |
-| Analytics Dashboard | OK | KPIs, graficos, funis |
-| Notificacoes por Email | OK | Via Resend + Edge Functions |
-| Lembretes Automaticos | OK | Cron job 24h antes da visita |
-| Integracao GA4/Meta Pixel | OK | Tracking de eventos |
-| SEO Dinamico | OK | Meta tags, Open Graph |
-| Performance | OK | Lazy loading, code splitting, indexes DB |
-
-### Pendentes (Nao Criticos)
-
-| Funcionalidade | Impacto | Recomendacao |
-|----------------|---------|--------------|
-| Admin Dashboard | Baixo | Implementar apos go-live |
-| PWA/Service Worker | Baixo | Opcional para MVP |
-| Chatbot com IA | Medio | Fase 2 |
-| Rate Limiting | Medio | Configurar via Cloudflare |
+## Objetivo
+Transformar o chatbot da Sofia em um assistente multimodal que responde por texto quando o cliente escreve e por voz quando o cliente fala, com uma base de conhecimento centralizada gerenciada exclusivamente pelo desenvolvedor.
 
 ---
 
-## 2. Vulnerabilidades de Seguranca
+## Parte 1: Remover HeyGen
 
-### CRITICAS (Bloquear Producao)
+### 1.1 Limpar `index.html`
+- Remover o script do HeyGen (linhas 26-64)
+- Remover a função `window.openSofiaChat`
 
-```text
-+-----------------------------------------------------------------------+
-| ERRO 1: Agendamentos Visiveis Publicamente                            |
-+-----------------------------------------------------------------------+
-| Tabela: agendamentos_visitas                                          |
-| Problema: Dados de clientes (nome, email, telefone, documento)        |
-|           podem ser lidos por qualquer pessoa sem autenticacao        |
-| Risco: Roubo de leads, spam, fraude de identidade                     |
-| Correcao: Adicionar politica RLS restritiva para SELECT               |
-+-----------------------------------------------------------------------+
+### 1.2 Atualizar `SofiaAssistentSection.tsx`
+- Modificar o botão "Conversar com Sofia" para abrir o chatbot Lovable AI
+- O botão passará a abrir o `ChatbotWidget` ao invés de expandir o HeyGen
 
-+-----------------------------------------------------------------------+
-| ERRO 2: Feedbacks com Dados Financeiros Expostos                      |
-+-----------------------------------------------------------------------+
-| Tabela: feedbacks_visitas                                             |
-| Problema: Token permite acesso a orcamento, IP, geolocalizacao        |
-| Risco: Coleta de perfis financeiros de clientes                       |
-| Correcao: Limitar campos expostos via token, restringir SELECT        |
-+-----------------------------------------------------------------------+
+---
+
+## Parte 2: Adicionar Voz ao Chatbot
+
+### 2.1 Speech-to-Text (Entrada de Voz)
+Utilizando a Web Speech API nativa do navegador (grátis, sem API key):
+- Adicionar botão de microfone no `ChatbotWidget`
+- Quando o usuário clicar, ativar reconhecimento de voz
+- Transcrever a fala para texto e enviar como mensagem normal
+- Marcar a mensagem como `inputType: "voice"` para saber que deve responder por voz
+
+### 2.2 Text-to-Speech (Saída de Voz)
+Utilizando ElevenLabs para voz de alta qualidade:
+- Criar edge function `elevenlabs-tts` para converter texto em áudio
+- Quando a mensagem do usuário for de voz, a resposta da IA será lida em áudio
+- Adicionar player de áudio inline nas mensagens do assistente
+
+### 2.3 Fluxo de Interação
+```
+Usuário digita → Resposta em texto apenas
+Usuário fala → Resposta em texto + áudio automático
 ```
 
-### ALERTAS (Corrigir em Breve)
-
-| Alerta | Descricao | Dificuldade |
-|--------|-----------|-------------|
-| Leaked Password Protection | Desabilitado no Supabase Auth | Facil |
-| Extensoes no Schema Public | pg_cron/pg_net em public | Media |
-| Edge Functions Publicas | Sem rate limiting | Media |
-| SECURITY DEFINER Functions | Precisam de testes unitarios | Media |
-
 ---
 
-## 3. Checklist Pre-Producao
+## Parte 3: Base de Conhecimento
 
-### Seguranca (OBRIGATORIO)
+### 3.1 Estrutura da Base de Conhecimento
+A base de conhecimento será alimentada de **3 formas**:
 
-- [x] **Corrigir RLS da tabela agendamentos_visitas**
-  - ✅ Verificado: já não existe política de SELECT público
-  - ✅ INSERT público mantido para formulário
+#### Nível 1: Dados Dinâmicos (Automático)
+- Dados do imóvel (já implementado)
+- Dados da empresa (já implementado)
+- Histórico da conversa (já implementado)
 
-- [x] **Corrigir RLS da tabela feedbacks_visitas**
-  - ✅ Criada VIEW `feedbacks_visitas_publico` que expõe apenas campos seguros
-  - ✅ Removida política que expunha todos os campos via token
-  - ✅ Atualizado código para usar VIEW segura
+#### Nível 2: Conhecimento Global (Nova tabela)
+- Criar tabela `chatbot_knowledge_base` para armazenar:
+  - FAQs genéricas
+  - Informações de financiamento
+  - Processos de compra
+  - Materiais e acabamentos padrão
+  - Políticas gerais
 
-- [ ] **Habilitar Leaked Password Protection**
-  - Acessar Lovable Cloud > Auth > Security
-  - Ativar "Check for leaked passwords"
+#### Nível 3: Conhecimento por Imóvel (Opcional)
+- Campo `contexto_adicional_ia` na tabela `imoveis` para informações específicas
 
-### Infraestrutura (RECOMENDADO)
-
-- [ ] Configurar dominio personalizado (ex: app.godoyprime.com.br)
-- [ ] Configurar Cloudflare (CDN + Rate Limiting + DDoS Protection)
-- [ ] Verificar dominio no Resend para emails (SPF/DKIM/DMARC)
-- [ ] Criar backup do banco de dados
-- [ ] Testar fluxo completo end-to-end
-
-### Testes Funcionais (RECOMENDADO)
-
-- [ ] Cadastro de construtora
-- [ ] Cadastro de imobiliaria
-- [ ] Criacao de imovel completo
-- [ ] Geracao de link white-label
-- [ ] Preenchimento de lead (como visitante)
-- [ ] Agendamento de visita (como visitante)
-- [ ] Confirmacao de visita (como imobiliaria)
-- [ ] Fluxo de feedback (cliente + corretor)
-- [ ] Geracao de PDF
-- [ ] Lembrete 24h (verificar cron)
-
----
-
-## 4. Estrutura do Banco de Dados
-
-### Tabelas Principais (15 tabelas)
-
-```text
-agendamentos_visitas     - Visitas agendadas
-atividades_lead          - Historico de acoes
-configuracoes_formularios - Forms customizaveis
-construtoras             - Cadastro construtoras
-conversas_chatbot        - Logs do chatbot
-feedbacks_visitas        - Avaliacoes pos-visita
-imobiliaria_imovel_access - Links white-label
-imobiliarias             - Cadastro imobiliarias
-imoveis                  - Catalogo de imoveis
-integracoes              - Configs de integracao
-leads                    - Contatos captados
-notas_lead               - Anotacoes internas
-pageviews                - Analytics de visitas
-tarefas                  - Gestao de tarefas
-user_roles               - Perfis de usuario
+### 3.2 Nova Tabela: `chatbot_knowledge_base`
+```sql
+CREATE TABLE chatbot_knowledge_base (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  categoria VARCHAR(100) NOT NULL,
+  titulo VARCHAR(255) NOT NULL,
+  conteudo TEXT NOT NULL,
+  tags TEXT[],
+  ativo BOOLEAN DEFAULT true,
+  prioridade INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
-### Indexes de Performance (25+ indexes criados)
+**RLS**: Nenhuma policy pública - acesso apenas via service role key (edge functions)
 
-Os indexes para queries frequentes ja foram implementados (leads por status, pageviews por data, etc).
-
----
-
-## 5. Edge Functions Implementadas
-
-| Funcao | Proposito | Validacao |
-|--------|-----------|-----------|
-| send-lead-notification | Notifica lead novo | UUID, email, telefone, length |
-| send-visit-notification | Notifica agendamento | UUID, email, telefone, datas |
-| send-feedback-request | Envia link de feedback | UUID, email, token |
-| generate-feedback-pdf | Gera relatorio PDF | UUID, HTML encode |
-| send-visit-reminder | Lembrete 24h (cron) | Query interna |
-| chatbot-message | Respostas do chatbot | Em desenvolvimento |
-
-Todas as funcoes incluem:
-- Validacao de inputs (UUID, email, telefone brasileiro)
-- Sanitizacao HTML (prevencao XSS)
-- Verificacao de existencia no banco
-- Headers CORS configurados
+### 3.3 Página de Administração (Apenas Desenvolvedor)
+- Criar rota protegida `/admin/base-conhecimento`
+- Proteger com verificação de email específico do desenvolvedor
+- Interface CRUD para gerenciar entradas da base de conhecimento
+- Categorias: FAQ, Financiamento, Materiais, Processos, Outros
 
 ---
 
-## 6. Arquitetura de Seguranca
+## Parte 4: Atualizar Edge Function
 
-### Row Level Security (RLS)
+### 4.1 Modificar `chatbot-message/index.ts`
+- Buscar dados da `chatbot_knowledge_base` ativa
+- Adicionar ao system prompt
+- Detectar `inputType: "voice"` para saber quando gerar áudio
+- Retornar flag `should_speak: true` quando apropriado
 
-```text
-Construtoras:
-- Veem apenas seus proprios imoveis
-- Podem criar/editar/excluir imoveis
-- Veem leads de todos os imoveis proprios
+### 4.2 Nova Edge Function `elevenlabs-tts`
+- Receber texto e converter em áudio usando ElevenLabs API
+- Voz: Sofia (ou voz feminina brasileira profissional)
+- Retornar áudio base64 para playback no cliente
 
-Imobiliarias:
-- Veem apenas imoveis com acesso ativo
-- Veem apenas leads gerados por elas
-- Podem confirmar/cancelar visitas
+---
 
-Publico:
-- Pode ver imoveis ativos (para landing pages)
-- Pode inserir leads e agendamentos
-- Pode acessar feedbacks via token (PROBLEMA)
+## Parte 5: Atualizar UI do ChatbotWidget
+
+### 5.1 Novos Componentes
+- Botão de microfone com estado de gravação
+- Player de áudio inline para respostas
+- Indicador visual de "ouvindo" e "falando"
+
+### 5.2 Estado de Interação
+- `isListening`: Microfone ativo
+- `isSpeaking`: Áudio sendo reproduzido
+- `inputType`: "text" | "voice"
+
+---
+
+## Arquivos a Criar/Modificar
+
+| Arquivo | Ação |
+|---------|------|
+| `index.html` | Remover HeyGen |
+| `src/components/property/SofiaAssistentSection.tsx` | Conectar ao ChatbotWidget |
+| `src/components/chatbot/ChatbotWidget.tsx` | Adicionar voz |
+| `src/components/chatbot/VoiceRecorder.tsx` | Novo - Controle de microfone |
+| `src/components/chatbot/AudioPlayer.tsx` | Novo - Player de resposta |
+| `supabase/functions/chatbot-message/index.ts` | Buscar base de conhecimento |
+| `supabase/functions/elevenlabs-tts/index.ts` | Novo - TTS |
+| `src/pages/admin/BaseConhecimento.tsx` | Novo - CRUD admin |
+| `supabase/migrations/...` | Nova tabela |
+
+---
+
+## Requisitos
+
+### Secrets Necessários
+- `ELEVENLABS_API_KEY` - Para Text-to-Speech de alta qualidade
+
+### Sem Custo Adicional
+- Speech-to-Text usa Web Speech API do navegador (grátis)
+- Lovable AI Gateway já está configurado
+
+---
+
+## Segurança
+
+### Base de Conhecimento
+- Tabela sem RLS público
+- Acesso apenas via service role nas edge functions
+- Página admin protegida por verificação de email do desenvolvedor
+
+### Dados do Cliente
+- Continua usando o fluxo existente de captura de leads
+- Nenhum dado de voz é armazenado (processado em memória)
+
+---
+
+## Resumo Visual
+
 ```
-
-### Autenticacao
-
-- Supabase Auth com email/senha
-- Sessoes persistentes (localStorage)
-- Roles: construtora, imobiliaria
-- ProtectedRoute com verificacao de role
-
----
-
-## 7. Plano de Correcao (Estimativa: 2-4 horas)
-
-### Fase 1: Correcoes Criticas
-
-1. **Migracro SQL para RLS de agendamentos_visitas**
-   - Remover SELECT publico ou restringir campos
-   - Manter apenas INSERT publico
-
-2. **Migracao SQL para RLS de feedbacks_visitas**
-   - Criar VIEW com campos limitados para acesso via token
-   - Ou usar funcao SECURITY DEFINER que retorna apenas dados necessarios
-
-3. **Habilitar Leaked Password Protection**
-   - Configuracao no Lovable Cloud
-
-### Fase 2: Melhorias
-
-4. **Mover extensoes para schema separado**
-   - pg_cron e pg_net fora do public
-
-5. **Adicionar CAPTCHA nos formularios**
-   - Alternativa: rate limiting via Cloudflare
-
----
-
-## 8. Conclusao
-
-### Pronto para Producao?
-
-**QUASE** - Vulnerabilidades críticas corrigidas. Restam 2 warnings de menor prioridade.
-
-### Correcoes Realizadas
-
-1. ✅ **RLS de agendamentos_visitas** - Verificado: não havia SELECT público
-2. ✅ **RLS de feedbacks_visitas** - Criada VIEW segura `feedbacks_visitas_publico`
-3. ⚠️ **Leaked Password Protection** - Pendente (configuração manual no Cloud)
-4. ⚠️ **Extensões no schema public** - Alerta de baixa prioridade
-
-### Proximos Passos Recomendados
-
-1. ✅ ~~Corrigir vulnerabilidades RLS~~ (FEITO)
-2. ⏳ Habilitar Leaked Password Protection (Lovable Cloud > Auth > Security)
-3. ⏳ Testar fluxo end-to-end
-4. ⏳ Configurar dominio e Cloudflare
-5. ⏳ Go-live com monitoramento ativo
-
-### O que foi protegido
-
-A VIEW `feedbacks_visitas_publico` agora expõe APENAS:
-- Dados básicos do feedback (id, token, status, data)
-- Nome do cliente e email (necessários para UI)
-- Avaliações e comentários
-- Assinatura do cliente
-- PDF gerado
-
-**NÃO EXPÕE MAIS:**
-- IP do cliente
-- Device/User Agent
-- Geolocalização
-- Orçamento disponível
-- Dados financeiros
-- Email do corretor
+┌─────────────────────────────────────────────────────────────┐
+│                    CLIENTE NA PÁGINA                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   [Chat Widget] ────────────────────────────────────────    │
+│   │                                                     │   │
+│   │  ┌─────────────────────────────────────────────┐   │   │
+│   │  │ Sofia: Como posso ajudar? 🎧                │   │   │
+│   │  └─────────────────────────────────────────────┘   │   │
+│   │                                                     │   │
+│   │  ┌─────────────────────────────────────────────┐   │   │
+│   │  │ Você: [texto ou transcrição de voz]        │   │   │
+│   │  └─────────────────────────────────────────────┘   │   │
+│   │                                                     │   │
+│   │  ┌───────────────────┬─────────┐                   │   │
+│   │  │ Digite...        │ 🎤 │ ➤ │                   │   │
+│   │  └───────────────────┴─────────┘                   │   │
+│   └─────────────────────────────────────────────────────    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    EDGE FUNCTION                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. Busca dados do imóvel (dinâmico)                       │
+│  2. Busca base de conhecimento global                      │
+│  3. Monta system prompt completo                           │
+│  4. Chama Lovable AI Gateway                               │
+│  5. Se inputType="voice" → Chama ElevenLabs TTS            │
+│  6. Retorna { resposta, audioBase64? }                     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 ADMIN (SÓ DESENVOLVEDOR)                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  /admin/base-conhecimento                                  │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ + Nova Entrada                                      │   │
+│  ├─────────────────────────────────────────────────────┤   │
+│  │ [FAQ] O que é ITBI?               ✏️ 🗑️            │   │
+│  │ [Financiamento] Como funciona...  ✏️ 🗑️            │   │
+│  │ [Materiais] Porcelanato usado...  ✏️ 🗑️            │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
