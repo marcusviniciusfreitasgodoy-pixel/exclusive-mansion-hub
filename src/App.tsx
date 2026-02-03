@@ -32,6 +32,7 @@ const ImobiliariasConstrutora = lazy(() => import("./pages/dashboard/construtora
 
 const ImobiliariaDashboard = lazy(() => import("./pages/dashboard/imobiliaria"));
 const FeedbackCorretorPage = lazy(() => import("./pages/dashboard/imobiliaria/FeedbackCorretor"));
+const LeadsImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Leads"));
 const AgendamentosImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Agendamentos"));
 const AnalyticsImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Analytics"));
 const FeedbacksImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Feedbacks"));
@@ -251,6 +252,11 @@ const App = () => (
               <Route path="/dashboard/imobiliaria/meus-links" element={
                 <ProtectedRoute allowedRoles={['imobiliaria']}>
                   <LazyRoute><MeusLinks /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/leads" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><LeadsImobiliaria /></LazyRoute>
                 </ProtectedRoute>
               } />
               
