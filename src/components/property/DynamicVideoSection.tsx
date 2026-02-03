@@ -1,8 +1,15 @@
 import { Play } from "lucide-react";
 import { useState } from "react";
 
+interface VideoItem {
+  url: string;
+  tipo?: string; // 'youtube' | 'vimeo' | 'vertical' | 'horizontal' | 'uploaded'
+  isUploaded?: boolean;
+  nome?: string;
+}
+
 interface DynamicVideoSectionProps {
-  videos: { url: string; tipo?: string }[];
+  videos: VideoItem[];
   tour360Url?: string | null;
 }
 
@@ -46,6 +53,14 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
     return null;
   };
 
+  // Check if video is uploaded (MP4/file) or external link
+  const isUploadedVideo = (video: VideoItem): boolean => {
+    return video.isUploaded === true || 
+           (!video.url.includes('youtube.com') && 
+            !video.url.includes('youtu.be') && 
+            !video.url.includes('vimeo.com'));
+  };
+
   // Convert YouTube URLs to embed format
   const getEmbedUrl = (url: string) => {
     const videoId = getYouTubeVideoId(url);
@@ -75,27 +90,64 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
         </div>
 
         <div className="mx-auto max-w-6xl">
-          {/* Videos Grid - Vertical videos first */}
+          {/* Videos Grid - Organize by type */}
           {videos && videos.length > 0 && (() => {
-            const verticalVideos = videos.filter(v => v.tipo === "vertical");
-            const horizontalVideos = videos.filter(v => v.tipo === "horizontal" || v.tipo === undefined);
+            // Separate uploaded videos from external links
+            const uploadedVideos = videos.filter(v => isUploadedVideo(v));
+            const externalVideos = videos.filter(v => !isUploadedVideo(v));
+            
+            // Further separate by orientation
+            const verticalUploaded = uploadedVideos.filter(v => v.tipo === 'vertical');
+            const horizontalUploaded = uploadedVideos.filter(v => v.tipo !== 'vertical');
+            const verticalExternal = externalVideos.filter(v => v.tipo === "vertical");
+            const horizontalExternal = externalVideos.filter(v => v.tipo === "horizontal" || v.tipo === undefined || v.tipo === 'youtube' || v.tipo === 'vimeo');
 
             return (
               <>
-                {/* Vertical Videos (Shorts style) */}
-                {verticalVideos.length > 0 && (
+                {/* Uploaded Vertical Videos (Shorts style) */}
+                {verticalUploaded.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="mb-6 text-center text-2xl font-semibold text-primary">
+                      Vídeos Verticais
+                    </h3>
+                    <div className={`grid gap-8 ${
+                      verticalUploaded.length === 1
+                        ? "grid-cols-1 max-w-md mx-auto"
+                        : verticalUploaded.length === 2
+                        ? "md:grid-cols-2 max-w-3xl mx-auto"
+                        : "md:grid-cols-3"
+                    } justify-items-center`}>
+                      {verticalUploaded.map((video, index) => (
+                        <div
+                          key={`uploaded-vertical-${index}`}
+                          className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md"
+                        >
+                          <video
+                            src={video.url}
+                            controls
+                            className="h-full w-full object-cover"
+                            preload="metadata"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* External Vertical Videos (YouTube Shorts) */}
+                {verticalExternal.length > 0 && (
                   <div className={`grid gap-8 mb-12 ${
-                    verticalVideos.length === 1
+                    verticalExternal.length === 1
                       ? "grid-cols-1 max-w-md mx-auto"
-                      : verticalVideos.length === 2
+                      : verticalExternal.length === 2
                       ? "md:grid-cols-2 max-w-3xl mx-auto"
                       : "md:grid-cols-3"
                   } justify-items-center`}>
-                    {verticalVideos.map((video, index) => {
+                    {verticalExternal.map((video, index) => {
                       const globalIndex = index;
                       return (
                         <div
-                          key={globalIndex}
+                          key={`external-vertical-${globalIndex}`}
                           className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-elegant animate-scale-in w-full max-w-md"
                         >
                         {!playingVideos[globalIndex] ? (
@@ -145,17 +197,39 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
                   </div>
                 )}
 
-                {/* Horizontal Videos (Regular videos with narration) */}
-                {horizontalVideos.length > 0 && (
+                {/* Uploaded Horizontal Videos */}
+                {horizontalUploaded.length > 0 && (
+                  <div className="space-y-8 mb-12">
+                    <h3 className="text-center text-2xl font-semibold text-primary">
+                      Vídeos do Imóvel
+                    </h3>
+                    {horizontalUploaded.map((video, index) => (
+                      <div
+                        key={`uploaded-horizontal-${index}`}
+                        className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in max-w-4xl mx-auto"
+                      >
+                        <video
+                          src={video.url}
+                          controls
+                          className="h-full w-full object-cover"
+                          preload="metadata"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* External Horizontal Videos (with narration) */}
+                {horizontalExternal.length > 0 && (
                   <div className="space-y-8">
                     <h3 className="text-center text-2xl font-semibold text-primary">
                       Vídeo com Narração
                     </h3>
-                    {horizontalVideos.map((video, index) => {
-                      const globalIndex = verticalVideos.length + index;
+                    {horizontalExternal.map((video, index) => {
+                      const globalIndex = 1000 + index; // Offset to avoid key conflicts
                       return (
                         <div
-                          key={globalIndex}
+                          key={`external-horizontal-${index}`}
                           className="relative aspect-video overflow-hidden rounded-2xl shadow-elegant animate-scale-in max-w-4xl mx-auto"
                         >
                           {!playingVideos[globalIndex] ? (
@@ -163,7 +237,7 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
                               {getYouTubeThumbnail(video.url) ? (
                                 <img 
                                   src={getYouTubeThumbnail(video.url)!} 
-                                  alt={`Vídeo ${globalIndex + 1}`}
+                                  alt={`Vídeo ${index + 1}`}
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
@@ -192,7 +266,7 @@ export const DynamicVideoSection = ({ videos, tour360Url }: DynamicVideoSectionP
                           ) : (
                             <iframe
                               src={getEmbedUrl(video.url)}
-                              title={`Vídeo ${globalIndex + 1}`}
+                              title={`Vídeo ${index + 1}`}
                               className="h-full w-full"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen

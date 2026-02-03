@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap, FileText, File } from 'lucide-react';
+import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap, FileText, File, Link, Film } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +43,9 @@ interface ImageItem {
 
 interface VideoItem {
   url: string;
-  tipo?: string;
+  tipo?: string; // 'youtube' | 'vimeo' | 'vertical' | 'horizontal' | 'uploaded'
+  isUploaded?: boolean;
+  nome?: string;
 }
 
 interface DocumentItem {
@@ -62,6 +65,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const { 
     optimizeSingleImage, 
     getOptimizedExtension, 
@@ -83,6 +87,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [uploadStats, setUploadStats] = useState<{ original: number; optimized: number } | null>(null);
 
   const form = useForm<Step4Data>({
@@ -219,6 +224,121 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
     setVideos(newVideos);
     form.setValue('videos', newVideos);
     setNewVideoUrl('');
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const maxVideos = 10;
+    const uploadedVideoCount = videos.filter(v => v.isUploaded).length;
+    
+    if (uploadedVideoCount + files.length > maxVideos) {
+      toast({
+        title: 'Limite excedido',
+        description: `Você pode fazer upload de no máximo ${maxVideos} vídeos.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingVideo(true);
+
+    try {
+      const uploadedVideos: VideoItem[] = [];
+      const tempId = Date.now().toString();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Validate file type
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+        if (!allowedTypes.includes(file.type)) {
+          toast({
+            title: 'Tipo não suportado',
+            description: `${file.name} não é um formato de vídeo válido (MP4, WebM, MOV, AVI).`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        // Max 500MB per video
+        if (file.size > 500 * 1024 * 1024) {
+          toast({
+            title: 'Arquivo muito grande',
+            description: `${file.name} excede o limite de 500MB.`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+        const fileName = `${tempId}-${i}.${fileExt}`;
+        const filePath = `temp/videos/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('imoveis')
+          .upload(filePath, file, {
+            contentType: file.type,
+          });
+
+        if (error) {
+          console.error('Upload error:', error);
+          toast({
+            title: 'Erro no upload',
+            description: `Falha ao enviar ${file.name}`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        const { data: publicUrl } = supabase.storage
+          .from('imoveis')
+          .getPublicUrl(filePath);
+
+        uploadedVideos.push({
+          url: publicUrl.publicUrl,
+          tipo: 'horizontal', // Default to horizontal, user can change
+          isUploaded: true,
+          nome: file.name,
+        });
+      }
+
+      const newVideos = [...videos, ...uploadedVideos];
+      setVideos(newVideos);
+      form.setValue('videos', newVideos);
+
+      toast({
+        title: 'Vídeos enviados',
+        description: `${uploadedVideos.length} vídeo(s) enviado(s) com sucesso.`,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao fazer upload dos vídeos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingVideo(false);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
+    }
+  };
+
+  const toggleVideoOrientation = (index: number) => {
+    const newVideos = videos.map((v, i) => {
+      if (i === index && v.isUploaded) {
+        return {
+          ...v,
+          tipo: v.tipo === 'vertical' ? 'horizontal' : 'vertical',
+        };
+      }
+      return v;
+    });
+    setVideos(newVideos);
+    form.setValue('videos', newVideos);
   };
 
   const removeVideo = (index: number) => {
@@ -491,52 +611,156 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
         <div className="space-y-4">
           <Label className="flex items-center gap-2">
             <Video className="h-4 w-4" />
-            Vídeos (YouTube/Vimeo)
+            Vídeos
           </Label>
+          
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload" className="gap-2">
+                <Film className="h-4 w-4" />
+                Enviar Arquivo
+              </TabsTrigger>
+              <TabsTrigger value="link" className="gap-2">
+                <Link className="h-4 w-4" />
+                Link YouTube/Vimeo
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload" className="space-y-4 mt-4">
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer ${
+                  isUploadingVideo ? 'opacity-50 pointer-events-none' : ''
+                }`}
+                onClick={() => videoInputRef.current?.click()}
+              >
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,.mp4,.webm,.mov,.avi"
+                  multiple
+                  className="hidden"
+                  onChange={handleVideoUpload}
+                />
+                {isUploadingVideo ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                    <p className="text-muted-foreground">Enviando vídeos...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Film className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      Clique ou arraste vídeos aqui
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      MP4, WebM, MOV, AVI (máx. 500MB cada, até 10 vídeos)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="link" className="space-y-4 mt-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addVideo();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={addVideo}>
+                  Adicionar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Cole links do YouTube ou Vimeo
+              </p>
+            </TabsContent>
+          </Tabs>
 
-          <div className="flex gap-2">
-            <Input
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={newVideoUrl}
-              onChange={(e) => setNewVideoUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addVideo();
-                }
-              }}
-            />
-            <Button type="button" onClick={addVideo}>
-              Adicionar
-            </Button>
-          </div>
-
+          {/* Video List */}
           {videos.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               {videos.map((video, index) => (
                 <div
                   key={index}
-                  className="relative group aspect-video rounded-lg overflow-hidden border"
+                  className={`relative group rounded-lg overflow-hidden border ${
+                    video.isUploaded && video.tipo === 'vertical' ? 'aspect-[9/16] max-w-[200px]' : 'aspect-video'
+                  }`}
                 >
-                  {video.tipo === 'youtube' && (
+                  {video.isUploaded ? (
+                    <video
+                      src={video.url}
+                      className="w-full h-full object-cover"
+                      muted
+                      preload="metadata"
+                    />
+                  ) : video.tipo === 'youtube' ? (
                     <img
                       src={getYouTubeThumbnail(video.url)}
                       alt={`Video ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <Video className="h-10 w-10 text-muted-foreground" />
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Video className="h-10 w-10 text-white" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Video className="h-8 w-8 text-white" />
                   </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8"
-                    onClick={() => removeVideo(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  
+                  {/* Video info badge */}
+                  <div className="absolute bottom-2 left-2 flex gap-1">
+                    {video.isUploaded ? (
+                      <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                        {video.tipo === 'vertical' ? '9:16' : '16:9'}
+                      </span>
+                    ) : (
+                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded capitalize">
+                        {video.tipo}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    {video.isUploaded && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => toggleVideoOrientation(index)}
+                        title={video.tipo === 'vertical' ? 'Mudar para horizontal' : 'Mudar para vertical'}
+                      >
+                        <Film className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => removeVideo(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Video name for uploaded files */}
+                  {video.isUploaded && video.nome && (
+                    <div className="absolute bottom-2 right-2 max-w-[60%]">
+                      <span className="bg-black/60 text-white text-xs px-2 py-1 rounded truncate block">
+                        {video.nome}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
