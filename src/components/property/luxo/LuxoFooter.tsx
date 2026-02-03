@@ -31,10 +31,10 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
   ];
 
   const navLinks = [
-    { label: "Buy", href: "#" },
-    { label: "Sell", href: "#" },
-    { label: "Rent", href: "#" },
-    { label: "Agents", href: "#" },
+    { label: "Comprar", href: "#" },
+    { label: "Vender", href: "#" },
+    { label: "Alugar", href: "#" },
+    { label: "Corretores", href: "#" },
   ];
 
   return (
@@ -48,7 +48,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
               className="mb-6 text-sm font-semibold uppercase tracking-wider"
               style={{ color: "#D4AF37" }}
             >
-              Navigation
+              Navegação
             </h4>
             <ul className="space-y-3">
               {navLinks.map((link) => (
@@ -70,7 +70,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
               className="mb-6 text-sm font-semibold uppercase tracking-wider"
               style={{ color: "#D4AF37" }}
             >
-              Contact
+              Contato
             </h4>
             <ul className="space-y-4">
               {branding.telefone && (
@@ -98,7 +98,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
               className="mb-6 text-sm font-semibold uppercase tracking-wider"
               style={{ color: "#D4AF37" }}
             >
-              Follow Us
+              Redes Sociais
             </h4>
             <div className="flex gap-4">
               {socialLinks.map((social) => (
@@ -123,12 +123,12 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
               Newsletter
             </h4>
             <p className="mb-4 text-sm text-white/70">
-              Subscribe to receive exclusive listings and market insights.
+              Receba imóveis exclusivos e novidades do mercado.
             </p>
             <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
               <Input
                 type="email"
-                placeholder="Your email"
+                placeholder="Seu e-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-[#D4AF37]"
@@ -139,7 +139,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
                 className="bg-[#D4AF37] px-4 text-black hover:bg-[#D4AF37]/90"
                 style={{ borderRadius: "8px" }}
               >
-                Subscribe
+                Assinar
               </Button>
             </form>
           </div>
@@ -186,7 +186,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
           {/* Copyright & Legal */}
           <div className="text-center md:text-right">
             <p className="text-xs text-white/50">
-              © {currentYear} {branding.imobiliariaNome}. All rights reserved.
+              © {currentYear} {branding.imobiliariaNome}. Todos os direitos reservados.
             </p>
             <div className="mt-2 flex justify-center gap-4 text-xs text-white/40 md:justify-end">
               <a
@@ -195,7 +195,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
                 rel="noopener noreferrer"
                 className="italic hover:text-[#D4AF37]"
               >
-                Privacy Policy
+                Política de Privacidade
               </a>
               <span>|</span>
               <a
@@ -204,7 +204,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
                 rel="noopener noreferrer"
                 className="italic hover:text-[#D4AF37]"
               >
-                Terms of Use
+                Termos de Uso
               </a>
             </div>
           </div>
@@ -213,7 +213,7 @@ export function LuxoFooter({ branding, construtora }: LuxoFooterProps) {
         {/* Developer Credit */}
         {construtora.nome && (
           <p className="mt-6 text-center text-xs text-white/30">
-            Property marketed by {construtora.nome}
+            Imóvel comercializado por {construtora.nome}
           </p>
         )}
       </div>
