@@ -14,7 +14,6 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
-import BackgroundPreview from "./pages/auth/BackgroundPreview";
 
 // Lazy load dashboard pages (code splitting)
 const ConstrutoraDashboard = lazy(() => import("./pages/dashboard/construtora"));
@@ -101,7 +100,6 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
               <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
-              <Route path="/auth/preview-backgrounds" element={<BackgroundPreview />} />
               
               {/* Dynamic Property Page (White Label) */}
               <Route path="/imovel/:slug" element={
