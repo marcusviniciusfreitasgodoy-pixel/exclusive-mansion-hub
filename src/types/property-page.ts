@@ -15,6 +15,7 @@ export interface PropertyBranding {
   corPrimaria: string;
   telefone: string | null;
   emailContato: string | null;
+  faviconUrl: string | null;
 }
 
 export interface PropertyData {
