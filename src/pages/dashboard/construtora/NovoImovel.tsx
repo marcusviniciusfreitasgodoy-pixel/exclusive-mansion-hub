@@ -140,7 +140,7 @@ export default function NovoImovel() {
       const slug = generateSlug(formData.titulo || 'imovel');
 
       // Prepare data for insertion
-      const imovelData = {
+      const imovelData: Record<string, any> = {
         construtora_id: construtora.id,
         titulo: formData.titulo,
         endereco: `${formData.endereco}, ${formData.numero}${formData.complemento ? ` - ${formData.complemento}` : ''}`,
@@ -156,22 +156,22 @@ export default function NovoImovel() {
         banheiros: formData.banheiros,
         vagas: formData.vagas,
         descricao: formData.descricao,
-        diferenciais: JSON.stringify(formData.diferenciais || []),
+        diferenciais: formData.diferenciais || [],
         memorial_descritivo: formData.memorial || null,
-        imagens: JSON.stringify(formData.imagens || []),
-        videos: JSON.stringify(formData.videos || []),
+        imagens: formData.imagens || [],
+        videos: formData.videos || [],
         tour_360_url: formData.tour360Url || null,
-        documentos: JSON.stringify(formData.documentos || []),
+        documentos: formData.documentos || [],
         status: formData.status || 'ativo',
         template_escolhido: formData.template_escolhido || 'moderno',
-        customizacao_template: JSON.stringify(formData.customizacao_template || {}),
+        customizacao_template: formData.customizacao_template || {},
       };
 
       console.log('[Publish] Creating imovel:', imovelData);
 
       const { data: imovel, error: imovelError } = await supabase
         .from('imoveis')
-        .insert(imovelData)
+        .insert(imovelData as any)
         .select()
         .single();
 

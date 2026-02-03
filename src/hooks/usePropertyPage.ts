@@ -136,23 +136,35 @@ export function usePropertyPage(): UsePropertyPageResult {
           return;
         }
 
-        // Parse JSON fields with safe defaults
-        const parseJsonArray = (field: any): string[] => 
-          Array.isArray(field) ? field : [];
+        // Parse JSON fields with safe defaults - handles both native arrays and stringified JSON
+        const parseJsonField = (field: any): any[] => {
+          if (Array.isArray(field)) return field;
+          if (typeof field === 'string') {
+            try {
+              const parsed = JSON.parse(field);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch {
+              return [];
+            }
+          }
+          return [];
+        };
+
+        const parseJsonArray = (field: any): string[] => parseJsonField(field);
         
         const parseImagens = (field: any): { url: string; alt?: string }[] => {
-          if (!Array.isArray(field)) return [];
-          return field.map((img: any) => {
+          const arr = parseJsonField(field);
+          return arr.map((img: any) => {
             if (typeof img === 'string') return { url: img };
             return { url: img.url || '', alt: img.alt };
           });
         };
 
         const parseVideos = (field: any): { url: string; tipo?: string }[] => {
-          if (!Array.isArray(field)) return [];
-          return field.map((vid: any) => {
+          const arr = parseJsonField(field);
+          return arr.map((vid: any) => {
             if (typeof vid === 'string') return { url: vid };
-            return { url: vid.url || '', tipo: vid.tipo };
+            return { url: vid.url || '', tipo: vid.tipo, isUploaded: vid.isUploaded, orientation: vid.orientation };
           });
         };
 
