@@ -23,6 +23,7 @@ import {
   PerformanceTable,
   TrendLineChart,
   PropertyImobiliariaBreakdown,
+  ImobiliariaEvolutionChart,
   type Insight,
 } from '@/components/analytics';
 
@@ -573,6 +574,17 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Imobiliaria Evolution Chart */}
+      {construtora?.id && (
+        <div className="mb-6">
+          <ImobiliariaEvolutionChart 
+            construtoraId={construtora.id} 
+            startDate={startDate}
+            periodDays={getDays()}
+          />
+        </div>
+      )}
 
       {/* Consolidated Property Analytics */}
       {construtora?.id && (
