@@ -770,6 +770,7 @@ export type Database = {
           descricao: string | null
           diferenciais: Json | null
           distrito: string | null
+          documentos: Json | null
           endereco: string | null
           estado: string | null
           estilo_arquitetonico: string | null
@@ -840,6 +841,7 @@ export type Database = {
           descricao?: string | null
           diferenciais?: Json | null
           distrito?: string | null
+          documentos?: Json | null
           endereco?: string | null
           estado?: string | null
           estilo_arquitetonico?: string | null
@@ -910,6 +912,7 @@ export type Database = {
           descricao?: string | null
           diferenciais?: Json | null
           distrito?: string | null
+          documentos?: Json | null
           endereco?: string | null
           estado?: string | null
           estilo_arquitetonico?: string | null

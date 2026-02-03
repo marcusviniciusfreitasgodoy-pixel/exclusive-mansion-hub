@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Ruler, BedDouble, Bath, Car, Check } from 'lucide-react';
+import { MapPin, Ruler, BedDouble, Bath, Car, Check, FileText } from 'lucide-react';
 import { TemplateSelector } from '@/components/templates/TemplateSelector';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 
@@ -28,6 +28,7 @@ export interface ReviewData {
   imagens?: { url: string; alt?: string; isPrimary?: boolean }[];
   videos?: { url: string; tipo?: string }[];
   tour360Url?: string;
+  documentos?: { url: string; nome: string; tipo: string; tamanho_bytes?: number }[];
   status?: 'ativo' | 'inativo';
   template_escolhido?: TemplateType;
   customizacao_template?: TemplateCustomization;
@@ -159,11 +160,34 @@ export function Step5Review({
               <Label className="text-muted-foreground">Vídeos</Label>
               <p>{data.videos?.length || 0} vídeos</p>
             </div>
-            <div className="col-span-2">
+            <div>
+              <Label className="text-muted-foreground">Documentos</Label>
+              <p>{data.documentos?.length || 0} arquivos</p>
+            </div>
+            <div>
               <Label className="text-muted-foreground">Tour 360°</Label>
               <p>{data.tour360Url ? 'Configurado' : 'Não configurado'}</p>
             </div>
           </div>
+
+          {/* Documents List */}
+          {data.documentos && data.documentos.length > 0 && (
+            <div className="mt-4 pt-4 border-t">
+              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4" />
+                Documentos Anexados
+              </Label>
+              <div className="space-y-2">
+                {data.documentos.map((doc, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span>{doc.nome}</span>
+                    <Badge variant="outline" className="text-xs">{doc.tipo.toUpperCase()}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

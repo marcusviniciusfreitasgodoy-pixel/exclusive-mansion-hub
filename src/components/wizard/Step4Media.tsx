@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap } from 'lucide-react';
+import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap, FileText, File } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageOptimizer } from '@/hooks/useImageOptimizer';
 import { Progress } from '@/components/ui/progress';
+
 export const step4Schema = z.object({
   imagens: z.array(z.object({
     url: z.string(),
@@ -23,6 +24,12 @@ export const step4Schema = z.object({
     tipo: z.string().optional(),
   })).optional(),
   tour360Url: z.string().optional(),
+  documentos: z.array(z.object({
+    url: z.string(),
+    nome: z.string(),
+    tipo: z.string(),
+    tamanho_bytes: z.number().optional(),
+  })).optional(),
 });
 
 export type Step4Data = z.infer<typeof step4Schema>;
@@ -38,6 +45,13 @@ interface VideoItem {
   tipo?: string;
 }
 
+interface DocumentItem {
+  url: string;
+  nome: string;
+  tipo: string;
+  tamanho_bytes?: number;
+}
+
 interface Step4Props {
   defaultValues?: Partial<Step4Data>;
   onComplete: (data: Step4Data) => void;
@@ -47,6 +61,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const { construtora } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const { 
     optimizeSingleImage, 
     getOptimizedExtension, 
@@ -61,9 +76,13 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const [videos, setVideos] = useState<VideoItem[]>(
     (defaultValues?.videos?.filter((v): v is VideoItem => !!v.url)) || []
   );
+  const [documentos, setDocumentos] = useState<DocumentItem[]>(
+    (defaultValues?.documentos?.filter((d): d is DocumentItem => !!d.url)) || []
+  );
   const [tour360Url, setTour360Url] = useState(defaultValues?.tour360Url || '');
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [uploadStats, setUploadStats] = useState<{ original: number; optimized: number } | null>(null);
 
   const form = useForm<Step4Data>({
@@ -72,6 +91,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
       imagens: defaultValues?.imagens || [],
       videos: defaultValues?.videos || [],
       tour360Url: defaultValues?.tour360Url || '',
+      documentos: defaultValues?.documentos || [],
     },
   });
 
@@ -215,6 +235,116 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
     return '';
   };
 
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (documentos.length + files.length > 20) {
+      toast({
+        title: 'Limite excedido',
+        description: 'Você pode adicionar no máximo 20 documentos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingDoc(true);
+
+    try {
+      const uploadedDocs: DocumentItem[] = [];
+      const tempId = Date.now().toString();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.pdf')) {
+          toast({
+            title: 'Tipo não suportado',
+            description: `${file.name} não é um arquivo PDF ou documento válido.`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        // Max 50MB per file
+        if (file.size > 50 * 1024 * 1024) {
+          toast({
+            title: 'Arquivo muito grande',
+            description: `${file.name} excede o limite de 50MB.`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+        const fileName = `${tempId}-${i}.${fileExt}`;
+        const filePath = `temp/docs/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('imoveis')
+          .upload(filePath, file, {
+            contentType: file.type || 'application/pdf',
+          });
+
+        if (error) {
+          console.error('Upload error:', error);
+          toast({
+            title: 'Erro no upload',
+            description: `Falha ao enviar ${file.name}`,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        const { data: publicUrl } = supabase.storage
+          .from('imoveis')
+          .getPublicUrl(filePath);
+
+        uploadedDocs.push({
+          url: publicUrl.publicUrl,
+          nome: file.name,
+          tipo: fileExt,
+          tamanho_bytes: file.size,
+        });
+      }
+
+      const newDocs = [...documentos, ...uploadedDocs];
+      setDocumentos(newDocs);
+      form.setValue('documentos', newDocs);
+
+      toast({
+        title: 'Documentos enviados',
+        description: `${uploadedDocs.length} documento(s) enviado(s) com sucesso.`,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao fazer upload dos documentos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingDoc(false);
+      if (docInputRef.current) {
+        docInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeDocument = (index: number) => {
+    const newDocs = documentos.filter((_, i) => i !== index);
+    setDocumentos(newDocs);
+    form.setValue('documentos', newDocs);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
+
   const onSubmit = () => {
     if (imagens.length === 0) {
       toast({
@@ -229,6 +359,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
       imagens,
       videos,
       tour360Url: tour360Url || undefined,
+      documentos,
     });
   };
 
@@ -426,6 +557,94 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
               form.setValue('tour360Url', e.target.value);
             }}
           />
+        </div>
+
+        {/* Documents / PDFs */}
+        <div className="space-y-4">
+          <Label className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Documentos e Materiais Promocionais (máx. 20)
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Envie PDFs com informações do imóvel, memorial descritivo, plantas, book de vendas, etc.
+          </p>
+
+          <div
+            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer ${
+              isUploadingDoc ? 'opacity-50 pointer-events-none' : ''
+            }`}
+            onClick={() => docInputRef.current?.click()}
+          >
+            <input
+              ref={docInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              multiple
+              className="hidden"
+              onChange={handleDocUpload}
+            />
+            {isUploadingDoc ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                <p className="text-muted-foreground">Enviando documentos...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <File className="h-8 w-8 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  Clique ou arraste documentos aqui
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  PDF, DOC, DOCX (máx. 50MB cada)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Document List */}
+          {documentos.length > 0 && (
+            <div className="space-y-2">
+              {documentos.map((doc, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{doc.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.tipo.toUpperCase()} • {doc.tamanho_bytes ? formatFileSize(doc.tamanho_bytes) : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                    >
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                        Visualizar
+                      </a>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => removeDocument(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end">

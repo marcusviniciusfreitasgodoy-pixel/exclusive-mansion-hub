@@ -161,6 +161,7 @@ export default function NovoImovel() {
         imagens: JSON.stringify(formData.imagens || []),
         videos: JSON.stringify(formData.videos || []),
         tour_360_url: formData.tour360Url || null,
+        documentos: JSON.stringify(formData.documentos || []),
         status: formData.status || 'ativo',
         template_escolhido: formData.template_escolhido || 'moderno',
         customizacao_template: JSON.stringify(formData.customizacao_template || {}),
