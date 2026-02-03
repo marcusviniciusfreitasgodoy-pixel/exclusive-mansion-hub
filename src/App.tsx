@@ -44,6 +44,7 @@ const MinhasMidias = lazy(() => import("./pages/dashboard/imobiliaria/MinhasMidi
 // Lazy load public pages
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
 const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClientePublico"));
+const TemplatesShowcase = lazy(() => import("./pages/TemplatesShowcase"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -81,7 +82,12 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+              
+              {/* Templates Showcase - Public */}
+              <Route path="/templates" element={
+                <LazyRoute><TemplatesShowcase /></LazyRoute>
+              } />
               
               {/* Test Routes */}
               <Route path="/teste-conexao" element={
