@@ -91,6 +91,11 @@ function DefaultTemplate({ data }: { data: NonNullable<ReturnType<typeof useProp
       <div style={brandingStyles}>
         <Helmet>
           <title>{title}</title>
+          {branding.faviconUrl ? (
+            <link rel="icon" href={branding.faviconUrl} />
+          ) : (
+            <link rel="icon" href="/favicon.ico" />
+          )}
           <meta name="description" content={description} />
           <meta property="og:title" content={title} />
           <meta property="og:description" content={description} />

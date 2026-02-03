@@ -714,6 +714,7 @@ export type Database = {
           created_at: string | null
           creci: string
           email_contato: string | null
+          favicon_url: string | null
           id: string
           logo_url: string | null
           nome_empresa: string
@@ -725,6 +726,7 @@ export type Database = {
           created_at?: string | null
           creci: string
           email_contato?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
           nome_empresa: string
@@ -736,6 +738,7 @@ export type Database = {
           created_at?: string | null
           creci?: string
           email_contato?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
           nome_empresa?: string

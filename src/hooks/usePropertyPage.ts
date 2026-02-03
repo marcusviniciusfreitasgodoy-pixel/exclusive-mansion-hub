@@ -41,7 +41,8 @@ export function usePropertyPage(): UsePropertyPageResult {
               logo_url,
               cor_primaria,
               telefone,
-              email_contato
+              email_contato,
+              favicon_url
             ),
             imoveis (
               id,
@@ -246,6 +247,7 @@ export function usePropertyPage(): UsePropertyPageResult {
           corPrimaria: imobiliaria?.cor_primaria || "#1e3a5f",
           telefone: imobiliaria?.telefone || null,
           emailContato: imobiliaria?.email_contato || null,
+          faviconUrl: imobiliaria?.favicon_url || null,
         };
 
         setData({

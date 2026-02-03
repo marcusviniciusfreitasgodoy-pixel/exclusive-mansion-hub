@@ -78,6 +78,11 @@ export function TemplateWrapper({ data, children, templateType, integracoes = []
       <div style={cssVars} data-template={templateType}>
         <Helmet>
           <title>{title}</title>
+          {branding.faviconUrl ? (
+            <link rel="icon" href={branding.faviconUrl} />
+          ) : (
+            <link rel="icon" href="/favicon.ico" />
+          )}
           <meta name="description" content={description} />
           <meta property="og:title" content={title} />
           <meta property="og:description" content={description} />

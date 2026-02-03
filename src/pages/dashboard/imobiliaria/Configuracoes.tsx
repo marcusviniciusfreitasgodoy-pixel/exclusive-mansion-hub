@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard, ImageIcon, FileText, ChevronRight } from "lucide-react";
+import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard, ImageIcon, FileText, ChevronRight, Globe } from "lucide-react";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload } from "@/components/dashboard/LogoUpload";
+import { FaviconUpload } from "@/components/dashboard/FaviconUpload";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -37,6 +38,7 @@ export default function ConfiguracoesImobiliaria() {
   const { imobiliaria, refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(configSchema),
@@ -59,6 +61,7 @@ export default function ConfiguracoesImobiliaria() {
         cor_primaria: imobiliaria.cor_primaria || "#1e3a5f",
       });
       setLogoUrl(imobiliaria.logo_url || null);
+      setFaviconUrl((imobiliaria as any).favicon_url || null);
     }
   }, [imobiliaria, form]);
 
@@ -76,6 +79,7 @@ export default function ConfiguracoesImobiliaria() {
           telefone: data.telefone || null,
           cor_primaria: data.cor_primaria || "#1e3a5f",
           logo_url: logoUrl,
+          favicon_url: faviconUrl,
         })
         .eq("id", imobiliaria.id);
 
@@ -153,7 +157,27 @@ export default function ConfiguracoesImobiliaria() {
               </CardContent>
             </Card>
 
-            {/* Informações da Empresa */}
+            {/* Favicon */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Favicon (ícone da aba do navegador)
+                </CardTitle>
+                <CardDescription>
+                  Aparece na aba do navegador quando visitantes acessam seu link white-label.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {imobiliaria?.id && (
+                  <FaviconUpload
+                    currentFaviconUrl={faviconUrl}
+                    onFaviconChange={setFaviconUrl}
+                    entityId={imobiliaria.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
