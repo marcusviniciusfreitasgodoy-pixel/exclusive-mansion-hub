@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, errorResponse, successResponse, isValidEmail, sanitizeInput } from "../_shared/security.ts";
+import { corsHeaders, sanitizeInput, isValidEmail } from "../_shared/security.ts";
 
 interface SignupRequest {
   email: string;
@@ -14,6 +14,22 @@ interface SignupRequest {
   };
 }
 
+// Controlled error response - always HTTP 200 so frontend can read the payload
+function controlledError(code: string, message: string) {
+  return new Response(
+    JSON.stringify({ success: false, code, message }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+// Success response
+function successResponse(data: Record<string, unknown>) {
+  return new Response(
+    JSON.stringify({ success: true, ...data }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -26,27 +42,27 @@ Deno.serve(async (req) => {
 
     // Validate inputs
     if (!email || !isValidEmail(email)) {
-      return errorResponse("Email inválido", 400);
+      return controlledError("validation_error", "E-mail inválido");
     }
 
     if (!password || password.length < 6) {
-      return errorResponse("Senha deve ter pelo menos 6 caracteres", 400);
+      return controlledError("validation_error", "Senha deve ter pelo menos 6 caracteres");
     }
 
     if (!role || !['construtora', 'imobiliaria'].includes(role)) {
-      return errorResponse("Role inválido", 400);
+      return controlledError("validation_error", "Tipo de conta inválido");
     }
 
     if (!profile?.nome_empresa) {
-      return errorResponse("Nome da empresa é obrigatório", 400);
+      return controlledError("validation_error", "Nome da empresa é obrigatório");
     }
 
     if (role === 'construtora' && !profile.cnpj) {
-      return errorResponse("CNPJ é obrigatório para construtora", 400);
+      return controlledError("validation_error", "CNPJ é obrigatório para construtora");
     }
 
     if (role === 'imobiliaria' && !profile.creci) {
-      return errorResponse("CRECI é obrigatório para imobiliária", 400);
+      return controlledError("validation_error", "CRECI é obrigatório para imobiliária");
     }
 
     // Create Supabase client with service role for admin operations
@@ -65,14 +81,14 @@ Deno.serve(async (req) => {
 
     if (authError) {
       console.error("Auth error:", authError);
-      if (authError.message.includes("already been registered")) {
-        return errorResponse("Este email já está cadastrado", 409);
+      if (authError.message.includes("already been registered") || authError.code === "email_exists") {
+        return controlledError("email_exists", "Este e-mail já está cadastrado. Faça login ou recupere sua senha.");
       }
-      return errorResponse(authError.message, 400);
+      return controlledError("validation_error", authError.message);
     }
 
     if (!authData.user) {
-      return errorResponse("Falha ao criar usuário", 500);
+      return controlledError("internal_error", "Falha ao criar usuário");
     }
 
     const userId = authData.user.id;
@@ -86,7 +102,7 @@ Deno.serve(async (req) => {
       console.error("Role insert error:", roleError);
       // Rollback: delete the created user
       await supabaseAdmin.auth.admin.deleteUser(userId);
-      return errorResponse("Erro ao configurar permissões", 500);
+      return controlledError("internal_error", "Erro ao configurar permissões");
     }
 
     // Insert profile based on role
@@ -106,9 +122,9 @@ Deno.serve(async (req) => {
         await supabaseAdmin.auth.admin.deleteUser(userId);
         
         if (profileError.message.includes("duplicate key") && profileError.message.includes("cnpj")) {
-          return errorResponse("Este CNPJ já está cadastrado", 409);
+          return controlledError("cnpj_exists", "Este CNPJ já está cadastrado.");
         }
-        return errorResponse("Erro ao criar perfil da construtora", 500);
+        return controlledError("internal_error", "Erro ao criar perfil da construtora");
       }
     } else if (role === 'imobiliaria') {
       const { data: imobData, error: profileError } = await supabaseAdmin
@@ -130,9 +146,9 @@ Deno.serve(async (req) => {
         await supabaseAdmin.auth.admin.deleteUser(userId);
         
         if (profileError.message.includes("duplicate key") && profileError.message.includes("creci")) {
-          return errorResponse("Este CRECI já está cadastrado", 409);
+          return controlledError("creci_exists", "Este CRECI já está cadastrado.");
         }
-        return errorResponse("Erro ao criar perfil da imobiliária", 500);
+        return controlledError("internal_error", "Erro ao criar perfil da imobiliária");
       }
 
       // Create default form configurations if imobiliaria was created
@@ -174,13 +190,12 @@ Deno.serve(async (req) => {
     }
 
     return successResponse({
-      success: true,
-      message: "Conta criada com sucesso! Verifique seu email para confirmar o cadastro.",
+      message: "Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro.",
       userId,
     });
 
   } catch (error) {
     console.error("Signup error:", error);
-    return errorResponse("Erro interno do servidor", 500);
+    return controlledError("internal_error", "Erro interno do servidor. Tente novamente.");
   }
 });

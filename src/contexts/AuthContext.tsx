@@ -140,13 +140,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
 
+      // Handle network/invoke errors
       if (response.error) {
-        console.error('Signup function error:', response.error);
-        return { error: new Error(response.error.message || 'Erro ao criar conta') };
+        console.error('Signup function invoke error:', response.error);
+        return { error: new Error('Erro de conexão. Tente novamente.') };
       }
 
-      if (response.data?.error) {
-        return { error: new Error(response.data.error) };
+      // Check the response payload for controlled errors
+      const data = response.data as { success: boolean; code?: string; message?: string };
+      
+      if (!data.success) {
+        return { 
+          error: new Error(data.message || 'Erro ao criar conta'),
+          code: data.code 
+        };
       }
 
       return { error: null };
