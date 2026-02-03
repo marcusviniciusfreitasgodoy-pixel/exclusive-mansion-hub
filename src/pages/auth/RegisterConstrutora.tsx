@@ -68,21 +68,16 @@ export default function RegisterConstrutora() {
         return;
       }
 
-      const { error } = await signUp(formData.email, formData.password, 'construtora', {
+      const result = await signUp(formData.email, formData.password, 'construtora', {
         nome_empresa: formData.nome_empresa,
         cnpj: formData.cnpj.replace(/\D/g, ''),
       });
 
-      if (error) {
-        let message = 'Erro ao criar conta';
-        if (error.message.includes('already registered')) {
-          message = 'Este e-mail já está cadastrado';
-        } else if (error.message.includes('duplicate key') && error.message.includes('cnpj')) {
-          message = 'Este CNPJ já está cadastrado';
-        }
+      if (result.error) {
+        // The error message now comes directly from the backend in PT-BR
         toast({
-          title: 'Erro',
-          description: message,
+          title: 'Erro no cadastro',
+          description: result.error.message,
           variant: 'destructive',
         });
       } else {
