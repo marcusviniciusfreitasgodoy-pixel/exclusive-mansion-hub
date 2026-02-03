@@ -1,76 +1,345 @@
 
-## O que o log mostrou (causa do erro)
-O erro de cadastro **não foi RLS** desta vez. O log da função `signup-user` mostra claramente:
+# Plano: Sistema de Envio de Mídia pela Imobiliária com Aprovação
 
-- **Erro 422 / code: `email_exists`**
-- Mensagem: **“A user with this email address has already been registered”**
-
-Ou seja: o usuário tentou cadastrar uma construtora com um **e-mail que já existe** no sistema (no seu print aparece `marcus@godoyprime.com.br`, que já foi usado antes).
-
-O motivo de você ver apenas “Erro ao criar conta” (genérico) é que hoje o front não está conseguindo **extrair e exibir** a mensagem detalhada retornada pela função quando ela responde com status HTTP de erro.
+## Objetivo
+Permitir que imobiliárias enviem imagens e vídeos adicionais para os imóveis que têm acesso, criando um fluxo de aprovação onde a construtora revisa e aprova/rejeita o material antes de ele aparecer na página pública.
 
 ---
 
-## Objetivo da correção
-1. **Continuar bloqueando cadastros com e-mail já existente** (correto).
-2. Exibir para o usuário uma mensagem clara:  
-   - “Este e-mail já está cadastrado. Faça login ou recupere sua senha.”
-3. Fazer o mesmo para outros casos comuns:
-   - CNPJ já cadastrado
-   - Erros de validação (senha curta, e-mail inválido etc.)
+## Arquitetura do Fluxo
 
----
-
-## Mudanças planejadas (sem alterar regras de negócio)
-### 1) Ajustar a função `supabase/functions/signup-user/index.ts`
-**Problema atual:** quando a função retorna HTTP 409/400, o `supabase.functions.invoke` tende a preencher `response.error` e o front perde o payload amigável.
-
-**Solução:** padronizar a resposta do endpoint para **sempre retornar HTTP 200** quando for erro “controlado” (erros esperados de negócio/validação), com um payload consistente, por exemplo:
-```ts
-{ success: false, code: "email_exists", message: "Este e-mail já está cadastrado" }
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           FLUXO DE APROVAÇÃO                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  IMOBILIÁRIA                    CONSTRUTORA                   PÁGINA        │
+│  ──────────                     ───────────                   ──────        │
+│                                                                             │
+│  1. Acessa imóvel          ──────────────────────────────────────────────   │
+│  2. Clica "Enviar Mídia"   ──────────────────────────────────────────────   │
+│  3. Faz upload de          ──────────────────────────────────────────────   │
+│     imagens/vídeos                                                          │
+│                                                                             │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────────┐                                                        │
+│  │ Salva em        │                                                        │
+│  │ midias_pendentes│                                                        │
+│  │ status=pendente │                                                        │
+│  └────────┬────────┘                                                        │
+│           │                                                                 │
+│           │ (Notificação visual)                                            │
+│           ▼                                                                 │
+│                               4. Vê badge "X pendentes"                     │
+│                               5. Acessa painel de aprovação                 │
+│                               6. Visualiza mídia                            │
+│                               7. Aprova ✓ ou Rejeita ✗                      │
+│                                                                             │
+│                                       │                                     │
+│                                       ▼                                     │
+│                               ┌───────────────────┐                         │
+│                               │ Se APROVADO:      │                         │
+│                               │ - Copia para      │                         │
+│                               │   imoveis.imagens │                         │
+│                               │ - status=aprovado │                         │
+│                               └────────┬──────────┘                         │
+│                                        │                                    │
+│                                        ▼                                    │
+│                                                        8. Mídia aparece     │
+│                                                           na página         │
+│                                                           pública           │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
-E reservar HTTP 500 apenas para falhas realmente inesperadas.
-
-Isso garante que o front sempre receba `response.data` e consiga mostrar a mensagem correta.
-
-**Códigos que vamos padronizar:**
-- `email_exists`
-- `cnpj_exists`
-- `validation_error`
-- `internal_error`
-
-### 2) Ajustar `src/contexts/AuthContext.tsx` (função `signUp`)
-- Ler `response.data` e checar `success`.
-- Se `success === false`, retornar `new Error(message)` (ou retornar também `code` se quisermos mostrar ações específicas).
-
-### 3) Ajustar `src/pages/auth/RegisterConstrutora.tsx`
-- Atualizar a lógica que hoje só detecta `already registered` para também lidar com:
-  - mensagem em PT (“já está cadastrado”)
-  - `code: email_exists` (se decidirmos passar o code para o front)
-- Melhorar UX do erro:
-  - Se for e-mail existente: sugerir **Login** e (opcional) link “Esqueci minha senha”.
 
 ---
 
-## Como vou validar (checklist rápido)
-1. Tentar cadastrar com um e-mail já usado → deve aparecer “Este e-mail já está cadastrado…”.
-2. Tentar cadastrar com um e-mail novo e CNPJ novo → deve cadastrar e redirecionar para `/auth/login`.
-3. Tentar cadastrar com CNPJ repetido → deve aparecer “Este CNPJ já está cadastrado”.
-4. Verificar logs da função para confirmar que erros controlados não estão “estourando” como erro genérico no client.
+## Parte 1: Nova Tabela `midias_pendentes`
+
+Criar tabela para armazenar as mídias enviadas pelas imobiliárias aguardando aprovação.
+
+```sql
+CREATE TYPE midia_tipo AS ENUM ('imagem', 'video');
+CREATE TYPE midia_status AS ENUM ('pendente', 'aprovado', 'rejeitado');
+
+CREATE TABLE midias_pendentes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Relacionamentos
+  imovel_id UUID NOT NULL REFERENCES imoveis(id) ON DELETE CASCADE,
+  imobiliaria_id UUID NOT NULL REFERENCES imobiliarias(id) ON DELETE CASCADE,
+  access_id UUID NOT NULL REFERENCES imobiliaria_imovel_access(id) ON DELETE CASCADE,
+  
+  -- Dados da mídia
+  tipo midia_tipo NOT NULL,
+  url TEXT NOT NULL,                    -- URL do storage
+  alt TEXT,                             -- Descrição (para imagens)
+  video_tipo TEXT,                      -- youtube/vimeo (para vídeos)
+  
+  -- Status e workflow
+  status midia_status DEFAULT 'pendente',
+  enviado_em TIMESTAMPTZ DEFAULT now(),
+  revisado_em TIMESTAMPTZ,
+  revisado_por UUID,                    -- user_id do aprovador
+  motivo_rejeicao TEXT,
+  
+  -- Metadata
+  nome_arquivo_original TEXT,
+  tamanho_bytes INTEGER,
+  
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Índices para performance
+CREATE INDEX idx_midias_pendentes_imovel ON midias_pendentes(imovel_id);
+CREATE INDEX idx_midias_pendentes_status ON midias_pendentes(status);
+CREATE INDEX idx_midias_pendentes_imobiliaria ON midias_pendentes(imobiliaria_id);
+```
+
+### Políticas RLS
+
+```sql
+-- Imobiliárias podem inserir mídias para imóveis que têm acesso
+CREATE POLICY "Imobiliarias podem enviar midias"
+ON midias_pendentes FOR INSERT
+WITH CHECK (
+  imobiliaria_id = get_imobiliaria_id(auth.uid())
+  AND EXISTS (
+    SELECT 1 FROM imobiliaria_imovel_access
+    WHERE id = midias_pendentes.access_id
+    AND imobiliaria_id = midias_pendentes.imobiliaria_id
+    AND imovel_id = midias_pendentes.imovel_id
+    AND status = 'active'
+  )
+);
+
+-- Imobiliárias podem ver suas próprias mídias
+CREATE POLICY "Imobiliarias podem ver suas midias"
+ON midias_pendentes FOR SELECT
+USING (imobiliaria_id = get_imobiliaria_id(auth.uid()));
+
+-- Construtoras podem ver mídias de seus imóveis
+CREATE POLICY "Construtoras podem ver midias de seus imoveis"
+ON midias_pendentes FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM imoveis
+    WHERE id = midias_pendentes.imovel_id
+    AND construtora_id = get_construtora_id(auth.uid())
+  )
+);
+
+-- Construtoras podem atualizar status (aprovar/rejeitar)
+CREATE POLICY "Construtoras podem aprovar ou rejeitar"
+ON midias_pendentes FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM imoveis
+    WHERE id = midias_pendentes.imovel_id
+    AND construtora_id = get_construtora_id(auth.uid())
+  )
+);
+```
 
 ---
 
-## Observação importante para você (operacional)
-Para testar “cadastro funcionando” sem confundir com `email_exists`, use sempre:
-- **um e-mail novo** (nunca usado) e
-- **um CNPJ novo** (nunca usado)
+## Parte 2: Storage Bucket
 
-Se você repetir qualquer um dos dois, o sistema deve mesmo bloquear — a correção aqui é principalmente de **mensagem e tratamento** no front.
+Criar bucket dedicado para mídias pendentes:
+
+```sql
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('midias-pendentes', 'midias-pendentes', true, 20971520)  -- 20MB
+ON CONFLICT (id) DO NOTHING;
+
+-- Políticas de storage
+CREATE POLICY "Imobiliarias podem fazer upload"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'midias-pendentes'
+  AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "Leitura publica de midias pendentes"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'midias-pendentes');
+```
 
 ---
 
-## Arquivos que serão alterados
-- `supabase/functions/signup-user/index.ts`
-- `src/contexts/AuthContext.tsx`
-- `src/pages/auth/RegisterConstrutora.tsx`
+## Parte 3: Interface da Imobiliária
 
+### 3.1 Novo Componente: `EnviarMidiaModal.tsx`
+
+Modal para upload de imagens e vídeos com:
+- Área de drag & drop para imagens (reutilizando lógica do Step4Media)
+- Campo para URL de vídeo (YouTube/Vimeo)
+- Preview das mídias selecionadas
+- Otimização automática WebP
+- Status de upload
+
+### 3.2 Modificar Dashboard da Imobiliária
+
+Adicionar botão "Enviar Material" em cada card de imóvel:
+- Abre o modal de upload
+- Mostra contador de mídias enviadas/pendentes/aprovadas
+
+### 3.3 Nova Página: `MinhasMidias.tsx`
+
+Listar todas as mídias enviadas pela imobiliária com status:
+- 🟡 Pendente (aguardando aprovação)
+- 🟢 Aprovado (já aparece na página)
+- 🔴 Rejeitado (com motivo)
+
+---
+
+## Parte 4: Interface da Construtora
+
+### 4.1 Badge de Notificação no Menu
+
+Mostrar contador de mídias pendentes no sidebar:
+- Ao lado do item "Imóveis" ou novo item "Aprovações"
+- Badge vermelho com número
+
+### 4.2 Nova Página: `AprovarMidias.tsx`
+
+Painel de aprovação com:
+- Lista de mídias pendentes agrupadas por imóvel
+- Preview da imagem/thumbnail do vídeo
+- Informações: imobiliária que enviou, data, nome do arquivo
+- Botões: ✓ Aprovar | ✗ Rejeitar (com campo para motivo)
+
+### 4.3 Lógica de Aprovação
+
+Quando aprovada:
+1. Atualiza status para `aprovado`
+2. Adiciona a mídia ao array `imagens` ou `videos` do imóvel
+3. (Opcional) Move arquivo de `midias-pendentes` para `imoveis`
+
+Quando rejeitada:
+1. Atualiza status para `rejeitado`
+2. Salva motivo da rejeição
+3. Mídia permanece no bucket (pode ser removida após X dias)
+
+---
+
+## Parte 5: Notificações (Opcional - Fase 2)
+
+Enviar e-mail quando:
+- Imobiliária envia nova mídia → notifica construtora
+- Construtora aprova/rejeita → notifica imobiliária
+
+---
+
+## Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `supabase/migrations/...` | Criar | Nova tabela e políticas |
+| `src/components/imobiliaria/EnviarMidiaModal.tsx` | Criar | Modal de upload |
+| `src/pages/dashboard/imobiliaria/index.tsx` | Modificar | Adicionar botão "Enviar Material" |
+| `src/pages/dashboard/imobiliaria/MinhasMidias.tsx` | Criar | Lista de mídias enviadas |
+| `src/pages/dashboard/construtora/AprovarMidias.tsx` | Criar | Painel de aprovação |
+| `src/components/dashboard/DashboardSidebar.tsx` | Modificar | Badge de pendentes |
+| `src/App.tsx` | Modificar | Novas rotas |
+| `src/types/database.ts` | Modificar | Novos tipos |
+
+---
+
+## Segurança
+
+### Validações
+- Imobiliária só pode enviar mídia para imóveis que tem acesso ativo
+- Construtora só pode aprovar/rejeitar mídias de seus próprios imóveis
+- Limite de tamanho: 20MB por arquivo
+- Tipos permitidos: JPG, PNG, WebP (imagens) + URLs YouTube/Vimeo (vídeos)
+
+### RLS
+- Todas as operações protegidas por RLS
+- Nenhum acesso público à tabela `midias_pendentes`
+- Storage com políticas específicas por bucket
+
+---
+
+## Experiência do Usuário
+
+### Para a Imobiliária
+1. Acessa o dashboard
+2. Vê lista de imóveis autorizados
+3. Clica em "Enviar Material" no imóvel desejado
+4. Faz upload de fotos ou adiciona link de vídeo
+5. Recebe confirmação: "Material enviado para aprovação"
+6. Pode acompanhar status em "Minhas Mídias"
+
+### Para a Construtora
+1. Vê badge "3 pendentes" no menu
+2. Acessa "Aprovar Mídias"
+3. Visualiza cada mídia com informações da origem
+4. Aprova ou rejeita com um clique
+5. Mídia aprovada aparece automaticamente na página do imóvel
+
+---
+
+## Resumo Visual da Interface
+
+```text
+DASHBOARD IMOBILIÁRIA
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Imóveis Disponíveis                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
+│  │ [Foto Imóvel]    │  │ [Foto Imóvel]    │  │ [Foto Imóvel]    │          │
+│  │ Casa Alto Padrão │  │ Apartamento...   │  │ Penthouse...     │          │
+│  │ R$ 2.500.000     │  │ R$ 1.200.000     │  │ R$ 5.000.000     │          │
+│  │                  │  │                  │  │                  │          │
+│  │ [Copiar] [Abrir] │  │ [Copiar] [Abrir] │  │ [Copiar] [Abrir] │          │
+│  │ [📷 Enviar Mídia]│  │ [📷 Enviar Mídia]│  │ [📷 Enviar Mídia]│          │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+MODAL ENVIAR MÍDIA
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Enviar Material - Casa Alto Padrão                               [X]      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  📷 Imagens                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                                                                     │   │
+│  │  [+] Arraste imagens aqui ou clique para selecionar                │   │
+│  │                                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  🎬 Vídeo (YouTube/Vimeo)                                                   │
+│  [ https://youtube.com/watch?v=...                        ] [+ Adicionar]  │
+│                                                                             │
+│  Preview:                                                                   │
+│  ┌─────┐ ┌─────┐ ┌─────┐                                                   │
+│  │ img │ │ img │ │ vid │                                                   │
+│  └─────┘ └─────┘ └─────┘                                                   │
+│                                                                             │
+│                                        [ Cancelar ]  [ Enviar para Aprovação ]│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+DASHBOARD CONSTRUTORA - APROVAR MÍDIAS
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Aprovar Mídias                                          🔴 5 pendentes    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Casa Alto Padrão - Barra da Tijuca                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ ┌─────────┐  Enviado por: Imobiliária XYZ                           │   │
+│  │ │         │  Data: 03/02/2026 às 14:30                              │   │
+│  │ │  [IMG]  │  Arquivo: foto-varanda.jpg (2.1 MB)                     │   │
+│  │ │         │                                                         │   │
+│  │ └─────────┘  [ ✓ Aprovar ]  [ ✗ Rejeitar ]                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ ┌─────────┐  Enviado por: Imobiliária ABC                           │   │
+│  │ │         │  Data: 03/02/2026 às 15:00                              │   │
+│  │ │  [VID]  │  YouTube: Tour Virtual 4K                               │   │
+│  │ │         │                                                         │   │
+│  │ └─────────┘  [ ✓ Aprovar ]  [ ✗ Rejeitar ]                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
