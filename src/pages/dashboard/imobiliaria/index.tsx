@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Link as LinkIcon, Copy, ExternalLink } from 'lucide-react';
+import { Link as LinkIcon, Copy, ExternalLink, ImagePlus } from 'lucide-react';
+import { EnviarMidiaModal } from '@/components/imobiliaria/EnviarMidiaModal';
 import type { Imovel, ImobiliariaImovelAccess } from '@/types/database';
 
 interface ImovelWithAccess extends Imovel {
@@ -22,6 +23,8 @@ export default function ImobiliariaDashboard() {
   const [selectedImovel, setSelectedImovel] = useState<Imovel | null>(null);
   const [slug, setSlug] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [midiaModalOpen, setMidiaModalOpen] = useState(false);
+  const [midiaImovel, setMidiaImovel] = useState<ImovelWithAccess | null>(null);
 
   const { data: imoveisWithAccess, isLoading, refetch } = useQuery({
     queryKey: ['imoveis-disponiveis', imobiliaria?.id],
@@ -202,72 +205,105 @@ export default function ImobiliariaDashboard() {
                   </p>
                 )}
               </CardContent>
-              <CardFooter className="gap-2">
-                {imovel.access?.url_slug ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => copyToClipboard(`${baseUrl}/imovel/${imovel.access!.url_slug}`)}
-                    >
-                      <Copy className="mr-1 h-3 w-3" />
-                      Copiar Link
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`/imovel/${imovel.access.url_slug}`} target="_blank" rel="noopener">
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </Button>
-                  </>
-                ) : (
-                  <Dialog>
-                    <DialogTrigger asChild>
+              <CardFooter className="flex-col gap-2">
+                <div className="flex w-full gap-2">
+                  {imovel.access?.url_slug ? (
+                    <>
                       <Button
-                        variant="default"
+                        variant="outline"
                         size="sm"
-                        className="w-full"
-                        onClick={() => handleOpenDialog(imovel)}
+                        className="flex-1"
+                        onClick={() => copyToClipboard(`${baseUrl}/imovel/${imovel.access!.url_slug}`)}
                       >
-                        <LinkIcon className="mr-1 h-3 w-3" />
-                        Gerar Meu Link
+                        <Copy className="mr-1 h-3 w-3" />
+                        Copiar Link
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Gerar Link Personalizado</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div>
-                          <Label>Slug da URL</Label>
-                          <Input
-                            value={slug}
-                            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                            placeholder="meu-imovel-personalizado"
-                            className="mt-1"
-                          />
-                        </div>
-                        <div className="rounded-md bg-muted p-3">
-                          <p className="text-xs text-muted-foreground">Preview:</p>
-                          <p className="text-sm font-medium break-all">
-                            {baseUrl}/imovel/{slug}
-                          </p>
-                        </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/imovel/${imovel.access.url_slug}`} target="_blank" rel="noopener">
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </Button>
+                    </>
+                  ) : (
+                    <Dialog>
+                      <DialogTrigger asChild>
                         <Button
-                          onClick={handleGenerateLink}
-                          disabled={isGenerating || !slug}
+                          variant="default"
+                          size="sm"
                           className="w-full"
+                          onClick={() => handleOpenDialog(imovel)}
                         >
-                          {isGenerating ? 'Gerando...' : 'Gerar Link'}
+                          <LinkIcon className="mr-1 h-3 w-3" />
+                          Gerar Meu Link
                         </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Gerar Link Personalizado</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div>
+                            <Label>Slug da URL</Label>
+                            <Input
+                              value={slug}
+                              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                              placeholder="meu-imovel-personalizado"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="rounded-md bg-muted p-3">
+                            <p className="text-xs text-muted-foreground">Preview:</p>
+                            <p className="text-sm font-medium break-all">
+                              {baseUrl}/imovel/{slug}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={handleGenerateLink}
+                            disabled={isGenerating || !slug}
+                            className="w-full"
+                          >
+                            {isGenerating ? 'Gerando...' : 'Gerar Link'}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+                {imovel.access?.id && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setMidiaImovel(imovel);
+                      setMidiaModalOpen(true);
+                    }}
+                  >
+                    <ImagePlus className="mr-1 h-3 w-3" />
+                    Enviar Material
+                  </Button>
                 )}
               </CardFooter>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Modal de Enviar Mídia */}
+      {midiaImovel && imobiliaria && (
+        <EnviarMidiaModal
+          open={midiaModalOpen}
+          onOpenChange={setMidiaModalOpen}
+          imovel={{
+            id: midiaImovel.id,
+            titulo: midiaImovel.titulo,
+            access: midiaImovel.access,
+          }}
+          imobiliariaId={imobiliaria.id}
+          onSuccess={() => {
+            setMidiaImovel(null);
+          }}
+        />
       )}
     </DashboardLayout>
   );
