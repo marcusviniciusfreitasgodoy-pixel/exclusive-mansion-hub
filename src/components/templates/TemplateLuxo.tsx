@@ -135,7 +135,13 @@ export default function TemplateLuxo({ data, integracoes = [] }: TemplateLuxoPro
 
       <PropertyRecommendations currentProperty={property} imobiliariaId={imobiliariaId} />
 
-      <SofiaAssistentSection propertyTitle={property.titulo} />
+      <SofiaAssistentSection 
+        propertyTitle={property.titulo}
+        imovelId={property.id}
+        imobiliariaId={imobiliariaId}
+        construtorId={property.construtoraId}
+        imobiliariaNome={branding?.imobiliariaNome}
+      />
 
       <div ref={contactRef}>
         <PropertyContactSection

@@ -159,6 +159,10 @@ function DefaultTemplate({ data }: { data: NonNullable<ReturnType<typeof useProp
           />
           <SofiaAssistentSection 
             propertyTitle={property.titulo}
+            imovelId={property.id}
+            imobiliariaId={imobiliariaId}
+            construtorId={property.construtoraId}
+            imobiliariaNome={branding?.imobiliariaNome}
           />
           <div ref={contactRef}>
             <PropertyContactSection

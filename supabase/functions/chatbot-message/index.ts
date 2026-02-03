@@ -88,7 +88,7 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, mensagem_usuario, imovel_id, imobiliaria_id, construtora_id } =
+    const { session_id, mensagem_usuario, imovel_id, imobiliaria_id, construtora_id, input_type } =
       await req.json();
 
     if (!session_id || !mensagem_usuario || !imovel_id) {
@@ -119,6 +119,14 @@ serve(async (req) => {
         .single();
       imobiliaria = data;
     }
+
+    // 2. Fetch global knowledge base
+    const { data: knowledgeBase } = await supabase
+      .from("chatbot_knowledge_base")
+      .select("categoria, titulo, conteudo")
+      .eq("ativo", true)
+      .order("prioridade", { ascending: false })
+      .limit(50);
 
     const empresaNome = imobiliaria?.nome_empresa || imovel.construtoras?.nome_empresa || "nossa empresa";
     const empresaTelefone = imobiliaria?.telefone || imovel.construtoras?.telefone || "não informado";
@@ -170,7 +178,29 @@ serve(async (req) => {
       ? imovel.amenities.join(", ")
       : "";
 
-    const systemPrompt = `Você é um assistente virtual especializado em imóveis de alto padrão, representando a ${empresaNome}.
+    // Format knowledge base for prompt
+    let knowledgeBaseSection = "";
+    if (knowledgeBase && knowledgeBase.length > 0) {
+      const kbByCategory: Record<string, string[]> = {};
+      for (const kb of knowledgeBase) {
+        if (!kbByCategory[kb.categoria]) {
+          kbByCategory[kb.categoria] = [];
+        }
+        kbByCategory[kb.categoria].push(`- ${kb.titulo}: ${kb.conteudo}`);
+      }
+      
+      knowledgeBaseSection = "\n\nBASE DE CONHECIMENTO ADICIONAL:";
+      for (const [categoria, items] of Object.entries(kbByCategory)) {
+        knowledgeBaseSection += `\n\n[${categoria.toUpperCase()}]\n${items.join("\n")}`;
+      }
+    }
+
+    // Add property-specific AI context if available
+    const contextoAdicionalImovel = imovel.contexto_adicional_ia 
+      ? `\n\nCONTEXTO ESPECÍFICO DO IMÓVEL:\n${imovel.contexto_adicional_ia}`
+      : "";
+
+    const systemPrompt = `Você é Sofia, uma assistente virtual especializada em imóveis de alto padrão, representando a ${empresaNome}.
 
 IMÓVEL EM QUESTÃO:
 - Título: ${imovel.titulo}
@@ -193,7 +223,7 @@ DIFERENCIAIS:
 ${diferenciais}
 
 AMENIDADES:
-${amenities || "Não informado"}
+${amenities || "Não informado"}${contextoAdicionalImovel}${knowledgeBaseSection}
 
 CONTATO:
 - Empresa: ${empresaNome}
@@ -213,6 +243,7 @@ SUAS RESPONSABILIDADES:
 5. Quando não souber uma informação específica, sugira entrar em contato com a equipe
 6. Oferecer agendamento de visita quando cliente demonstrar interesse
 7. Para agendar visita, use a função solicitar_agendamento
+8. Utilize a BASE DE CONHECIMENTO para responder perguntas sobre financiamento, processos de compra, materiais, etc.
 
 REGRAS DE CAPTURA DE DADOS:
 - Se o cliente disser "Meu nome é João" → Chame capturar_dados_lead com nome="João"
@@ -557,6 +588,7 @@ TOM: Profissional, consultivo, amigável`;
         resposta: respostaIA,
         mensagem_id: novaMensagemAssistant.id,
         function_results: functionResults.length > 0 ? functionResults : undefined,
+        should_speak: input_type === "voice",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -47,6 +47,7 @@ const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClien
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
 const SeedData = lazy(() => import("./pages/admin/SeedData"));
 const Diagnostico = lazy(() => import("./pages/admin/Diagnostico"));
+const BaseConhecimento = lazy(() => import("./pages/admin/BaseConhecimento"));
 
 // Configure React Query with optimized defaults
 const queryClient = new QueryClient({
@@ -93,6 +94,9 @@ const App = () => (
               } />
               <Route path="/admin/diagnostico" element={
                 <LazyRoute><Diagnostico /></LazyRoute>
+              } />
+              <Route path="/admin/base-conhecimento" element={
+                <LazyRoute><BaseConhecimento /></LazyRoute>
               } />
               
               {/* Auth Routes (eager loaded for fast initial load) */}

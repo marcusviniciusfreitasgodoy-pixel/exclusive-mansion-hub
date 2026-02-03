@@ -187,6 +187,42 @@ export type Database = {
           },
         ]
       }
+      chatbot_knowledge_base: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          conteudo: string
+          created_at: string | null
+          id: string
+          prioridade: number | null
+          tags: string[] | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          conteudo: string
+          created_at?: string | null
+          id?: string
+          prioridade?: number | null
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          conteudo?: string
+          created_at?: string | null
+          id?: string
+          prioridade?: number | null
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       configuracoes_formularios: {
         Row: {
           ativo: boolean | null
@@ -723,6 +759,7 @@ export type Database = {
           condicoes_pagamento: string | null
           condominio: number | null
           construtora_id: string
+          contexto_adicional_ia: string | null
           corretores: Json | null
           created_at: string | null
           customizacao_template: Json | null
@@ -792,6 +829,7 @@ export type Database = {
           condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id: string
+          contexto_adicional_ia?: string | null
           corretores?: Json | null
           created_at?: string | null
           customizacao_template?: Json | null
@@ -861,6 +899,7 @@ export type Database = {
           condicoes_pagamento?: string | null
           condominio?: number | null
           construtora_id?: string
+          contexto_adicional_ia?: string | null
           corretores?: Json | null
           created_at?: string | null
           customizacao_template?: Json | null

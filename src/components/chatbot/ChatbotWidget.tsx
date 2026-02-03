@@ -1,17 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, User, CheckCircle2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, User, CheckCircle2, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { VoiceRecorder } from "./VoiceRecorder";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface Message {
   id: string;
   timestamp: string;
   role: "user" | "assistant";
   content: string;
+  inputType?: "text" | "voice";
+  audioBase64?: string;
   functionResults?: Array<{
     tipo: string;
     lead_id?: string;
@@ -29,6 +33,8 @@ interface ChatbotWidgetProps {
   construtorId: string;
   imovelTitulo: string;
   imobiliariaNome?: string;
+  isOpenExternal?: boolean;
+  onClose?: () => void;
 }
 
 function getOrCreateSessionId(): string {
@@ -49,16 +55,26 @@ export function ChatbotWidget({
   construtorId,
   imovelTitulo,
   imobiliariaNome = "nossa equipe",
+  isOpenExternal,
+  onClose,
 }: ChatbotWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [sessionId] = useState(getOrCreateSessionId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync with external open state
+  useEffect(() => {
+    if (isOpenExternal !== undefined) {
+      setIsOpen(isOpenExternal);
+    }
+  }, [isOpenExternal]);
 
   // Load existing conversation from localStorage
   useEffect(() => {
@@ -99,15 +115,49 @@ export function ChatbotWidget({
     }
   }, [isOpen]);
 
-  const sendMessage = useCallback(async () => {
-    const trimmedInput = inputValue.trim();
-    if (!trimmedInput || isLoading) return;
+  const handleClose = () => {
+    setIsOpen(false);
+    onClose?.();
+  };
+
+  const generateTTS = useCallback(async (text: string): Promise<string | undefined> => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("TTS request failed:", response.status);
+        return undefined;
+      }
+
+      const data = await response.json();
+      return data.audioContent;
+    } catch (error) {
+      console.error("TTS error:", error);
+      return undefined;
+    }
+  }, []);
+
+  const sendMessage = useCallback(async (text?: string, inputType: "text" | "voice" = "text") => {
+    const messageText = text || inputValue.trim();
+    if (!messageText || isLoading) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       role: "user",
-      content: trimmedInput,
+      content: messageText,
+      inputType,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -119,10 +169,11 @@ export function ChatbotWidget({
       const { data, error } = await supabase.functions.invoke("chatbot-message", {
         body: {
           session_id: sessionId,
-          mensagem_usuario: trimmedInput,
+          mensagem_usuario: messageText,
           imovel_id: imovelId,
           imobiliaria_id: imobiliariaId,
           construtora_id: construtorId,
+          input_type: inputType,
         },
       });
 
@@ -146,11 +197,20 @@ export function ChatbotWidget({
         }
       }
 
+      const responseText = data?.resposta || "Desculpe, ocorreu um erro. Tente novamente.";
+      
+      // Generate TTS if input was voice
+      let audioBase64: string | undefined;
+      if (inputType === "voice" && data?.should_speak !== false) {
+        audioBase64 = await generateTTS(responseText);
+      }
+
       const assistantMessage: Message = {
         id: data?.mensagem_id || crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         role: "assistant",
-        content: data?.resposta || "Desculpe, ocorreu um erro. Tente novamente.",
+        content: responseText,
+        audioBase64,
         functionResults: data?.function_results,
       };
 
@@ -180,7 +240,11 @@ export function ChatbotWidget({
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [inputValue, isLoading, sessionId, imovelId, imobiliariaId, construtorId]);
+  }, [inputValue, isLoading, sessionId, imovelId, imobiliariaId, construtorId, generateTTS]);
+
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    sendMessage(transcript, "voice");
+  }, [sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -200,7 +264,7 @@ export function ChatbotWidget({
     id: "greeting",
     timestamp: new Date().toISOString(),
     role: "assistant",
-    content: `Olá! 👋 Sou a assistente virtual da ${imobiliariaNome}. Estou aqui para tirar suas dúvidas sobre "${imovelTitulo}". Como posso ajudar?`,
+    content: `Olá! 👋 Sou a Sofia, assistente virtual da ${imobiliariaNome}. Estou aqui para tirar suas dúvidas sobre "${imovelTitulo}". Você pode digitar ou usar o microfone para falar comigo! Como posso ajudar?`,
   };
 
   const displayMessages = messages.length > 0 ? messages : [greetingMessage];
@@ -214,14 +278,14 @@ export function ChatbotWidget({
           "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl",
           isOpen && "hidden"
         )}
-        aria-label="Abrir chat"
+        aria-label="Abrir chat com Sofia"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[500px] w-[380px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
+        <div className="fixed bottom-6 right-6 z-50 flex h-[520px] w-[400px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between border-b bg-primary px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-3">
@@ -229,14 +293,17 @@ export function ChatbotWidget({
                 <Bot className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold">Assistente Virtual</h3>
-                <p className="text-xs opacity-80">Online • Resposta imediata</p>
+                <h3 className="font-semibold">Sofia</h3>
+                <p className="text-xs opacity-80 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  {isSpeaking ? "Falando..." : "Online • Texto ou voz"}
+                </p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               className="text-primary-foreground hover:bg-primary-foreground/20"
             >
               <X className="h-5 w-5" />
@@ -277,19 +344,30 @@ export function ChatbotWidget({
                     )}
                   >
                     <p className="whitespace-pre-wrap">{message.content}</p>
-                    <p
-                      className={cn(
-                        "mt-1 text-[10px]",
-                        message.role === "user"
-                          ? "text-primary-foreground/60"
-                          : "text-muted-foreground"
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p
+                        className={cn(
+                          "text-[10px]",
+                          message.role === "user"
+                            ? "text-primary-foreground/60"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {message.inputType === "voice" && "🎤 "}
+                        {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      {message.role === "assistant" && message.audioBase64 && (
+                        <AudioPlayer
+                          audioBase64={message.audioBase64}
+                          autoPlay={true}
+                          onPlayStart={() => setIsSpeaking(true)}
+                          onPlayEnd={() => setIsSpeaking(false)}
+                        />
                       )}
-                    >
-                      {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -317,12 +395,16 @@ export function ChatbotWidget({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Digite sua mensagem..."
+                placeholder="Digite ou fale sua mensagem..."
                 disabled={isLoading}
                 className="flex-1"
               />
+              <VoiceRecorder
+                onTranscript={handleVoiceTranscript}
+                disabled={isLoading}
+              />
               <Button
-                onClick={sendMessage}
+                onClick={() => sendMessage()}
                 disabled={!inputValue.trim() || isLoading}
                 size="icon"
               >
