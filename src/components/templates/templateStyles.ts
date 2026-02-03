@@ -21,29 +21,29 @@ export interface TemplateStyles {
 
 export const templateDefaults: Record<TemplateType, TemplateStyles> = {
   luxo: {
-    colorPrimary: "#000000",
-    colorSecondary: "#D4AF37",
-    colorText: "#1a1a1a",
-    fontHeading: "'Playfair Display', serif",
-    fontBody: "'Cormorant Garamond', serif",
-    heroHeight: "100vh",
+    colorPrimary: "#D4AF37",    // Dourado (Sotheby's)
+    colorSecondary: "#000000",  // Preto
+    colorText: "#333333",
+    fontHeading: "'Times New Roman', 'Georgia', serif",
+    fontBody: "'Helvetica', 'Arial', sans-serif",
+    heroHeight: "70vh",
     sectionPadding: "80px",
-    buttonRadius: "0px",
-    transitionDuration: "600ms",
-    transitionEasing: "ease-in-out",
+    buttonRadius: "8px",
+    transitionDuration: "500ms",
+    transitionEasing: "ease-out",
     animationsEnabled: true,
   },
   moderno: {
-    colorPrimary: "#0066FF",
-    colorSecondary: "#00CC88",
-    colorText: "#333333",
-    fontHeading: "'Inter', sans-serif",
-    fontBody: "'Poppins', sans-serif",
-    heroHeight: "70vh",
-    sectionPadding: "60px",
-    buttonRadius: "8px",
+    colorPrimary: "#1E3A8A",    // Azul profundo (The Agency)
+    colorSecondary: "#10B981",  // Verde natural
+    colorText: "#374151",
+    fontHeading: "'Montserrat', sans-serif",
+    fontBody: "'Montserrat', sans-serif",
+    heroHeight: "60vh",
+    sectionPadding: "48px",
+    buttonRadius: "12px",
     transitionDuration: "300ms",
-    transitionEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+    transitionEasing: "ease-in-out",
     animationsEnabled: true,
   },
   classico: {

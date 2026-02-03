@@ -74,6 +74,20 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Template Luxo (Sotheby's Style) */
+    --luxo-gold: 43 48% 52%;
+    --luxo-black: 0 0% 0%;
+    --luxo-white: 0 0% 100%;
+    --luxo-text: 0 0% 20%;
+    --luxo-background: 0 0% 97%;
+    
+    /* Template Moderno (The Agency Style) */
+    --moderno-blue: 217 78% 33%;
+    --moderno-green: 160 84% 39%;
+    --moderno-text: 215 16% 42%;
+    --moderno-background: 210 17% 98%;
+    --moderno-footer-bg: 201 94% 94%;
   }
 
   .dark {
