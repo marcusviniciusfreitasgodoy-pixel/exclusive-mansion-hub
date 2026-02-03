@@ -279,9 +279,11 @@ export type Database = {
           dominio_customizado: string | null
           email_contato: string | null
           id: string
+          instagram_url: string | null
           logo_url: string | null
           nome_empresa: string
           plano: Database["public"]["Enums"]["plano_construtora"] | null
+          site_url: string | null
           status: Database["public"]["Enums"]["construtora_status"] | null
           telefone: string | null
           user_id: string
@@ -294,9 +296,11 @@ export type Database = {
           dominio_customizado?: string | null
           email_contato?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           nome_empresa: string
           plano?: Database["public"]["Enums"]["plano_construtora"] | null
+          site_url?: string | null
           status?: Database["public"]["Enums"]["construtora_status"] | null
           telefone?: string | null
           user_id: string
@@ -309,9 +313,11 @@ export type Database = {
           dominio_customizado?: string | null
           email_contato?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           nome_empresa?: string
           plano?: Database["public"]["Enums"]["plano_construtora"] | null
+          site_url?: string | null
           status?: Database["public"]["Enums"]["construtora_status"] | null
           telefone?: string | null
           user_id?: string
@@ -716,8 +722,10 @@ export type Database = {
           email_contato: string | null
           favicon_url: string | null
           id: string
+          instagram_url: string | null
           logo_url: string | null
           nome_empresa: string
+          site_url: string | null
           telefone: string | null
           user_id: string
         }
@@ -728,8 +736,10 @@ export type Database = {
           email_contato?: string | null
           favicon_url?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           nome_empresa: string
+          site_url?: string | null
           telefone?: string | null
           user_id: string
         }
@@ -740,8 +750,10 @@ export type Database = {
           email_contato?: string | null
           favicon_url?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           nome_empresa?: string
+          site_url?: string | null
           telefone?: string | null
           user_id?: string
         }

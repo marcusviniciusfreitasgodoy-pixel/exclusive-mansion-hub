@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Save, Mail, Phone, Building2, Palette, Loader2, ImageIcon } from "lucide-react";
+import { Save, Mail, Phone, Building2, Palette, Loader2, ImageIcon, Instagram, Globe } from "lucide-react";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,8 @@ const configSchema = z.object({
   telefone: z.string().max(20).optional().or(z.literal("")),
   cor_primaria: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida").optional(),
   cor_secundaria: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida").optional(),
+  instagram_url: z.string().url("URL inválida").max(255).optional().or(z.literal("")),
+  site_url: z.string().url("URL inválida").max(255).optional().or(z.literal("")),
 });
 
 type ConfigFormData = z.infer<typeof configSchema>;
@@ -45,6 +47,8 @@ export default function ConfiguracoesConstrutora() {
       telefone: "",
       cor_primaria: "#1e3a5f",
       cor_secundaria: "#b8860b",
+      instagram_url: "",
+      site_url: "",
     },
   });
 
@@ -56,6 +60,8 @@ export default function ConfiguracoesConstrutora() {
         telefone: construtora.telefone || "",
         cor_primaria: construtora.cor_primaria || "#1e3a5f",
         cor_secundaria: construtora.cor_secundaria || "#b8860b",
+        instagram_url: (construtora as any).instagram_url || "",
+        site_url: (construtora as any).site_url || "",
       });
       setLogoUrl(construtora.logo_url || null);
     }
@@ -75,6 +81,8 @@ export default function ConfiguracoesConstrutora() {
           cor_primaria: data.cor_primaria || "#1e3a5f",
           cor_secundaria: data.cor_secundaria || "#b8860b",
           logo_url: logoUrl,
+          instagram_url: data.instagram_url || null,
+          site_url: data.site_url || null,
         })
         .eq("id", construtora.id);
 
@@ -202,6 +210,60 @@ export default function ConfiguracoesConstrutora() {
                       </FormControl>
                       <FormDescription>
                         Número com DDD para contato via WhatsApp (sem espaços ou caracteres especiais).
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Redes Sociais e Site */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Redes Sociais e Site
+                </CardTitle>
+                <CardDescription>
+                  Links que serão exibidos nas páginas de imóveis e no footer.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="instagram_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input {...field} type="url" placeholder="https://instagram.com/suaempresa" className="pl-10" />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        URL completa do perfil do Instagram da construtora.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="site_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site Institucional</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input {...field} type="url" placeholder="https://www.suaempresa.com.br" className="pl-10" />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        URL do site institucional da construtora.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

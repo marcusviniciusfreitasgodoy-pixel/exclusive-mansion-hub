@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard, ImageIcon, FileText, ChevronRight, Globe } from "lucide-react";
+import { Save, Mail, Phone, Building2, Palette, Loader2, CreditCard, ImageIcon, FileText, ChevronRight, Globe, Instagram } from "lucide-react";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,8 @@ const configSchema = z.object({
   email_contato: z.string().email("E-mail inválido").max(255).optional().or(z.literal("")),
   telefone: z.string().max(20).optional().or(z.literal("")),
   cor_primaria: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida").optional(),
+  instagram_url: z.string().url("URL inválida").max(255).optional().or(z.literal("")),
+  site_url: z.string().url("URL inválida").max(255).optional().or(z.literal("")),
 });
 
 type ConfigFormData = z.infer<typeof configSchema>;
@@ -48,6 +50,8 @@ export default function ConfiguracoesImobiliaria() {
       email_contato: "",
       telefone: "",
       cor_primaria: "#1e3a5f",
+      instagram_url: "",
+      site_url: "",
     },
   });
 
@@ -59,6 +63,8 @@ export default function ConfiguracoesImobiliaria() {
         email_contato: imobiliaria.email_contato || "",
         telefone: imobiliaria.telefone || "",
         cor_primaria: imobiliaria.cor_primaria || "#1e3a5f",
+        instagram_url: (imobiliaria as any).instagram_url || "",
+        site_url: (imobiliaria as any).site_url || "",
       });
       setLogoUrl(imobiliaria.logo_url || null);
       setFaviconUrl((imobiliaria as any).favicon_url || null);
@@ -80,6 +86,8 @@ export default function ConfiguracoesImobiliaria() {
           cor_primaria: data.cor_primaria || "#1e3a5f",
           logo_url: logoUrl,
           favicon_url: faviconUrl,
+          instagram_url: data.instagram_url || null,
+          site_url: data.site_url || null,
         })
         .eq("id", imobiliaria.id);
 
@@ -323,6 +331,60 @@ export default function ConfiguracoesImobiliaria() {
                     Primária
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Redes Sociais e Site */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Redes Sociais e Site
+                </CardTitle>
+                <CardDescription>
+                  Links que serão exibidos nas páginas white-label dos imóveis.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="instagram_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input {...field} type="url" placeholder="https://instagram.com/suaimobiliaria" className="pl-10" />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        URL completa do perfil do Instagram da imobiliária.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="site_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site Institucional</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input {...field} type="url" placeholder="https://www.suaimobiliaria.com.br" className="pl-10" />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        URL do site institucional da imobiliária.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
