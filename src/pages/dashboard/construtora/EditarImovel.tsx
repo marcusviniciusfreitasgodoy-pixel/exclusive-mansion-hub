@@ -78,6 +78,7 @@ export default function EditarImovel() {
         descricao: imovel.descricao || '',
         diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais as string[] : [],
         memorial: imovel.memorial_descritivo || '',
+        contextoAdicionalIA: imovel.contexto_adicional_ia || '',
         imagens: Array.isArray(imovel.imagens) 
           ? (imovel.imagens as { url?: string; alt?: string; isPrimary?: boolean }[])
           : [],
@@ -112,6 +113,7 @@ export default function EditarImovel() {
         descricao: data.descricao,
         diferenciais: JSON.stringify(data.diferenciais || []),
         memorial_descritivo: data.memorial || null,
+        contexto_adicional_ia: data.contextoAdicionalIA || null,
         imagens: JSON.stringify(data.imagens || []),
         videos: JSON.stringify(data.videos || []),
         tour_360_url: data.tour360Url || null,
