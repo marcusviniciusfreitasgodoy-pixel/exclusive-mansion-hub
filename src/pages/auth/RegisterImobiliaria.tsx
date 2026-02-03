@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import logo from '@/assets/logo-principal.png';
+import barraTijucaBg from '@/assets/barra-tijuca-bg.jpg';
 
 const registerSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -105,8 +106,17 @@ export default function RegisterImobiliaria() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 px-4 py-8">
-      <div className="w-full max-w-md space-y-8">
+    <div 
+      className="flex min-h-screen flex-col items-center justify-center px-4 py-8 relative"
+      style={{
+        backgroundImage: `url(${barraTijucaBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center">
           <img src={logo} alt="Logo" className="mx-auto h-16" />
           <h1 className="mt-6 text-3xl font-bold text-primary">Cadastro Imobiliária</h1>
