@@ -5,3 +5,4 @@ export { HeatmapChart } from './HeatmapChart';
 export { InsightsCard, type Insight } from './InsightsCard';
 export { PerformanceTable } from './PerformanceTable';
 export { TrendLineChart } from './TrendLineChart';
+export { PropertyImobiliariaBreakdown } from './PropertyImobiliariaBreakdown';
