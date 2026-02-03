@@ -1,228 +1,229 @@
 
-# Plano: Adicionar Favicon Customizado por Imobiliária
+# Plano de Redesign dos Templates Luxo e Moderno
 
-## Objetivo
-Permitir que imobiliárias façam upload de um favicon personalizado que será exibido dinamicamente nas páginas white-label dos imóveis, completando a experiência de personalização visual junto com logo e cores.
+## Resumo Executivo
+
+Este plano detalha a substituição dos templates **Luxo** e **Moderno** por novos designs baseados nos padrões visuais de **Sotheby's International Realty** (Luxo) e **The Agency RE** (Moderno), mantendo o template Clássico atual que já está em uso.
 
 ---
 
-## Arquitetura do Recurso
+## Comparativo: Estado Atual vs Novo Design
+
+### Template Luxo
+
+| Característica | Atual | Novo (Sotheby's Style) |
+|---|---|---|
+| Paleta | Preto + Dourado | Branco + Dourado #D4AF37 |
+| Tipografia | Playfair Display | Times New Roman (serif elegante) |
+| Hero | 100vh, fundo escuro | 70vh, imagem com overlay preto 50% |
+| Layout | Grid simples | Grid 12 colunas com margens premium |
+| Animações | 600ms ease-in-out | Parallax + Fade-in em scroll |
+| Galeria | Carousel simples | Grid 1/3/4 colunas + zoom hover |
+| Detalhes | Lista simples | 2 colunas com mapa integrado |
+| Footer | Minimalista | 4 colunas com newsletter |
+
+### Template Moderno
+
+| Característica | Atual | Novo (The Agency Style) |
+|---|---|---|
+| Paleta | Azul + Verde | Azul profundo #1E3A8A + Verde natural #10B981 |
+| Tipografia | Inter/Poppins | Montserrat (sans-serif moderna) |
+| Hero | 70vh | 60vh, texto à esquerda |
+| Layout | Cards arredondados | Grid 12 colunas com espaçamentos amplos |
+| Animações | 300ms rápidas | Scroll-triggered + micro-interações |
+| Galeria | Carousel | Slider com autoplay 3s |
+| Detalhes | 2 colunas | 3 colunas lifestyle-focused |
+| Footer | Simples | 3 colunas com fundo azul claro |
+
+---
+
+## Arquivos a Modificar
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              FLUXO DO FAVICON                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  DASHBOARD IMOBILIÁRIA                       PÁGINA DO IMÓVEL               │
-│  ─────────────────────                       ─────────────────              │
-│                                                                             │
-│  Configurações                                                              │
-│  ┌─────────────────────────┐                                                │
-│  │ Logo da Imobiliária     │                                                │
-│  │ ┌─────┐                 │                                                │
-│  │ │ IMG │  [Alterar]      │                                                │
-│  │ └─────┘                 │                                                │
-│  ├─────────────────────────┤                                                │
-│  │ Favicon (NOVO!)         │                                                │
-│  │ ┌───┐                   │                                                │
-│  │ │ICO│  [Alterar]        │  ─────────────────────────────────────────▶    │
-│  │ └───┘                   │       Renderizado no <head> da página          │
-│  │ 32x32 ou 64x64 pixels   │       via react-helmet                         │
-│  └─────────────────────────┘                                                │
-│                                                                             │
-│                                              ┌──────────────────────────┐   │
-│                                              │ 🌐 Tab do Navegador      │   │
-│                                              │ ┌───┐ Cobertura Barra... │   │
-│                                              │ │ICO│                    │   │
-│                                              │ └───┘                    │   │
-│                                              └──────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+src/
+├── components/
+│   ├── templates/
+│   │   ├── TemplateLuxo.tsx        [REESCREVER]
+│   │   ├── TemplateModerno.tsx     [REESCREVER]
+│   │   ├── templateStyles.ts       [ATUALIZAR]
+│   │   └── TemplateWrapper.tsx     [ATUALIZAR fontes]
+│   └── property/
+│       ├── LuxoHero.tsx            [CRIAR]
+│       ├── LuxoGallery.tsx         [CRIAR]
+│       ├── LuxoDetailsGrid.tsx     [CRIAR]
+│       ├── LuxoFooter.tsx          [CRIAR]
+│       ├── ModernoHero.tsx         [CRIAR]
+│       ├── ModernoGallery.tsx      [CRIAR]
+│       ├── ModernoDetailsGrid.tsx  [CRIAR]
+│       └── ModernoFooter.tsx       [CRIAR]
+└── index.css                       [ADICIONAR novas variáveis]
 ```
 
 ---
 
-## Parte 1: Alteração no Banco de Dados
+## Detalhamento Técnico
 
-### Nova coluna na tabela `imobiliarias`
+### Etapa 1: Variáveis CSS e Estilos Base
 
-```sql
-ALTER TABLE imobiliarias 
-ADD COLUMN favicon_url TEXT;
-```
+Adicionar novas variáveis CSS globais em `index.css`:
 
-**Justificativa:**
-- Apenas imobiliárias precisam de favicon customizado (são elas que geram os links white-label)
-- Construtoras não possuem páginas públicas próprias neste contexto
-
----
-
-## Parte 2: Interface - Dashboard da Imobiliária
-
-### Modificar `ConfiguracoesImobiliaria.tsx`
-
-Adicionar seção de upload de favicon reutilizando padrão do `LogoUpload`:
-
-- Campo separado para favicon (abaixo do logo)
-- Formatos aceitos: ICO, PNG, SVG, WebP
-- Tamanho máximo: 256KB (favicons são pequenos)
-- Recomendação visual: 32x32 ou 64x64 pixels
-- Preview quadrado pequeno (32x32 ou 48x48)
-
-**UI proposta:**
-```text
-┌──────────────────────────────────────────────────────────────────────────┐
-│ 🖼️ Logo da Imobiliária                                                   │
-│ O logo será exibido nas páginas white-label dos imóveis.                │
-│                                                                          │
-│ ┌──────┐                                                                 │
-│ │ Logo │  [Alterar Logo]  [Remover]                                      │
-│ └──────┘                                                                 │
-│ Formatos: JPG, PNG, WebP ou SVG. Tamanho máximo: 2MB.                   │
-└──────────────────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────────────────┐
-│ 🔖 Favicon (ícone da aba do navegador)         <- NOVA SEÇÃO             │
-│ Aparece na aba do navegador quando visitantes acessam seu link.          │
-│                                                                          │
-│ ┌────┐                                                                   │
-│ │ 🌐 │  [Alterar Favicon]  [Remover]                                     │
-│ └────┘                                                                   │
-│ Formatos: ICO, PNG, SVG ou WebP. Tamanho ideal: 32x32 ou 64x64 pixels.  │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Parte 3: Componente de Upload de Favicon
-
-### Novo componente `FaviconUpload.tsx`
-
-Similar ao `LogoUpload`, mas com:
-- Validações específicas para favicon (tamanho menor, formatos ICO permitidos)
-- Preview em tamanho pequeno (32x32)
-- Bucket de storage: reutilizar `logos` ou criar `favicons`
-
----
-
-## Parte 4: Tipos e Branding
-
-### Atualizar `PropertyBranding` em `property-page.ts`
-
-```typescript
-export interface PropertyBranding {
-  imobiliariaLogo: string | null;
-  imobiliariaNome: string;
-  corPrimaria: string;
-  telefone: string | null;
-  emailContato: string | null;
-  faviconUrl: string | null;  // <- NOVO
+```css
+:root {
+  /* Template Luxo (Sotheby's) */
+  --luxo-gold: 43 48% 52%;
+  --luxo-black: 0 0% 0%;
+  --luxo-white: 0 0% 100%;
+  --luxo-text: 0 0% 20%;
+  --luxo-background: 0 0% 97%;
+  
+  /* Template Moderno (The Agency) */
+  --moderno-blue: 217 78% 33%;
+  --moderno-green: 160 84% 39%;
+  --moderno-text: 215 16% 42%;
+  --moderno-background: 210 17% 98%;
 }
 ```
 
-### Atualizar `usePropertyPage.ts`
+### Etapa 2: Template Luxo (Sotheby's Style)
 
-Buscar `favicon_url` na query de `imobiliarias` e mapear para o branding.
+**Componentes específicos a criar:**
 
----
+1. **LuxoHero.tsx** - Hero 70vh com:
+   - Imagem fullwidth com overlay preto 50%
+   - Título em H1 serif dourado, maiúsculo
+   - Preço em H2 branco
+   - CTA "Contact Agent" retangular dourado
 
-## Parte 5: Renderização Dinâmica do Favicon
+2. **LuxoGallery.tsx** - Galeria grid responsiva:
+   - Thumbnails 300x300px
+   - 1 col mobile / 3 tablet / 4 desktop
+   - Zoom 1.1x no hover
+   - Navegação com setas e dots
 
-### Modificar `TemplateWrapper.tsx`
+3. **LuxoDetailsGrid.tsx** - Layout 2 colunas:
+   - Descrição narrativa (18px serif)
+   - Lista de amenidades com ícones
+   - Mapa integrado
 
-Adicionar tag `<link rel="icon">` dinâmica usando react-helmet:
+4. **LuxoFooter.tsx** - Footer 4 colunas:
+   - Links de navegação
+   - Contato
+   - Redes sociais (ícones dourados)
+   - Newsletter signup
 
-```tsx
-<Helmet>
-  <title>{title}</title>
-  {/* Favicon dinâmico */}
-  {branding.faviconUrl && (
-    <link rel="icon" type="image/x-icon" href={branding.faviconUrl} />
-  )}
-  {/* Fallback se não houver favicon customizado - usa o padrão do projeto */}
-  {!branding.faviconUrl && (
-    <link rel="icon" href="/favicon.ico" />
-  )}
-  {/* ... demais meta tags */}
-</Helmet>
+**Estilos principais:**
+- Fundo branco #FFFFFF
+- Header fixo 80px com logo serif dourado
+- Botões retangulares 8px radius, fundo dourado
+- Animações: fade-in 0.5s, parallax leve, hover zoom
+
+### Etapa 3: Template Moderno (The Agency Style)
+
+**Componentes específicos a criar:**
+
+1. **ModernoHero.tsx** - Hero 60vh com:
+   - Overlay branco minimal 30%
+   - Título sans-serif azul, lowercase
+   - Preço em verde
+   - CTA "Request Info" arredondado 12px
+
+2. **ModernoGallery.tsx** - Slider horizontal:
+   - Imagens 400x250px arredondadas 8px
+   - Autoplay 3s
+   - Dots azuis
+   - 1/2/3 colunas responsivo
+
+3. **ModernoDetailsGrid.tsx** - Layout 3 colunas:
+   - Descrição lifestyle (line-height 1.6)
+   - Specs técnicos com ícones verdes
+   - Mapa e amenidades
+
+4. **ModernoFooter.tsx** - Footer 3 colunas:
+   - Fundo azul claro #E0F2FE
+   - Newsletter com botão azul
+   - Redes sociais verdes
+
+**Estilos principais:**
+- Fundo branco #FFFFFF
+- Header sticky 70px com logo Montserrat azul
+- Botões arredondados 12px, azul com sombra
+- Animações: scroll-triggered 0.3s, pulse em CTAs
+
+### Etapa 4: Atualizar templateStyles.ts
+
+```typescript
+export const templateDefaults: Record<TemplateType, TemplateStyles> = {
+  luxo: {
+    colorPrimary: "#D4AF37",    // Dourado
+    colorSecondary: "#000000",  // Preto
+    colorText: "#333333",
+    fontHeading: "'Times New Roman', 'Georgia', serif",
+    fontBody: "'Helvetica', 'Arial', sans-serif",
+    heroHeight: "70vh",
+    sectionPadding: "80px",
+    buttonRadius: "8px",
+    transitionDuration: "500ms",
+    transitionEasing: "ease-out",
+    animationsEnabled: true,
+  },
+  moderno: {
+    colorPrimary: "#1E3A8A",    // Azul profundo
+    colorSecondary: "#10B981",  // Verde natural
+    colorText: "#374151",
+    fontHeading: "'Montserrat', sans-serif",
+    fontBody: "'Montserrat', sans-serif",
+    heroHeight: "60vh",
+    sectionPadding: "48px",
+    buttonRadius: "12px",
+    transitionDuration: "300ms",
+    transitionEasing: "ease-in-out",
+    animationsEnabled: true,
+  },
+  // classico permanece igual
+};
 ```
 
-### Modificar `PropertyPage.tsx` (DefaultTemplate)
+### Etapa 5: Carregamento de Fontes
 
-Aplicar a mesma lógica para o template legado.
-
----
-
-## Arquivos a Modificar/Criar
-
-| Arquivo | Ação | Descrição |
-|---------|------|-----------|
-| `supabase/migrations/...` | Criar | ADD COLUMN `favicon_url` em `imobiliarias` |
-| `src/types/property-page.ts` | Modificar | Adicionar `faviconUrl` ao `PropertyBranding` |
-| `src/hooks/usePropertyPage.ts` | Modificar | Buscar e mapear `favicon_url` |
-| `src/components/dashboard/FaviconUpload.tsx` | Criar | Componente de upload de favicon |
-| `src/pages/dashboard/imobiliaria/Configuracoes.tsx` | Modificar | Adicionar seção de favicon |
-| `src/components/templates/TemplateWrapper.tsx` | Modificar | Injetar favicon via Helmet |
-| `src/pages/imovel/PropertyPage.tsx` | Modificar | Injetar favicon no DefaultTemplate |
+Atualizar `TemplateWrapper.tsx` para carregar:
+- **Luxo**: Times New Roman (sistema) + Helvetica
+- **Moderno**: Montserrat via Google Fonts
 
 ---
 
-## Comportamento Esperado
+## Sequência de Implementação
 
-### Para a Imobiliária (Dashboard)
-1. Acessa Configurações
-2. Vê nova seção "Favicon"
-3. Faz upload de um ícone pequeno (ICO, PNG, SVG ou WebP)
-4. Salva configurações
-5. O favicon aparece nas abas do navegador dos visitantes
-
-### Para Visitantes (Página do Imóvel)
-1. Acessa link white-label (ex: `/i/abc123`)
-2. O navegador carrega o favicon da imobiliária
-3. A aba do navegador mostra o ícone personalizado + título do imóvel
-
-### Fallback
-- Se a imobiliária não tiver favicon customizado, usa o favicon padrão do projeto (`/favicon.ico`)
+1. **Variáveis CSS** - Adicionar variáveis globais em index.css
+2. **templateStyles.ts** - Atualizar defaults dos templates
+3. **TemplateWrapper.tsx** - Configurar carregamento de fontes
+4. **Componentes Luxo** - Criar Hero, Gallery, Details, Footer
+5. **TemplateLuxo.tsx** - Reescrever usando novos componentes
+6. **Componentes Moderno** - Criar Hero, Gallery, Details, Footer
+7. **TemplateModerno.tsx** - Reescrever usando novos componentes
+8. **Testes visuais** - Verificar responsividade e animações
 
 ---
 
-## Validações de Segurança
+## Considerações de Acessibilidade
 
-- Upload apenas para usuários autenticados da imobiliária
-- Tipos de arquivo restritos: `.ico`, `.png`, `.svg`, `.webp`
-- Tamanho máximo: 256KB
-- Storage com políticas RLS apropriadas
-
----
-
-## Considerações Técnicas
-
-### React-Helmet e Favicon Dinâmico
-O react-helmet-async permite alterar o `<link rel="icon">` dinamicamente. Isso funciona bem em SPAs, mas:
-- O navegador pode cachear favicons agressivamente
-- Recomenda-se adicionar um parâmetro de cache-busting se necessário (ex: `?v=${timestamp}`)
-
-### Formatos de Favicon Recomendados
-- **ICO**: Formato clássico, suporte universal
-- **PNG 32x32**: Formato moderno, boa qualidade
-- **SVG**: Escalável, ideal para ícones vetoriais
-- **WebP**: Boa compressão, suporte crescente
+- Contraste de cores testado para padrão AA
+- Tamanhos de fonte adequados (mínimo 16px para corpo)
+- Foco visível em elementos interativos
+- Alt text em todas as imagens
+- Navegação por teclado funcional
 
 ---
 
-## Resumo Visual
+## Estimativa de Esforço
 
-```text
-ANTES                                   DEPOIS
-──────                                  ──────
+| Tarefa | Complexidade |
+|---|---|
+| Variáveis CSS | Baixa |
+| templateStyles.ts | Baixa |
+| Componentes Luxo (4) | Alta |
+| TemplateLuxo.tsx | Média |
+| Componentes Moderno (4) | Alta |
+| TemplateModerno.tsx | Média |
+| Testes e ajustes | Média |
 
-Tab do navegador:                       Tab do navegador:
-┌─────────────────────────────┐         ┌─────────────────────────────┐
-│ 🏠 Cobertura Duplex - ...   │         │ 🏢 Cobertura Duplex - ...   │
-└─────────────────────────────┘         └─────────────────────────────┘
-   ↑                                       ↑
-   Favicon padrão                          Favicon da imobiliária
-   (Godoy Prime)                           (customizado!)
-```
-
-Este recurso complementa perfeitamente o conjunto de personalização já existente (logo + cores), oferecendo uma experiência white-label completa.
+**Total estimado**: Implementação completa requer múltiplas iterações para garantir fidelidade aos designs de referência.
