@@ -93,12 +93,25 @@ export default function TesteConexao() {
     console.log('🔄 Testando inserção na tabela construtoras...');
 
     try {
-      // First, we need to be authenticated to insert
-      // For testing, let's check auth status
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         const message = '⚠️ Você precisa estar logado para testar inserção. As políticas RLS exigem autenticação.';
+        console.log(message);
+        setInsertResult(message);
+        setIsTestingInsert(false);
+        return;
+      }
+
+      // Verificar se já existe uma construtora para este usuário
+      const { data: existing } = await supabase
+        .from('construtoras')
+        .select('id, nome_empresa')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const message = `ℹ️ Você já possui uma construtora cadastrada: "${existing.nome_empresa}" (ID: ${existing.id})`;
         console.log(message);
         setInsertResult(message);
         setIsTestingInsert(false);
@@ -125,7 +138,6 @@ export default function TesteConexao() {
       } else {
         console.log('✅ Inserção bem-sucedida:', data);
         setInsertResult(`✅ Construtora criada com sucesso! ID: ${data.id}`);
-        // Refresh the tables count
         checkTables();
       }
     } catch (err) {
