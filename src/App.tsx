@@ -28,6 +28,7 @@ const ConfiguracoesConstrutora = lazy(() => import("./pages/dashboard/construtor
 const PipelineConstrutora = lazy(() => import("./pages/dashboard/construtora/Pipeline"));
 const IntegracoesConstrutoraPage = lazy(() => import("./pages/dashboard/construtora/Integracoes"));
 const AprovarMidias = lazy(() => import("./pages/dashboard/construtora/AprovarMidias"));
+const ImobiliariasConstrutora = lazy(() => import("./pages/dashboard/construtora/Imobiliarias"));
 
 const ImobiliariaDashboard = lazy(() => import("./pages/dashboard/imobiliaria"));
 const FeedbackCorretorPage = lazy(() => import("./pages/dashboard/imobiliaria/FeedbackCorretor"));
@@ -177,6 +178,11 @@ const App = () => (
               <Route path="/dashboard/construtora/aprovar-midias" element={
                 <ProtectedRoute allowedRoles={['construtora']}>
                   <LazyRoute><AprovarMidias /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/construtora/imobiliarias" element={
+                <ProtectedRoute allowedRoles={['construtora']}>
+                  <LazyRoute><ImobiliariasConstrutora /></LazyRoute>
                 </ProtectedRoute>
               } />
               
