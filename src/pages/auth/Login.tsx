@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import logo from '@/assets/logo-principal.png';
-import barraTijucaBg from '@/assets/barra-tijuca-bg.jpg';
+import authBackground from '@/assets/auth-background.jpg';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -83,7 +83,7 @@ export default function Login() {
     <div 
       className="flex min-h-screen flex-col items-center justify-center px-4 relative"
       style={{
-        backgroundImage: `url(${barraTijucaBg})`,
+        backgroundImage: `url(${authBackground})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
