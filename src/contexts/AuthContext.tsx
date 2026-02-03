@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppRole, Construtora, Imobiliaria } from '@/types/database';
-import { criarConfiguracoesFormularioPadrao } from '@/lib/form-helpers';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -119,62 +119,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userRole: AppRole, 
     profileData: ConstrutorSignupData | ImobiliariaSignupData
   ) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
+    try {
+      // Use edge function with service role to bypass RLS during signup
+      const response = await supabase.functions.invoke('signup-user', {
+        body: {
+          email,
+          password,
+          role: userRole,
+          profile: userRole === 'construtora' 
+            ? {
+                nome_empresa: (profileData as ConstrutorSignupData).nome_empresa,
+                cnpj: (profileData as ConstrutorSignupData).cnpj,
+              }
+            : {
+                nome_empresa: (profileData as ImobiliariaSignupData).nome_empresa,
+                creci: (profileData as ImobiliariaSignupData).creci,
+                telefone: (profileData as ImobiliariaSignupData).telefone,
+                email_contato: (profileData as ImobiliariaSignupData).email_contato,
+              }
+        }
+      });
+
+      if (response.error) {
+        console.error('Signup function error:', response.error);
+        return { error: new Error(response.error.message || 'Erro ao criar conta') };
       }
-    });
 
-    if (error) return { error: error as Error };
-    if (!data.user) return { error: new Error('Falha ao criar usuário') };
-
-    // Insert role
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({ user_id: data.user.id, role: userRole });
-
-    if (roleError) {
-      console.error('Error inserting role:', roleError);
-      return { error: roleError as unknown as Error };
-    }
-
-    // Insert profile based on role
-    if (userRole === 'construtora') {
-      const constData = profileData as ConstrutorSignupData;
-      const { error: profileError } = await supabase
-        .from('construtoras')
-        .insert({
-          user_id: data.user.id,
-          nome_empresa: constData.nome_empresa,
-          cnpj: constData.cnpj
-        });
-      if (profileError) return { error: profileError as unknown as Error };
-    } else if (userRole === 'imobiliaria') {
-      const imobData = profileData as ImobiliariaSignupData;
-      const { data: imobiliariaData, error: profileError } = await supabase
-        .from('imobiliarias')
-        .insert({
-          user_id: data.user.id,
-          nome_empresa: imobData.nome_empresa,
-          creci: imobData.creci,
-          telefone: imobData.telefone,
-          email_contato: imobData.email_contato
-        })
-        .select('id')
-        .single();
-      if (profileError) return { error: profileError as unknown as Error };
-
-      // Create default form configurations for the new imobiliária
-      if (imobiliariaData?.id) {
-        await criarConfiguracoesFormularioPadrao(imobiliariaData.id, data.user.id);
+      if (response.data?.error) {
+        return { error: new Error(response.data.error) };
       }
-    }
 
-    return { error: null };
+      return { error: null };
+    } catch (err) {
+      console.error('Signup error:', err);
+      return { error: err as Error };
+    }
   };
 
   const signOut = async () => {
