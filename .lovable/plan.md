@@ -448,7 +448,7 @@ src/pages/dashboard/imobiliaria/Campanhas.tsx
 ├─────────────────────────────────────────────────────────────────┤
 │ FASE │ FUNCIONALIDADE              │ SEMANA  │ ESFORÇO │ STATUS │
 ├─────────────────────────────────────────────────────────────────┤
-│  1   │ Quick Wins (PWA + Ligar)    │ 1       │ 10h     │ ⬜     │
+│  1   │ Quick Wins (PWA + Ligar)    │ 1       │ 10h     │ ✅     │
 │  2   │ WhatsApp Business API       │ 2-3     │ 24h     │ ⬜     │
 │  3   │ Calendário Inteligente      │ 4-5     │ 24h     │ ⬜     │
 │  4   │ Onboarding Guiado           │ 6       │ 16h     │ ⬜     │
