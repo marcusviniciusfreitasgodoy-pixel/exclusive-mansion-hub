@@ -25,10 +25,13 @@ export type Step3Data = z.infer<typeof step3Schema>;
 
 export interface PropertyDataForCopy {
   titulo?: string;
+  propertyType?: string;
   bairro?: string;
   cidade?: string;
   areaTotal?: number;
+  areaPrivativa?: number;
   suites?: number;
+  banheiros?: number;
   vagas?: number;
   valor?: number;
 }

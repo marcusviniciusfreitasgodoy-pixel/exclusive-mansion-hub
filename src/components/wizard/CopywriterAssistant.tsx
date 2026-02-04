@@ -14,10 +14,13 @@ type TipoTexto = 'descricao' | 'headline' | 'copy_anuncio';
 
 interface PropertyData {
   titulo?: string;
+  propertyType?: string;
   bairro?: string;
   cidade?: string;
   areaTotal?: number;
+  areaPrivativa?: number;
   suites?: number;
+  banheiros?: number;
   vagas?: number;
   valor?: number;
 }
@@ -84,8 +87,11 @@ export function CopywriterAssistant({
             titulo: propertyData.titulo,
             bairro: propertyData.bairro,
             cidade: propertyData.cidade || 'Rio de Janeiro',
+            property_type: propertyData.propertyType,
             area_total: propertyData.areaTotal,
+            area_privativa: propertyData.areaPrivativa,
             suites: propertyData.suites,
+            banheiros: propertyData.banheiros,
             vagas: propertyData.vagas,
             valor: propertyData.valor,
             diferenciais: diferenciais,
