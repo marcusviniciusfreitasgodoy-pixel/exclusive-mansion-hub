@@ -2,6 +2,7 @@
 
 export type TipoIntegracao = 
   | 'whatsapp_business' 
+  | 'whatsapp_simples'
   | 'google_analytics' 
   | 'meta_pixel' 
   | 'zapier_webhook' 
@@ -154,11 +155,40 @@ export const INTEGRACOES_DISPONIVEIS: IntegracaoConfig[] = [
     ]
   },
   {
+    tipo: 'whatsapp_simples',
+    nome: 'WhatsApp Simples (wa.me)',
+    descricao: 'Abra conversas no WhatsApp com um clique. Não requer API oficial.',
+    icone: '💬',
+    cor: 'bg-green-400',
+    campos: [
+      {
+        key: 'numero_padrao',
+        label: 'Número Padrão (opcional)',
+        tipo: 'text',
+        placeholder: '5511999999999',
+        obrigatorio: false,
+        ajuda: 'Número para receber mensagens de leads (com código do país)'
+      },
+      {
+        key: 'mensagem_padrao',
+        label: 'Mensagem Padrão',
+        tipo: 'textarea',
+        placeholder: 'Olá! Vi seu anúncio e gostaria de mais informações.',
+        obrigatorio: false,
+        ajuda: 'Mensagem pré-preenchida ao abrir conversa'
+      }
+    ],
+    eventosDisponiveis: [
+      { key: 'novo_lead', label: 'Novo lead', descricao: 'Abrir WhatsApp ao receber novo lead', padrao: true },
+      { key: 'agendamento', label: 'Novo agendamento', descricao: 'Abrir WhatsApp ao receber agendamento', padrao: true }
+    ]
+  },
+  {
     tipo: 'whatsapp_business',
     nome: 'WhatsApp Business API',
-    descricao: 'Envie notificações automáticas de novos leads e agendamentos via WhatsApp.',
-    icone: '💬',
-    cor: 'bg-green-500',
+    descricao: 'Envie notificações automáticas de novos leads e agendamentos via WhatsApp. Requer conta Meta Business.',
+    icone: '📲',
+    cor: 'bg-green-600',
     campos: [
       {
         key: 'phone_number_id',
@@ -184,6 +214,12 @@ export const INTEGRACOES_DISPONIVEIS: IntegracaoConfig[] = [
         obrigatorio: true,
         ajuda: 'ID da conta Business'
       }
+    ],
+    eventosDisponiveis: [
+      { key: 'novo_lead', label: 'Novo lead', descricao: 'Notificar automaticamente ao receber lead', padrao: true },
+      { key: 'agendamento', label: 'Agendamento confirmado', descricao: 'Enviar confirmação de visita', padrao: true },
+      { key: 'lembrete_24h', label: 'Lembrete 24h', descricao: 'Lembrete automático um dia antes', padrao: true },
+      { key: 'lembrete_1h', label: 'Lembrete 1h', descricao: 'Lembrete automático uma hora antes', padrao: false }
     ]
   },
   {
