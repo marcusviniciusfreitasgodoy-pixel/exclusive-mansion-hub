@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { MapPin, Ruler, BedDouble, Bath, Car, Check, FileText } from 'lucide-react';
 import { TemplateSelector } from '@/components/templates/TemplateSelector';
+import { cn } from '@/lib/utils';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 
 export interface ReviewData {
@@ -49,6 +52,8 @@ export function Step5Review({
   onTemplateChange,
   onCustomizationChange,
 }: Step5Props) {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
   const formatCurrency = (value: number | undefined): string => {
     if (!value) return 'Não informado';
     return new Intl.NumberFormat('pt-BR', {
@@ -186,6 +191,35 @@ export function Step5Review({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Description Section */}
+          {data.descricao && (
+            <div className="mt-4 pt-4 border-t">
+              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4" />
+                Descrição
+              </Label>
+              <div className={cn(
+                "prose prose-sm max-w-none transition-all",
+                !showFullDescription && data.descricao.length > 300 && "line-clamp-4"
+              )}>
+                {data.descricao.split('\n').map((paragraph, index) => (
+                  <p key={index} className="text-sm text-muted-foreground mb-2">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+              {data.descricao.length > 300 && (
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-xs"
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                >
+                  {showFullDescription ? 'Mostrar menos ▲' : 'Mostrar mais ▼'}
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
