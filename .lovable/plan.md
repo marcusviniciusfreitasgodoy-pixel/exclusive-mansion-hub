@@ -1,222 +1,205 @@
 
 
-# Plano: Criar Imóvel GRID Residencial com Materiais Completos
+# Plano: Popular Base com Dados de Demonstração Completos
 
 ## Objetivo
 
-Inserir um novo imóvel completo no banco de dados com todos os materiais promocionais fornecidos para visualização do site final.
+Criar um ambiente de demonstração rico e realista para apresentação da plataforma a construtoras e imobiliárias, cobrindo todas as funcionalidades disponíveis.
 
-## Dados do Imóvel (Extraídos dos Materiais)
+## Análise do Estado Atual
 
-| Campo | Valor |
-|-------|-------|
-| Título | GRID Residencial - Unidade 201 |
-| Headline | Viva em harmonia no coração da Gávea |
-| Endereço | Rua General Rabelo, 51 |
-| Bairro | Gávea |
-| Cidade | Rio de Janeiro |
-| Estado | RJ |
-| Valor | R$ 1.400.000,00 |
-| Área Privativa | 54,50 m² |
-| Suítes | 1 |
-| Banheiros | 1 |
-| Vagas | 1 |
+| Área | Status Atual | Necessidade |
+|------|--------------|-------------|
+| **Imóveis** | 5 imóveis cadastrados | OK, usar os existentes |
+| **Leads** | 5 leads, todos em estágio "novo" | Distribuir em todos os estágios do pipeline |
+| **Pageviews** | 4 registros apenas | Aumentar para gerar gráficos realistas |
+| **Agendamentos** | 2 (pendente e confirmado) | Adicionar realizados e cancelados |
+| **Feedbacks** | 2 completos | Adicionar mais para métricas robustas |
+| **Atividades CRM** | 0 registros | Criar histórico de atividades |
+| **Tarefas CRM** | 0 registros | Criar tarefas com diferentes prioridades |
+| **Imobiliárias** | 3 imobiliárias | Adicionar mais para ranking |
 
-## Descrição (Gerada a partir do Book)
+## Dados a Serem Inseridos
 
-> Apartamento moderno no GRID Residencial, empreendimento exclusivo localizado no coração da Gávea. Design contemporâneo com fachada em tom madeira e varandas com filtros transparentes que fazem a intermediação entre os apartamentos e a cidade.
+### 1. Leads Distribuídos no Pipeline (20 novos leads)
 
-> A unidade 201 conta com 54,50m² de área privativa, incluindo vaga de garagem (nº 5), eletrodomésticos (fogão, geladeira, máquina de lavar e secar, microondas) e armários em todos os ambientes.
+Distribuição por estágio para visualização completa do Kanban:
 
-> Localização estratégica próxima à PUC-Rio, Shopping da Gávea, Lagoa, Leblon e Jardim Botânico, com acesso privilegiado a cultura, gastronomia e serviços.
+| Estágio | Quantidade | Score Range |
+|---------|------------|-------------|
+| `novo` | 3 | 10-30 (frio) |
+| `contatado` | 4 | 30-50 (morno) |
+| `qualificado` | 3 | 50-70 (quente) |
+| `visita_agendada` | 3 | 60-80 |
+| `proposta_enviada` | 2 | 70-90 |
+| `negociacao` | 2 | 80-95 |
+| `ganho` | 2 | 95-100 |
+| `perdido` | 1 | 20 |
 
-## Diferenciais
+Origens variadas: `formulario`, `whatsapp`, `chat_ia`
 
-- Espaço de coworking
-- Horta coletiva
-- Entregue parcialmente mobiliado
-- Eletrodomésticos inclusos
-- Design arquitetônico contemporâneo
-- Última unidade disponível
+Tags incluídas: `["investidor"]`, `["primeiro_imovel"]`, `["permuta"]`, `["urgente"]`
 
-## Materiais Promocionais
+### 2. Atividades do CRM (30+ registros)
 
-| Material | Arquivo | Destino Storage |
-|----------|---------|-----------------|
-| Book Digital | `book_grid_DIGITAL-2.pdf` | `imoveis/grid-201/book-digital.pdf` |
-| Estudo ROI | `Estudo_ROI_Grid-2.jpg` | `imoveis/grid-201/estudo-roi.jpg` |
-| Tabela Vendas | `TABELA_DE_VENDAS_-_GRID_-_JANEIRO_26-2.pdf` | `imoveis/grid-201/tabela-vendas.pdf` |
-| Planta Unidade | `GRID_UNIDADE_201-2.pdf` | `imoveis/grid-201/planta-unidade.pdf` |
+Criar histórico para os leads existentes:
 
-## Imagem Principal
+| Tipo | Descrição |
+|------|-----------|
+| `email_enviado` | "Enviado e-mail de boas-vindas" |
+| `whatsapp_enviado` | "Primeiro contato via WhatsApp" |
+| `ligacao_realizada` | "Ligação de qualificação - 15min" |
+| `reuniao` | "Reunião online de apresentação" |
+| `visita_agendada` | "Agendada visita ao GRID Residencial" |
+| `proposta_enviada` | "Proposta comercial enviada" |
+| `nota` | "Cliente solicitou mais fotos" |
+| `status_alterado` | "Alterado de Novo para Contatado" |
 
-A imagem do empreendimento (`image-25.png`) será usada como imagem principal do imóvel.
+### 3. Tarefas do CRM (10 tarefas)
 
-## Vídeos
+| Prioridade | Status | Exemplo |
+|------------|--------|---------|
+| `urgente` | `pendente` | "Retornar ligação - cliente muito interessado" |
+| `alta` | `em_andamento` | "Preparar proposta personalizada" |
+| `media` | `pendente` | "Enviar material adicional" |
+| `baixa` | `concluida` | "Atualizar CRM" |
+| `alta` | `cancelada` | "Agendar segunda visita" (cliente desistiu) |
 
-Os dois vídeos serão adicionados à galeria de vídeos do imóvel.
+### 4. Pageviews Realistas (100+ registros)
 
-## Estrutura JSON materiais_promocionais
+Distribuição temporal e por horário para gerar:
+- Gráfico de evolução diária
+- Heatmap de horários de acesso
+- Métricas comparativas por período
 
-```json
-{
-  "bookDigital": {
-    "url": "[URL do Storage]",
-    "nome": "Book Digital - GRID Residencial",
-    "tipo": "pdf"
-  },
-  "estudoRentabilidade": {
-    "url": "[URL do Storage]",
-    "nome": "Estudo de Rentabilidade Short Stay",
-    "tipo": "image"
-  },
-  "tabelaVendas": {
-    "url": "[URL do Storage]",
-    "nome": "Tabela de Vendas - Janeiro 2026",
-    "tipo": "pdf"
-  },
-  "plantaUnidade": {
-    "url": "[URL do Storage]",
-    "nome": "Planta Unidade 201 - 54,50m²",
-    "tipo": "pdf"
-  },
-  "personalizacao": [
-    { "titulo": "Armários", "disponivel": true },
-    { "titulo": "Revestimentos", "disponivel": false },
-    { "titulo": "Bancadas", "disponivel": false }
-  ],
-  "seguranca": [
-    "Portaria 24 horas",
-    "Câmeras de segurança",
-    "Controle de acesso"
-  ],
-  "sustentabilidade": [
-    "Sistema de reúso de água",
-    "Iluminação LED nas áreas comuns",
-    "Coleta seletiva"
-  ],
-  "infraestrutura": [
-    "Espaço de coworking",
-    "Horta coletiva",
-    "Bicicletário"
-  ]
-}
-```
+Horários concentrados: 9-12h e 18-22h (padrão de acesso real)
 
-## Etapas de Implementação
+### 5. Mais Agendamentos (6 novos)
 
-### Etapa 1: Upload dos Arquivos para Storage
+| Status | Data | Cliente |
+|--------|------|---------|
+| `realizado` | Passado | 3 visitas |
+| `confirmado` | Futuro próximo | 2 visitas |
+| `cancelado` | Passado | 1 visita |
 
-Criar bucket `materiais-imoveis` (se não existir) e fazer upload de:
-1. Imagem principal do empreendimento
-2. Book Digital PDF
-3. Estudo de Rentabilidade JPG
-4. Tabela de Vendas PDF
-5. Planta da Unidade PDF
-6. 2 Vídeos promocionais
+### 6. Mais Feedbacks (4 novos)
 
-### Etapa 2: Inserir o Imóvel no Banco
+Variação de NPS para demonstrar analytics:
 
-```sql
-INSERT INTO imoveis (
-  construtora_id,
-  titulo,
-  headline,
-  endereco,
-  bairro,
-  cidade,
-  estado,
-  valor,
-  area_privativa,
-  suites,
-  banheiros,
-  vagas,
-  descricao,
-  diferenciais,
-  imagens,
-  videos,
-  status,
-  template_escolhido,
-  materiais_promocionais,
-  flag_lancamento,
-  flag_exclusividade
-) VALUES (
-  '8de22a19-9ce7-41a6-a1dc-deab3ad6d275',
-  'GRID Residencial - Unidade 201',
-  'Viva em harmonia no coração da Gávea',
-  'Rua General Rabelo, 51',
-  'Gávea',
-  'Rio de Janeiro',
-  'RJ',
-  1400000,
-  54.50,
-  1,
-  1,
-  1,
-  '[descrição completa]',
-  '["Espaço de coworking", "Horta coletiva", ...]',
-  '[{"url": "...", "isPrimary": true}]',
-  '[{"url": "...", "tipo": "video/mp4"}]',
-  'ativo',
-  'moderno',
-  '[JSON dos materiais]',
-  true,
-  true
-);
-```
+| NPS | Interesse | Qualificação |
+|-----|-----------|--------------|
+| 10 | muito_interessado | quente |
+| 8 | interessado | morno |
+| 5 | pouco_interessado | frio |
+| 3 | sem_interesse | frio |
 
-### Etapa 3: Criar Acesso Público
+Objeções variadas: `preco`, `localizacao`, `tamanho`, `financiamento`
+
+### 7. Imobiliárias Adicionais (2 novas)
+
+Para enriquecer o ranking e comparativos:
+
+| Nome | CRECI | Leads | Visitas |
+|------|-------|-------|---------|
+| "Prime Imóveis RJ" | "CRECI-RJ 54321" | 8 | 4 |
+| "Zona Sul Imobiliária" | "CRECI-RJ 98765" | 5 | 2 |
+
+## Funcionalidades Demonstráveis Após Implementação
+
+### Dashboard Construtora
+
+| Página | O que será mostrado |
+|--------|---------------------|
+| **Pipeline** | Kanban com leads distribuídos em 8 colunas, drag-and-drop, métricas |
+| **Leads** | Tabela com filtros, status variados, exportação CSV |
+| **Analytics** | Gráficos de evolução, funil, heatmap, origens, ranking imobiliárias |
+| **Agendamentos** | Cards com todos os status, filtros por imobiliária |
+| **Feedbacks** | NPS médio, gráficos de satisfação, objeções, desempenho por imobiliária |
+| **Imobiliárias** | Cards com estatísticas, leads e visitas por parceiro |
+
+### Dashboard Imobiliária
+
+| Página | O que será mostrado |
+|--------|---------------------|
+| **Pipeline** | Mesmo Kanban filtrado para a imobiliária |
+| **Leads** | Leads captados pela imobiliária |
+| **Analytics** | Métricas da imobiliária |
+| **Agendamentos** | Visitas agendadas pela imobiliária |
+| **Feedbacks** | Feedbacks das visitas realizadas |
+
+## Estrutura dos Dados SQL
+
+### Leads (exemplo de um registro)
 
 ```sql
-INSERT INTO imobiliaria_imovel_access (
-  imobiliaria_id,
-  imovel_id,
-  url_slug,
-  status
+INSERT INTO leads (
+  imovel_id, imobiliaria_id, construtora_id,
+  nome, email, telefone, mensagem, origem,
+  status, estagio_pipeline, score_qualificacao,
+  tags, orcamento, prazo_compra, ultimo_contato,
+  responsavel_nome, created_at
 ) VALUES (
+  'ea860551-1750-4b08-9043-1f7233ccf67b',
   '0808cf71-aa0c-4531-94f3-a3741a2efea0',
-  '[ID do imóvel criado]',
-  'grid-residencial-gavea-201',
-  'active'
+  '8de22a19-9ce7-41a6-a1dc-deab3ad6d275',
+  'Ricardo Mendes', 'ricardo@email.com', '(21) 99111-2222',
+  'Interessado na unidade 201', 'whatsapp',
+  'contatado', 'negociacao', 85,
+  '["investidor", "urgente"]', 1500000, '0-3_meses',
+  NOW() - INTERVAL '2 hours', 'João Corretor',
+  NOW() - INTERVAL '5 days'
 );
 ```
 
-## Resultado Final
+### Atividades (exemplo)
 
-Após a implementação, você poderá acessar a página completa do imóvel em:
-
+```sql
+INSERT INTO atividades_lead (
+  lead_id, tipo, titulo, descricao,
+  usuario_nome, created_at
+) VALUES (
+  '[lead_id]', 'ligacao_realizada',
+  'Ligação de qualificação',
+  'Conversa de 15 minutos. Cliente tem aprovação de crédito.',
+  'Ana Corretora', NOW() - INTERVAL '3 days'
+);
 ```
-/imovel/grid-residencial-gavea-201
+
+### Pageviews (exemplo com distribuição temporal)
+
+```sql
+INSERT INTO pageviews (
+  imovel_id, imobiliaria_id, access_id,
+  user_agent, referrer, created_at
+) VALUES (
+  'ea860551-1750-4b08-9043-1f7233ccf67b',
+  '0808cf71-aa0c-4531-94f3-a3741a2efea0',
+  '28b77434-16e7-47cb-9210-f0f5123bbc2e',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)',
+  'https://instagram.com',
+  NOW() - INTERVAL '3 days' + INTERVAL '10 hours'
+);
 ```
 
-A página exibirá:
+## Ordem de Execução
 
-1. **Hero** com imagem principal e título
-2. **Resumo** com preço, área e especificações
-3. **Galeria de Vídeos** com os 2 vídeos promocionais
-4. **Descrição** completa do empreendimento
-5. **Book Digital** - Seção para abrir/baixar o PDF
-6. **Estudo de Rentabilidade** - Imagem com zoom
-7. **Tabela de Vendas** - Download do PDF
-8. **Planta da Unidade** - Visualização da planta
-9. **Infraestrutura** - Lista de amenidades
-10. **Segurança** - Recursos de segurança
-11. **Sustentabilidade** - Iniciativas sustentáveis
-12. **Personalização** - Opções disponíveis
+1. **Criar novas imobiliárias** (para ranking)
+2. **Criar acessos** para novas imobiliárias
+3. **Inserir leads** com distribuição por pipeline
+4. **Inserir atividades** para histórico do CRM
+5. **Inserir tarefas** com diferentes status/prioridades
+6. **Inserir pageviews** distribuídos temporalmente
+7. **Inserir agendamentos** com status variados
+8. **Inserir feedbacks** com NPS diversificado
 
-## Arquivos Necessários
+## Resultado Esperado
 
-| Ação | Arquivo |
-|------|---------|
-| Copiar para assets | `user-uploads://image-25.png` |
-| Upload Storage | `user-uploads://book_grid_DIGITAL-2.pdf` |
-| Upload Storage | `user-uploads://Estudo_ROI_Grid-2.jpg` |
-| Upload Storage | `user-uploads://TABELA_DE_VENDAS_-_GRID_-_JANEIRO_26-2.pdf` |
-| Upload Storage | `user-uploads://GRID_UNIDADE_201-2.pdf` |
-| Upload Storage | `user-uploads://Cópia_de_GRID_-_Post_1080x1080_-_15seg.mp4` |
-| Upload Storage | `user-uploads://Cópia_de_GRID_-_Storie_1080x1920_-_15seg_2.mp4` |
+Após a implementação, todos os dashboards terão:
 
-## Template Escolhido
-
-O imóvel será criado com o template **Moderno** que combina bem com o estilo contemporâneo do GRID Residencial.
+- **Métricas significativas** (não zeradas)
+- **Gráficos com dados reais** (evolução, funil, pizza, barras)
+- **Ranking de imobiliárias** com performance comparativa
+- **Pipeline Kanban** populado em todas as colunas
+- **Heatmap** mostrando horários de pico
+- **Insights automáticos** gerados pelos dados
 
