@@ -1,280 +1,222 @@
 
-# Plano: Criar Novas Seções de Materiais para Imóveis
 
-## Resumo dos Materiais Analisados
+# Plano: Criar Imóvel GRID Residencial com Materiais Completos
 
-Baseado nos arquivos fornecidos, identifiquei **6 tipos de materiais** que as construtoras podem disponibilizar:
+## Objetivo
 
-| Material | Arquivo Exemplo | Descrição |
-|----------|-----------------|-----------|
-| **Book Digital** | `book_grid_DIGITAL.pdf` | Apresentação completa do empreendimento com história, conceito, localização, arquitetos, plantas, renders e ficha técnica |
-| **Estudo de Rentabilidade** | `Estudo_ROI_Grid.jpg` | Análise de retorno de investimento para short-stay, com tabelas de ocupação e projeções financeiras |
-| **Tabela de Vendas** | `TABELA_DE_VENDAS_-_GRID_-_JANEIRO_26.pdf` | Preços, condições de pagamento e observações por unidade |
-| **Planta da Unidade** | `GRID_UNIDADE_201.pdf` / `GRID_UNIDADE_206.pdf` | Planta baixa específica da unidade sendo vendida |
-| **Memorial Descritivo** | (já existe no sistema) | Especificações técnicas de acabamentos |
-| **Condições de Pagamento** | (já existe no sistema) | Formas de pagamento aceitas |
+Inserir um novo imóvel completo no banco de dados com todos os materiais promocionais fornecidos para visualização do site final.
 
-## Arquitetura da Solução
+## Dados do Imóvel (Extraídos dos Materiais)
 
-### 1. Novos Campos no Banco de Dados
+| Campo | Valor |
+|-------|-------|
+| Título | GRID Residencial - Unidade 201 |
+| Headline | Viva em harmonia no coração da Gávea |
+| Endereço | Rua General Rabelo, 51 |
+| Bairro | Gávea |
+| Cidade | Rio de Janeiro |
+| Estado | RJ |
+| Valor | R$ 1.400.000,00 |
+| Área Privativa | 54,50 m² |
+| Suítes | 1 |
+| Banheiros | 1 |
+| Vagas | 1 |
 
-Adicionar à tabela `imoveis` um novo campo JSONB para armazenar os materiais promocionais de forma estruturada:
+## Descrição (Gerada a partir do Book)
 
-```sql
-ALTER TABLE imoveis ADD COLUMN materiais_promocionais JSONB DEFAULT '{}';
-```
+> Apartamento moderno no GRID Residencial, empreendimento exclusivo localizado no coração da Gávea. Design contemporâneo com fachada em tom madeira e varandas com filtros transparentes que fazem a intermediação entre os apartamentos e a cidade.
 
-Estrutura do campo:
+> A unidade 201 conta com 54,50m² de área privativa, incluindo vaga de garagem (nº 5), eletrodomésticos (fogão, geladeira, máquina de lavar e secar, microondas) e armários em todos os ambientes.
+
+> Localização estratégica próxima à PUC-Rio, Shopping da Gávea, Lagoa, Leblon e Jardim Botânico, com acesso privilegiado a cultura, gastronomia e serviços.
+
+## Diferenciais
+
+- Espaço de coworking
+- Horta coletiva
+- Entregue parcialmente mobiliado
+- Eletrodomésticos inclusos
+- Design arquitetônico contemporâneo
+- Última unidade disponível
+
+## Materiais Promocionais
+
+| Material | Arquivo | Destino Storage |
+|----------|---------|-----------------|
+| Book Digital | `book_grid_DIGITAL-2.pdf` | `imoveis/grid-201/book-digital.pdf` |
+| Estudo ROI | `Estudo_ROI_Grid-2.jpg` | `imoveis/grid-201/estudo-roi.jpg` |
+| Tabela Vendas | `TABELA_DE_VENDAS_-_GRID_-_JANEIRO_26-2.pdf` | `imoveis/grid-201/tabela-vendas.pdf` |
+| Planta Unidade | `GRID_UNIDADE_201-2.pdf` | `imoveis/grid-201/planta-unidade.pdf` |
+
+## Imagem Principal
+
+A imagem do empreendimento (`image-25.png`) será usada como imagem principal do imóvel.
+
+## Vídeos
+
+Os dois vídeos serão adicionados à galeria de vídeos do imóvel.
+
+## Estrutura JSON materiais_promocionais
+
 ```json
 {
-  "bookDigital": { "url": "...", "nome": "...", "tipo": "pdf" },
-  "estudoRentabilidade": { "url": "...", "nome": "...", "tipo": "image|pdf" },
-  "tabelaVendas": { "url": "...", "nome": "...", "tipo": "pdf" },
-  "plantaUnidade": { "url": "...", "nome": "...", "tipo": "pdf|image" },
+  "bookDigital": {
+    "url": "[URL do Storage]",
+    "nome": "Book Digital - GRID Residencial",
+    "tipo": "pdf"
+  },
+  "estudoRentabilidade": {
+    "url": "[URL do Storage]",
+    "nome": "Estudo de Rentabilidade Short Stay",
+    "tipo": "image"
+  },
+  "tabelaVendas": {
+    "url": "[URL do Storage]",
+    "nome": "Tabela de Vendas - Janeiro 2026",
+    "tipo": "pdf"
+  },
+  "plantaUnidade": {
+    "url": "[URL do Storage]",
+    "nome": "Planta Unidade 201 - 54,50m²",
+    "tipo": "pdf"
+  },
   "personalizacao": [
-    { "titulo": "Planta", "disponivel": true },
-    { "titulo": "Revestimentos", "disponivel": true }
+    { "titulo": "Armários", "disponivel": true },
+    { "titulo": "Revestimentos", "disponivel": false },
+    { "titulo": "Bancadas", "disponivel": false }
   ],
   "seguranca": [
-    "Alarme e sensores perimetrais",
-    "Circuito fechado de TV"
+    "Portaria 24 horas",
+    "Câmeras de segurança",
+    "Controle de acesso"
   ],
   "sustentabilidade": [
-    "Sistema dual flush",
-    "Medidor individual de água"
+    "Sistema de reúso de água",
+    "Iluminação LED nas áreas comuns",
+    "Coleta seletiva"
   ],
   "infraestrutura": [
-    "Área de delivery com refrigerador",
-    "Espaço de coworking"
+    "Espaço de coworking",
+    "Horta coletiva",
+    "Bicicletário"
   ]
 }
 ```
 
-### 2. Novas Seções na Página do Imóvel
+## Etapas de Implementação
 
-#### Seção 1: Book Digital / Apresentação do Empreendimento
-- **Componente**: `PropertyBookSection.tsx`
-- **Condicional**: Só aparece se `materiais_promocionais.bookDigital` estiver preenchido
-- **Layout**: Card com thumbnail do PDF, botão para abrir em nova aba ou modal com visualizador
+### Etapa 1: Upload dos Arquivos para Storage
 
-#### Seção 2: Estudo de Rentabilidade / ROI
-- **Componente**: `PropertyROISection.tsx`
-- **Condicional**: Só aparece se `materiais_promocionais.estudoRentabilidade` existir
-- **Layout**: 
-  - Se imagem: exibe inline com zoom
-  - Se PDF: botão para download/visualização
-  - Destaque para métricas principais (se disponíveis)
+Criar bucket `materiais-imoveis` (se não existir) e fazer upload de:
+1. Imagem principal do empreendimento
+2. Book Digital PDF
+3. Estudo de Rentabilidade JPG
+4. Tabela de Vendas PDF
+5. Planta da Unidade PDF
+6. 2 Vídeos promocionais
 
-#### Seção 3: Tabela de Vendas
-- **Componente**: `PropertyPriceTableSection.tsx`
-- **Condicional**: Só aparece se `materiais_promocionais.tabelaVendas` existir
-- **Layout**: Card com botão de download e preview
-
-#### Seção 4: Planta da Unidade
-- **Componente**: `PropertyFloorPlanSection.tsx`
-- **Condicional**: Só aparece se `materiais_promocionais.plantaUnidade` existir
-- **Layout**: 
-  - Imagem expandível com zoom
-  - Legenda com cômodos identificados (se disponível)
-
-#### Seção 5: Personalização Disponível
-- **Componente**: `PropertyCustomizationSection.tsx`
-- **Condicional**: Só aparece se houver opções de personalização
-- **Layout**: Lista de checkboxes mostrando o que pode ser personalizado
-
-#### Seção 6: Segurança e Tecnologia
-- **Componente**: `PropertySecuritySection.tsx`
-- **Condicional**: Só aparece se houver itens de segurança
-- **Layout**: Grid com ícones e descrições
-
-#### Seção 7: Sustentabilidade
-- **Componente**: `PropertySustainabilitySection.tsx`
-- **Condicional**: Só aparece se houver itens de sustentabilidade
-- **Layout**: Grid com ícones verdes e badges ecológicos
-
-### 3. Atualização do Wizard de Cadastro (Step 4: Mídias)
-
-Adicionar uma nova aba ou seção no Step 4 para upload dos materiais promocionais:
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│ Etapa 4: Mídias                                         │
-├─────────────────────────────────────────────────────────┤
-│ [Imagens] [Vídeos] [Tour 360°] [Materiais Promocionais] │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  📕 Book Digital do Empreendimento (PDF)                │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │ Arraste ou clique para upload                     │   │
-│  │ (Apresentação completa com renders, plantas, etc) │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  📊 Estudo de Rentabilidade/ROI (PDF ou Imagem)         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │ Arraste ou clique para upload                     │   │
-│  │ (Análise de retorno para investidores)            │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  💰 Tabela de Vendas/Preços (PDF)                       │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │ Arraste ou clique para upload                     │   │
-│  │ (Valores e condições por unidade)                 │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  🏠 Planta da Unidade (PDF ou Imagem)                   │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │ Arraste ou clique para upload                     │   │
-│  │ (Planta baixa específica desta unidade)           │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 4. Atualização do Step 5: Revisão
-
-Adicionar visualização dos materiais promocionais no resumo:
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│ Materiais Promocionais                                  │
-├─────────────────────────────────────────────────────────┤
-│ ✓ Book Digital: book_grid_DIGITAL.pdf                   │
-│ ✓ Estudo ROI: Estudo_ROI_Grid.jpg                       │
-│ ✓ Tabela de Vendas: TABELA_DE_VENDAS_GRID.pdf           │
-│ ✓ Planta da Unidade: GRID_UNIDADE_201.pdf               │
-└─────────────────────────────────────────────────────────┘
-```
-
-## Detalhes Técnicos
-
-### Arquivos a Criar
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/components/property/PropertyBookSection.tsx` | Seção de Book Digital |
-| `src/components/property/PropertyROISection.tsx` | Seção de Estudo de Rentabilidade |
-| `src/components/property/PropertyPriceTableSection.tsx` | Seção de Tabela de Vendas |
-| `src/components/property/PropertyFloorPlanSection.tsx` | Seção de Planta da Unidade |
-| `src/components/property/PropertyCustomizationSection.tsx` | Seção de Personalização |
-| `src/components/property/PropertySecuritySection.tsx` | Seção de Segurança |
-| `src/components/property/PropertySustainabilitySection.tsx` | Seção de Sustentabilidade |
-| `src/components/wizard/Step4MaterialsUpload.tsx` | Sub-componente para upload de materiais |
-
-### Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/types/property-page.ts` | Adicionar tipos para materiais promocionais |
-| `src/types/database.ts` | Adicionar campo `materiais_promocionais` ao tipo `Imovel` |
-| `src/hooks/usePropertyPage.ts` | Carregar e parsear materiais promocionais |
-| `src/components/wizard/Step4Media.tsx` | Adicionar nova aba de Materiais Promocionais |
-| `src/components/wizard/Step5Review.tsx` | Exibir materiais na revisão |
-| `src/components/templates/TemplateModerno.tsx` | Adicionar novas seções condicionais |
-| `src/components/templates/TemplateLuxo.tsx` | Adicionar novas seções condicionais |
-| `src/components/templates/TemplateClassico.tsx` | Adicionar novas seções condicionais |
-| `src/pages/dashboard/construtora/NovoImovel.tsx` | Salvar materiais promocionais |
-| `src/pages/dashboard/construtora/EditarImovel.tsx` | Editar materiais promocionais |
-
-### Migração de Banco de Dados
+### Etapa 2: Inserir o Imóvel no Banco
 
 ```sql
--- Adicionar campo para materiais promocionais
-ALTER TABLE imoveis 
-ADD COLUMN IF NOT EXISTS materiais_promocionais JSONB DEFAULT '{}';
-
--- Criar índice para performance em buscas
-CREATE INDEX IF NOT EXISTS idx_imoveis_materiais 
-ON imoveis USING GIN (materiais_promocionais);
+INSERT INTO imoveis (
+  construtora_id,
+  titulo,
+  headline,
+  endereco,
+  bairro,
+  cidade,
+  estado,
+  valor,
+  area_privativa,
+  suites,
+  banheiros,
+  vagas,
+  descricao,
+  diferenciais,
+  imagens,
+  videos,
+  status,
+  template_escolhido,
+  materiais_promocionais,
+  flag_lancamento,
+  flag_exclusividade
+) VALUES (
+  '8de22a19-9ce7-41a6-a1dc-deab3ad6d275',
+  'GRID Residencial - Unidade 201',
+  'Viva em harmonia no coração da Gávea',
+  'Rua General Rabelo, 51',
+  'Gávea',
+  'Rio de Janeiro',
+  'RJ',
+  1400000,
+  54.50,
+  1,
+  1,
+  1,
+  '[descrição completa]',
+  '["Espaço de coworking", "Horta coletiva", ...]',
+  '[{"url": "...", "isPrimary": true}]',
+  '[{"url": "...", "tipo": "video/mp4"}]',
+  'ativo',
+  'moderno',
+  '[JSON dos materiais]',
+  true,
+  true
+);
 ```
 
-## Layout Visual das Novas Seções
+### Etapa 3: Criar Acesso Público
 
-### Book Digital
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                      📕 Apresentação do Empreendimento          │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌────────────┐                                                 │
-│  │            │  GRID Residencial - Gávea                       │
-│  │  [Thumb]   │                                                 │
-│  │   PDF      │  Conheça todos os detalhes do empreendimento:   │
-│  │            │  • Conceito arquitetônico                       │
-│  └────────────┘  • Plantas de todas as unidades                 │
-│                  • Renders e perspectivas                       │
-│                  • Especificações técnicas                      │
-│                                                                 │
-│                  [📖 Abrir Book Digital] [⬇️ Download PDF]      │
-└─────────────────────────────────────────────────────────────────┘
+```sql
+INSERT INTO imobiliaria_imovel_access (
+  imobiliaria_id,
+  imovel_id,
+  url_slug,
+  status
+) VALUES (
+  '0808cf71-aa0c-4531-94f3-a3741a2efea0',
+  '[ID do imóvel criado]',
+  'grid-residencial-gavea-201',
+  'active'
+);
 ```
 
-### Estudo de Rentabilidade
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                📊 Estudo de Rentabilidade                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Investimento Inteligente na Zona Sul do Rio                    │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                                                          │   │
-│  │   [Imagem/PDF do Estudo com Zoom]                        │   │
-│  │                                                          │   │
-│  │   • Análise de mercado short-stay                        │   │
-│  │   • Projeção de rentabilidade mensal                     │   │
-│  │   • Comparativo com concorrentes                         │   │
-│  │                                                          │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  [🔍 Ver Estudo Completo]                                       │
-└─────────────────────────────────────────────────────────────────┘
+## Resultado Final
+
+Após a implementação, você poderá acessar a página completa do imóvel em:
+
+```
+/imovel/grid-residencial-gavea-201
 ```
 
-### Planta da Unidade
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                 🏠 Planta da Unidade 201                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌────────────────────────────────────────────────────────┐    │
-│   │                                                        │    │
-│   │    [Planta Baixa - Clique para ampliar]                │    │
-│   │                                                        │    │
-│   │    ┌─────────┬─────────┐                               │    │
-│   │    │ VARANDA │  SALA   │                               │    │
-│   │    ├─────────┼─────────┤                               │    │
-│   │    │ QUARTO  │ COZINHA │                               │    │
-│   │    │         ├─────────┤                               │    │
-│   │    │         │  BANHO  │                               │    │
-│   │    └─────────┴─────────┘                               │    │
-│   │                                                        │    │
-│   └────────────────────────────────────────────────────────┘    │
-│                                                                 │
-│   Área Privativa: 54,50 m²                                      │
-│   [📥 Download Planta PDF]                                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+A página exibirá:
 
-## Ordem de Implementação
+1. **Hero** com imagem principal e título
+2. **Resumo** com preço, área e especificações
+3. **Galeria de Vídeos** com os 2 vídeos promocionais
+4. **Descrição** completa do empreendimento
+5. **Book Digital** - Seção para abrir/baixar o PDF
+6. **Estudo de Rentabilidade** - Imagem com zoom
+7. **Tabela de Vendas** - Download do PDF
+8. **Planta da Unidade** - Visualização da planta
+9. **Infraestrutura** - Lista de amenidades
+10. **Segurança** - Recursos de segurança
+11. **Sustentabilidade** - Iniciativas sustentáveis
+12. **Personalização** - Opções disponíveis
 
-1. **Migração do banco** - Adicionar campo JSONB
-2. **Atualizar tipos TypeScript** - `PropertyData`, `Imovel`
-3. **Criar componentes de seção** - 7 novos componentes
-4. **Atualizar Step 4** - Nova aba de materiais
-5. **Atualizar Step 5** - Exibir materiais na revisão
-6. **Atualizar templates** - Adicionar seções condicionais
-7. **Atualizar hook usePropertyPage** - Carregar materiais
-8. **Atualizar NovoImovel/EditarImovel** - Salvar materiais
+## Arquivos Necessários
 
-## Comportamento Condicional
+| Ação | Arquivo |
+|------|---------|
+| Copiar para assets | `user-uploads://image-25.png` |
+| Upload Storage | `user-uploads://book_grid_DIGITAL-2.pdf` |
+| Upload Storage | `user-uploads://Estudo_ROI_Grid-2.jpg` |
+| Upload Storage | `user-uploads://TABELA_DE_VENDAS_-_GRID_-_JANEIRO_26-2.pdf` |
+| Upload Storage | `user-uploads://GRID_UNIDADE_201-2.pdf` |
+| Upload Storage | `user-uploads://Cópia_de_GRID_-_Post_1080x1080_-_15seg.mp4` |
+| Upload Storage | `user-uploads://Cópia_de_GRID_-_Storie_1080x1920_-_15seg_2.mp4` |
 
-| Seção | Condição para Exibir |
-|-------|---------------------|
-| Book Digital | `materiais_promocionais?.bookDigital?.url` existe |
-| Estudo ROI | `materiais_promocionais?.estudoRentabilidade?.url` existe |
-| Tabela Vendas | `materiais_promocionais?.tabelaVendas?.url` existe |
-| Planta Unidade | `materiais_promocionais?.plantaUnidade?.url` existe |
-| Personalização | Array `materiais_promocionais?.personalizacao?.length > 0` |
-| Segurança | Array `materiais_promocionais?.seguranca?.length > 0` |
-| Sustentabilidade | Array `materiais_promocionais?.sustentabilidade?.length > 0` |
+## Template Escolhido
 
-Se nenhum material for fornecido, a seção correspondente simplesmente não aparece no site.
+O imóvel será criado com o template **Moderno** que combina bem com o estilo contemporâneo do GRID Residencial.
+
