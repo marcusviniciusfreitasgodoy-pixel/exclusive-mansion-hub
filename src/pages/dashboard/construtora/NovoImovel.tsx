@@ -158,6 +158,8 @@ export default function NovoImovel() {
         descricao: formData.descricao,
         diferenciais: formData.diferenciais || [],
         memorial_descritivo: formData.memorial || null,
+        condicoes_pagamento: formData.condicoesPagamento || null,
+        contexto_adicional_ia: formData.contextoAdicionalIA || null,
         imagens: formData.imagens || [],
         videos: formData.videos || [],
         tour_360_url: formData.tour360Url || null,
