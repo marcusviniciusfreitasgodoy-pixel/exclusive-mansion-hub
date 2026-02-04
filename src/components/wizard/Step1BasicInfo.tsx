@@ -1,12 +1,12 @@
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
 export const step1Schema = z.object({
   titulo: z.string().min(5, 'Título deve ter no mínimo 5 caracteres').max(100, 'Título muito longo'),
@@ -16,7 +16,12 @@ export const step1Schema = z.object({
   bairro: z.string().min(2, 'Bairro é obrigatório'),
   cidade: z.string().min(2, 'Cidade é obrigatória'),
   estado: z.string().min(2, 'Estado é obrigatório'),
-  cep: z.string().optional(),
+  cep: z.string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{5}-?\d{3}$/.test(val),
+      { message: 'CEP inválido (formato: 00000-000)' }
+    ),
   valor: z.number().min(1000, 'Valor deve ser maior que R$ 1.000'),
   condominio: z.number().optional(),
   iptu: z.number().optional(),
@@ -37,6 +42,10 @@ interface Step1Props {
 }
 
 export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
+  const [cepSuccess, setCepSuccess] = useState(false);
+
   const form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
@@ -72,6 +81,69 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
     return parseInt(cleaned, 10) || 0;
   };
 
+  const formatCep = (value: string): string => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 5) {
+      return cleaned;
+    }
+    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
+  };
+
+  const fetchAddressByCep = useCallback(async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    setCepError(null);
+    setCepSuccess(false);
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        setCepError('CEP não encontrado');
+        return;
+      }
+
+      // Preenche os campos automaticamente
+      if (data.logradouro) {
+        form.setValue('endereco', data.logradouro, { shouldValidate: true });
+      }
+      if (data.bairro) {
+        form.setValue('bairro', data.bairro, { shouldValidate: true });
+      }
+      if (data.localidade) {
+        form.setValue('cidade', data.localidade, { shouldValidate: true });
+      }
+      if (data.uf) {
+        form.setValue('estado', data.uf, { shouldValidate: true });
+      }
+
+      setCepSuccess(true);
+      // Remove success indicator after 3 seconds
+      setTimeout(() => setCepSuccess(false), 3000);
+    } catch {
+      setCepError('Erro ao buscar CEP');
+    } finally {
+      setIsLoadingCep(false);
+    }
+  }, [form]);
+
+  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+    const formatted = formatCep(e.target.value);
+    onChange(formatted);
+
+    // Limpa estados anteriores
+    setCepError(null);
+    setCepSuccess(false);
+
+    // Busca endereço quando CEP estiver completo (9 caracteres com hífen)
+    if (formatted.length === 9) {
+      fetchAddressByCep(formatted);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -94,6 +166,52 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
         <div className="space-y-4">
           <h3 className="font-medium text-foreground">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* CEP - Primeiro campo */}
+            <FormField
+              control={form.control}
+              name="cep"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CEP</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="00000-000"
+                        maxLength={9}
+                        value={field.value || ''}
+                        onChange={(e) => handleCepChange(e, field.onChange)}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        className={cepError ? 'border-destructive' : cepSuccess ? 'border-green-500' : ''}
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {isLoadingCep && (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                        {cepSuccess && !isLoadingCep && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        )}
+                        {cepError && !isLoadingCep && (
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        )}
+                      </div>
+                    </div>
+                  </FormControl>
+                  {cepError && (
+                    <p className="text-sm text-destructive">{cepError}</p>
+                  )}
+                  {cepSuccess && (
+                    <p className="text-sm text-green-600">Endereço encontrado e preenchido!</p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Campo vazio para alinhar grid */}
+            <div className="hidden md:block" />
+
             <FormField
               control={form.control}
               name="endereco"
@@ -152,20 +270,6 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
 
             <FormField
               control={form.control}
-              name="cep"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CEP</FormLabel>
-                  <FormControl>
-                    <Input placeholder="22630-010" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="cidade"
               render={({ field }) => (
                 <FormItem>
@@ -184,7 +288,7 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estado *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
@@ -272,7 +376,7 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status inicial</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="w-48">
                     <SelectValue />
