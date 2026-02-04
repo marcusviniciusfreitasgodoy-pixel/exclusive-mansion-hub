@@ -43,6 +43,7 @@ const PipelineImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Pip
 const IntegracoesImobiliariaPage = lazy(() => import("./pages/dashboard/imobiliaria/Integracoes"));
 const MinhasMidias = lazy(() => import("./pages/dashboard/imobiliaria/MinhasMidias"));
 const MeusLinks = lazy(() => import("./pages/dashboard/imobiliaria/MeusLinks"));
+const ConfigurarAgenda = lazy(() => import("./pages/dashboard/imobiliaria/ConfigurarAgenda"));
 
 // Lazy load public pages
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
@@ -257,6 +258,11 @@ const App = () => (
               <Route path="/dashboard/imobiliaria/leads" element={
                 <ProtectedRoute allowedRoles={['imobiliaria']}>
                   <LazyRoute><LeadsImobiliaria /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/configurar-agenda" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><ConfigurarAgenda /></LazyRoute>
                 </ProtectedRoute>
               } />
               

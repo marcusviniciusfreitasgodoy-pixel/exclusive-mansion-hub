@@ -32,6 +32,7 @@ import {
   Link2,
   ImagePlus,
   Images,
+  Clock,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
@@ -54,6 +55,7 @@ const imobiliariaLinks = [
   { title: 'Minhas Mídias', url: '/dashboard/imobiliaria/minhas-midias', icon: Images },
   { title: 'Pipeline CRM', url: '/dashboard/imobiliaria/pipeline', icon: Kanban },
   { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar },
+  { title: 'Configurar Agenda', url: '/dashboard/imobiliaria/configurar-agenda', icon: Clock },
   { title: 'Feedbacks', url: '/dashboard/imobiliaria/feedbacks', icon: FileText },
   { title: 'Meus Links', url: '/dashboard/imobiliaria/meus-links', icon: LinkIcon },
   { title: 'Meus Leads', url: '/dashboard/imobiliaria/leads', icon: MessageSquare },
