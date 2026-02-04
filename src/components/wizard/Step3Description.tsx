@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { ArrowRight, Plus, X, Edit2, Check, Bot, Lock, Key } from 'lucide-react';
+import { ArrowRight, Plus, X, Edit2, Check, Bot, Lock, Key, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 import { CopywriterAssistant } from './CopywriterAssistant';
-
 export const step3Schema = z.object({
   descricao: z.string().min(50, 'Descrição deve ter no mínimo 50 caracteres'),
   diferenciais: z.array(z.string()).min(3, 'Adicione pelo menos 3 diferenciais'),
@@ -45,6 +46,10 @@ export function Step3Description({ defaultValues, propertyData, onComplete }: St
   const [newDiferencial, setNewDiferencial] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  
+  // AI comparison modal states
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [aiSuggestedText, setAiSuggestedText] = useState('');
   
   // Developer access states
   const [isDevUnlocked, setIsDevUnlocked] = useState(false);
@@ -117,7 +122,27 @@ export function Step3Description({ defaultValues, propertyData, onComplete }: St
 
   // Handle text from AI assistant
   const handleUseAIDescription = (text: string) => {
-    form.setValue('descricao', text, { shouldValidate: true });
+    const currentText = form.getValues('descricao');
+    
+    if (currentText && currentText.trim().length > 0) {
+      // There's existing text - show comparison modal
+      setAiSuggestedText(text);
+      setShowCompareModal(true);
+    } else {
+      // No existing text - insert directly
+      form.setValue('descricao', text, { shouldValidate: true });
+    }
+  };
+
+  const handleKeepCurrent = () => {
+    setShowCompareModal(false);
+    setAiSuggestedText('');
+  };
+
+  const handleUseAI = () => {
+    form.setValue('descricao', aiSuggestedText, { shouldValidate: true });
+    setShowCompareModal(false);
+    setAiSuggestedText('');
   };
 
   return (
@@ -362,6 +387,67 @@ export function Step3Description({ defaultValues, propertyData, onComplete }: St
               </Button>
               <Button type="button" onClick={handleUnlockDev}>
                 Desbloquear
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* AI Description Comparison Modal */}
+        <Dialog open={showCompareModal} onOpenChange={setShowCompareModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Escolha a Descrição</DialogTitle>
+              <DialogDescription>
+                Compare sua descrição atual com a sugestão da IA
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Current Description */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Edit2 className="h-4 w-4" />
+                  Sua Descrição Atual
+                </Label>
+                <ScrollArea className="h-[300px] border rounded-lg p-3">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {form.getValues('descricao')}
+                  </p>
+                </ScrollArea>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleKeepCurrent}
+                >
+                  Manter Esta
+                </Button>
+              </div>
+              
+              {/* AI Suggestion */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Sugestão da IA
+                </Label>
+                <ScrollArea className="h-[300px] border rounded-lg p-3 border-primary/30 bg-primary/5">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {aiSuggestedText}
+                  </p>
+                </ScrollArea>
+                <Button 
+                  type="button"
+                  className="w-full"
+                  onClick={handleUseAI}
+                >
+                  Usar Esta
+                </Button>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setShowCompareModal(false)}>
+                Cancelar
               </Button>
             </DialogFooter>
           </DialogContent>
