@@ -369,7 +369,9 @@ export default function NovoImovel() {
                 bairro: formData.bairro,
                 cidade: formData.cidade,
                 areaTotal: formData.areaTotal,
+                areaPrivativa: formData.areaPrivativa,
                 suites: formData.suites,
+                banheiros: formData.banheiros,
                 vagas: formData.vagas,
                 valor: formData.valor,
               }}
