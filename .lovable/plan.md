@@ -1,183 +1,207 @@
 
 
-# Plano: Opção de Escolha Entre Descrição Atual e Sugerida pela IA
+# Plano: Corrigir IA para NÃO Inventar Informações
 
 ## Problema Identificado
 
-Atualmente, ao clicar em "Usar Este Texto" no assistente de copywriting, a descrição existente é **sobrescrita imediatamente**, sem oferecer ao usuário a possibilidade de comparar ou escolher entre manter sua descrição original ou usar a sugerida pela IA.
+A IA está gerando informações incorretas (ex: descrevendo uma cobertura **duplex** como **linear**) porque:
 
-## Solução Proposta
+1. O prompt não recebe informações cruciais como **tipo do imóvel**
+2. Não há instruções explícitas proibindo a IA de inventar dados
+3. O prompt incentiva "criatividade" sem restringir à fidelidade dos dados
 
-Adicionar um modal de comparação que exiba lado a lado:
-- A descrição atual (escrita pelo usuário)
-- A descrição sugerida pela IA
+## Solução em 3 Frentes
 
-O usuário poderá escolher qual usar ou cancelar a operação.
+### 1. Modificar o System Prompt (Edge Function)
 
-## Fluxo de UX Proposto
+Adicionar restrições explícitas e enfáticas:
 
 ```text
-1. Usuário gera texto com IA
-2. Clica em "Usar Este Texto"
-3. SE já existir descrição:
-   ┌─────────────────────────────────────────────────────────────┐
-   │              Escolha a Descrição                            │
-   ├─────────────────────────────────────────────────────────────┤
-   │  ┌─────────────────────┐  ┌─────────────────────┐          │
-   │  │  📝 Descrição Atual │  │  ✨ Sugestão da IA  │          │
-   │  ├─────────────────────┤  ├─────────────────────┤          │
-   │  │ "Texto atual do     │  │ "Novo texto gerado  │          │
-   │  │  usuário..."        │  │  pela IA..."        │          │
-   │  │                     │  │                     │          │
-   │  └─────────────────────┘  └─────────────────────┘          │
-   │                                                             │
-   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-   │  │ Manter Atual│  │ Usar IA     │  │ Cancelar    │         │
-   │  └─────────────┘  └─────────────┘  └─────────────┘         │
-   └─────────────────────────────────────────────────────────────┘
+REGRAS ABSOLUTAS (NUNCA VIOLE):
+1. Use APENAS as informações fornecidas no contexto do imóvel
+2. NÃO invente características que não foram mencionadas
+3. NÃO altere dados factuais (tipo, metragem, localização, número de quartos)
+4. Se uma informação não foi fornecida, NÃO a mencione
+5. O título do imóvel geralmente indica o tipo (duplex, linear, casa, etc.) - RESPEITE
 
-   SE não existir descrição:
-   → Insere diretamente (comportamento atual)
+EXEMPLOS DO QUE VOCÊ NÃO DEVE FAZER:
+- Se o título diz "Cobertura Duplex", NÃO descreva como "linear" ou "térreo"
+- Se tem 4 suítes, NÃO mencione "5 amplos dormitórios"
+- Se não foi informada piscina, NÃO mencione piscina
+```
+
+### 2. Enviar Mais Contexto para a IA
+
+Atualizar o `CopywriterAssistant` e a Edge Function para incluir:
+
+| Dado Atual | Novo Dado a Incluir |
+|------------|---------------------|
+| titulo | **property_type** (tipo do imóvel) |
+| bairro | **estilo_arquitetonico** |
+| area_total | **area_privativa** |
+| suites | **banheiros** |
+| valor | **vista** (se disponível) |
+| diferenciais | **headline** (se existir) |
+
+### 3. Reestruturar o User Prompt
+
+Deixar claro que os dados são FATOS, não sugestões:
+
+```text
+DADOS FACTUAIS DO IMÓVEL (OBRIGATÓRIO RESPEITAR):
+- Tipo: Cobertura Duplex  ← NÃO ALTERE
+- Área Total: 450m²       ← NÃO ALTERE
+- Suítes: 4               ← NÃO ALTERE
+...
+
+DIFERENCIAIS REAIS DO IMÓVEL:
+- Vista frontal para o mar
+- Piscina privativa
+- Elevador privativo
+...
+
+INSTRUÇÕES:
+Crie um texto persuasivo usando EXCLUSIVAMENTE os dados acima.
+NÃO invente características adicionais.
 ```
 
 ## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/components/wizard/CopywriterAssistant.tsx` | Adicionar callback que passa a descrição atual para comparação |
-| `src/components/wizard/Step3Description.tsx` | Implementar modal de comparação e lógica de escolha |
+| `supabase/functions/generate-property-copy/index.ts` | Atualizar SYSTEM_PROMPT com restrições; Expandir dados recebidos |
+| `src/components/wizard/CopywriterAssistant.tsx` | Enviar mais campos do imóvel |
+| `src/pages/dashboard/construtora/NovoImovel.tsx` | Passar mais dados para Step3 |
+| `src/pages/dashboard/construtora/EditarImovel.tsx` | Passar mais dados para Step3 |
 
 ## Implementação Detalhada
 
-### 1. Modificar CopywriterAssistant.tsx
-
-Adicionar prop `currentDescription` para saber se já existe texto:
+### 1. Novo System Prompt (Edge Function)
 
 ```typescript
-interface CopywriterAssistantProps {
-  propertyData: PropertyData;
-  diferenciais: string[];
-  currentDescription?: string; // Nova prop
-  onUseDescription: (text: string) => void;
-  onUseHeadline?: (text: string) => void;
+const SYSTEM_PROMPT = `Aja como um especialista em marketing imobiliário de alto padrão, com foco exclusivo no mercado do Rio de Janeiro.
+
+**REGRAS CRÍTICAS - VIOLAÇÃO É PROIBIDA:**
+1. Use SOMENTE as informações fornecidas no contexto do imóvel
+2. NUNCA invente ou altere características (tipo, metragem, quartos, localização)
+3. Se o título indica "Duplex", a descrição DEVE mencionar "duplex" - JAMAIS "linear"
+4. Se o título indica "Cobertura", NÃO descreva como "apartamento térreo"
+5. Se uma característica NÃO foi informada, NÃO a mencione no texto
+6. Números são EXATOS: se tem 4 suítes, escreva "4 suítes", não "5 amplos quartos"
+7. Bairros devem ser mencionados EXATAMENTE como informados
+
+**Objetivo:** Criar descrições persuasivas que despertem interesse para visitas.
+
+**Estilo de Escrita:**
+- Evite clichês ("espetacular", "maravilhosa", "incrível", "deslumbrante")
+- Use linguagem sofisticada e exclusiva
+- Foque nos diferenciais REAIS fornecidos
+- Textos envolventes mas FIÉIS aos dados
+
+**Formato de Resposta:**
+Retorne APENAS o texto solicitado, sem marcações, aspas ou explicações.`;
+```
+
+### 2. Novo User Prompt com Dados Expandidos
+
+```typescript
+const userPrompt = `
+═══════════════════════════════════════════════════════════
+DADOS FACTUAIS DO IMÓVEL - NÃO ALTERE NENHUM DESTES DADOS
+═══════════════════════════════════════════════════════════
+
+IDENTIFICAÇÃO:
+- Título EXATO: ${dados_imovel.titulo || 'Não informado'}
+- Tipo do Imóvel: ${dados_imovel.property_type || 'Extrair do título'}
+
+LOCALIZAÇÃO:
+- Bairro: ${dados_imovel.bairro || 'Não informado'}
+- Cidade: ${dados_imovel.cidade || 'Rio de Janeiro'}
+
+METRAGENS (números exatos):
+- Área Total: ${dados_imovel.area_total ? `${dados_imovel.area_total}m²` : 'Não informada'}
+- Área Privativa: ${dados_imovel.area_privativa ? `${dados_imovel.area_privativa}m²` : 'Não informada'}
+
+CONFIGURAÇÃO (números exatos):
+- Suítes: ${dados_imovel.suites || 0}
+- Banheiros: ${dados_imovel.banheiros || 0}
+- Vagas: ${dados_imovel.vagas || 0}
+
+VALOR:
+- ${valorFormatado}
+
+DIFERENCIAIS REAIS (use apenas estes):
+${diferenciais}
+
+${dados_imovel.palavras_chave_adicionais ? `PALAVRAS-CHAVE EXTRAS:\n${dados_imovel.palavras_chave_adicionais}` : ''}
+
+═══════════════════════════════════════════════════════════
+INSTRUÇÕES DE GERAÇÃO
+═══════════════════════════════════════════════════════════
+
+${tipoInstrucao}
+
+LEMBRE-SE: Use APENAS os dados acima. NÃO invente informações.
+Se o título diz "Duplex", o texto DEVE dizer "duplex".
+Se o título diz "Linear", o texto DEVE dizer "linear".
+`;
+```
+
+### 3. Expandir PropertyData Interface
+
+```typescript
+interface PropertyData {
+  titulo?: string;
+  propertyType?: string;  // NOVO
+  bairro?: string;
+  cidade?: string;
+  areaTotal?: number;
+  areaPrivativa?: number; // NOVO
+  suites?: number;
+  banheiros?: number;     // NOVO
+  vagas?: number;
+  valor?: number;
+  vista?: string[];       // NOVO (opcional)
+  estiloArquitetonico?: string; // NOVO (opcional)
 }
 ```
 
-A função `handleUseText` passa a chamar o callback com o texto gerado, e o componente pai decide se mostra modal ou insere diretamente.
+### 4. Atualizar Passagem de Dados
 
-### 2. Modificar Step3Description.tsx
-
-Adicionar estados e modal de comparação:
+Em `NovoImovel.tsx` e `EditarImovel.tsx`:
 
 ```typescript
-// Estados
-const [showCompareModal, setShowCompareModal] = useState(false);
-const [aiSuggestedText, setAiSuggestedText] = useState('');
-
-// Handler atualizado
-const handleUseAIDescription = (text: string) => {
-  const currentText = form.getValues('descricao');
-  
-  if (currentText && currentText.trim().length > 0) {
-    // Já existe descrição - mostrar modal de comparação
-    setAiSuggestedText(text);
-    setShowCompareModal(true);
-  } else {
-    // Não existe descrição - inserir diretamente
-    form.setValue('descricao', text, { shouldValidate: true });
-  }
-};
-
-// Ações do modal
-const handleKeepCurrent = () => {
-  setShowCompareModal(false);
-  setAiSuggestedText('');
-};
-
-const handleUseAI = () => {
-  form.setValue('descricao', aiSuggestedText, { shouldValidate: true });
-  setShowCompareModal(false);
-  setAiSuggestedText('');
-};
+propertyData={{
+  titulo: formData.titulo,
+  propertyType: formData.propertyType,
+  bairro: formData.bairro,
+  cidade: formData.cidade,
+  areaTotal: formData.areaTotal,
+  areaPrivativa: formData.areaPrivativa,
+  suites: formData.suites,
+  banheiros: formData.banheiros,
+  vagas: formData.vagas,
+  valor: formData.valor,
+}}
 ```
-
-### 3. UI do Modal de Comparação
-
-```tsx
-<Dialog open={showCompareModal} onOpenChange={setShowCompareModal}>
-  <DialogContent className="max-w-4xl max-h-[80vh]">
-    <DialogHeader>
-      <DialogTitle>Escolha a Descrição</DialogTitle>
-      <DialogDescription>
-        Compare sua descrição atual com a sugestão da IA
-      </DialogDescription>
-    </DialogHeader>
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Descrição Atual */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2">
-          <Edit2 className="h-4 w-4" />
-          Sua Descrição Atual
-        </Label>
-        <ScrollArea className="h-[300px] border rounded-lg p-3">
-          <p className="text-sm whitespace-pre-wrap">
-            {form.getValues('descricao')}
-          </p>
-        </ScrollArea>
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={handleKeepCurrent}
-        >
-          Manter Esta
-        </Button>
-      </div>
-      
-      {/* Sugestão IA */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Sugestão da IA
-        </Label>
-        <ScrollArea className="h-[300px] border rounded-lg p-3 border-primary/30 bg-primary/5">
-          <p className="text-sm whitespace-pre-wrap">
-            {aiSuggestedText}
-          </p>
-        </ScrollArea>
-        <Button 
-          className="w-full"
-          onClick={handleUseAI}
-        >
-          Usar Esta
-        </Button>
-      </div>
-    </div>
-    
-    <DialogFooter>
-      <Button variant="ghost" onClick={() => setShowCompareModal(false)}>
-        Cancelar
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-```
-
-## Componentes Utilizados
-
-| Componente | Uso |
-|------------|-----|
-| `Dialog` | Modal de comparação |
-| `ScrollArea` | Para textos longos com scroll |
-| `Button` | Ações de escolha |
-| `Sparkles`, `Edit2` | Ícones visuais |
 
 ## Resultado Esperado
 
-1. Se o campo de descrição estiver **vazio**: texto da IA é inserido diretamente
-2. Se o campo de descrição **já tiver texto**: abre modal lado a lado para o usuário escolher
-3. Usuário pode:
-   - **Manter Atual**: fecha o modal sem alterações
-   - **Usar IA**: substitui pela sugestão
-   - **Cancelar**: fecha o modal sem alterações
+| Antes | Depois |
+|-------|--------|
+| "Esta cobertura linear oferece..." | "Esta cobertura duplex oferece..." |
+| IA inventa "5 amplos quartos" | "4 suítes espaçosas" (exatamente como informado) |
+| IA menciona "jardim" não informado | Menciona apenas diferenciais fornecidos |
+
+## Fluxo de Verificação
+
+```text
+1. Usuário cadastra "Cobertura Duplex Frente-Mar"
+2. Adiciona diferenciais: piscina, vista mar, elevador
+3. Clica "Gerar com IA"
+4. IA recebe:
+   - Título: "Cobertura Duplex Frente-Mar" → DEVE usar "duplex"
+   - Diferenciais: piscina, vista mar, elevador → SÓ pode mencionar estes
+5. IA gera texto FIEL aos dados
+```
 
