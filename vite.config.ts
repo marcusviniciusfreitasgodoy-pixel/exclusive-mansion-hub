@@ -39,7 +39,15 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
+        // Avoid precaching huge JPG/JPEG assets (Workbox default limit is 2MB and can fail builds)
+        // Keep core assets precached; large media should be runtime-cached or loaded on demand.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+        globIgnores: [
+          '**/assets/*.jpg',
+          '**/assets/*.jpeg',
+        ],
+        // Optional: raise limit slightly for other assets if needed
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
