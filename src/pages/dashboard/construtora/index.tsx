@@ -65,7 +65,9 @@ export default function ConstrutoraDashboard() {
           ...imovel,
           diferenciais: diferenciaisArray,
           imagens: imagensArray.map((img: any) => 
-            typeof img === 'string' ? { url: img } : { url: img?.url || '', alt: img?.alt }
+            typeof img === 'string' 
+              ? { url: img } 
+              : { url: img?.url || '', alt: img?.alt, isPrimary: img?.isPrimary }
           ),
           videos: videosArray.map((vid: any) => 
             typeof vid === 'string' ? { url: vid } : { url: vid?.url || '', tipo: vid?.tipo }
@@ -334,17 +336,20 @@ export default function ConstrutoraDashboard() {
           {filteredImoveis.map((imovel) => (
             <Card key={imovel.id} className="overflow-hidden group">
               <div className="aspect-video bg-muted relative">
-                {imovel.imagens?.[0]?.url ? (
-                  <img
-                    src={imovel.imagens[0].url}
-                    alt={imovel.titulo}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-muted-foreground">
-                    <Building2 className="h-12 w-12" />
-                  </div>
-                )}
+                {(() => {
+                  const primaryImg = imovel.imagens?.find(img => img.isPrimary) || imovel.imagens?.[0];
+                  return primaryImg?.url ? (
+                    <img
+                      src={primaryImg.url}
+                      alt={primaryImg.alt || imovel.titulo}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      <Building2 className="h-12 w-12" />
+                    </div>
+                  );
+                })()}
                 <Badge className={`absolute top-2 right-2 ${statusColors[imovel.status]}`}>
                   {imovel.status}
                 </Badge>

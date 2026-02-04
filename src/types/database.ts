@@ -70,7 +70,7 @@ export interface Imovel {
   diferenciais: string[];
   memorial_descritivo: string | null;
   condicoes_pagamento: string | null;
-  imagens: { url: string; alt?: string }[];
+  imagens: { url: string; alt?: string; isPrimary?: boolean }[];
   videos: { url: string; tipo?: string }[];
   tour_360_url: string | null;
   status: ImovelStatus;
