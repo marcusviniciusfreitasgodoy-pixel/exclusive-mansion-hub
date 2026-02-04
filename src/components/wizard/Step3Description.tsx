@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { ArrowRight, Plus, X, Edit2, Check, Bot } from 'lucide-react';
+import { ArrowRight, Plus, X, Edit2, Check, Bot, Lock, Key } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export const step3Schema = z.object({
   descricao: z.string().min(50, 'Descrição deve ter no mínimo 50 caracteres'),
@@ -25,10 +26,39 @@ interface Step3Props {
   onComplete: (data: Step3Data) => void;
 }
 
+// Senha do desenvolvedor
+const DEVELOPER_PASSWORD = "sofia2024dev";
+
 export function Step3Description({ defaultValues, onComplete }: Step3Props) {
   const [newDiferencial, setNewDiferencial] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  
+  // Developer access states
+  const [isDevUnlocked, setIsDevUnlocked] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // Check if already unlocked on mount
+  useEffect(() => {
+    const unlocked = sessionStorage.getItem('dev_unlocked');
+    if (unlocked === 'true') {
+      setIsDevUnlocked(true);
+    }
+  }, []);
+
+  const handleUnlockDev = () => {
+    if (passwordInput === DEVELOPER_PASSWORD) {
+      setIsDevUnlocked(true);
+      setShowPasswordDialog(false);
+      setPasswordError('');
+      setPasswordInput('');
+      sessionStorage.setItem('dev_unlocked', 'true');
+    } else {
+      setPasswordError('Senha incorreta');
+    }
+  };
 
   const form = useForm<Step3Data>({
     resolver: zodResolver(step3Schema),
@@ -222,35 +252,96 @@ export function Step3Description({ defaultValues, onComplete }: Step3Props) {
           )}
         />
 
-        {/* Contexto Adicional para IA */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-6">
-            <FormField
-              control={form.control}
-              name="contextoAdicionalIA"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-primary" />
-                    Contexto Adicional para Sofia (IA)
-                  </FormLabel>
-                  <FormDescription>
-                    Informações específicas que a assistente virtual Sofia deve saber sobre este imóvel, 
-                    como detalhes não públicos, instruções de negociação, ou pontos-chave para destacar durante conversas.
-                  </FormDescription>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Ex: Proprietário aceita permuta por imóvel de menor valor. Apartamento vizinho também está à venda. Priorizar compradores à vista. Mencionar a proximidade com o novo shopping em construção..."
-                      className="min-h-[120px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+        {/* Contexto Adicional para IA - Developer Only */}
+        {isDevUnlocked ? (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <FormField
+                control={form.control}
+                name="contextoAdicionalIA"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-primary" />
+                      Contexto Adicional para Sofia (IA)
+                    </FormLabel>
+                    <FormDescription>
+                      Informações específicas que a assistente virtual Sofia deve saber sobre este imóvel, 
+                      como detalhes não públicos, instruções de negociação, ou pontos-chave para destacar durante conversas.
+                    </FormDescription>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ex: Proprietário aceita permuta por imóvel de menor valor. Apartamento vizinho também está à venda. Priorizar compradores à vista. Mencionar a proximidade com o novo shopping em construção..."
+                        className="min-h-[120px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed border-muted-foreground/30">
+            <CardContent className="pt-6 text-center">
+              <Lock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">
+                Área restrita ao desenvolvedor
+              </p>
+              <Button 
+                type="button"
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowPasswordDialog(true)}
+              >
+                <Key className="h-4 w-4 mr-2" />
+                Desbloquear
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Password Dialog */}
+        <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Acesso Desenvolvedor</DialogTitle>
+              <DialogDescription>
+                Digite a senha para acessar o campo de contexto da IA
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Senha do desenvolvedor"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleUnlockDev();
+                  }
+                }}
+              />
+              {passwordError && (
+                <p className="text-sm text-destructive">{passwordError}</p>
               )}
-            />
-          </CardContent>
-        </Card>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setShowPasswordDialog(false);
+                setPasswordInput('');
+                setPasswordError('');
+              }}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={handleUnlockDev}>
+                Desbloquear
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="flex justify-end">
           <Button type="submit" className="gap-2">
