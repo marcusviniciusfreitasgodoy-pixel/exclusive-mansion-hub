@@ -113,12 +113,6 @@ export function Step5Review({
             </span>
           </div>
 
-          {data.descricao && (
-            <p className="text-muted-foreground line-clamp-3 mb-4">
-              {data.descricao}
-            </p>
-          )}
-
           {data.diferenciais && data.diferenciais.length > 0 && (
             <div className="space-y-2">
               <Label>Diferenciais:</Label>
