@@ -1,161 +1,186 @@
 
-# Plano: Implementar Campo CEP com Formatação e Busca de Endereço
+# Plano: Restringir Campo "Contexto para Sofia" ao Desenvolvedor
 
-## Funcionalidades a Implementar
+## Objetivo
 
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| Máscara de entrada | Formatação automática no padrão 00000-000 |
-| Busca de endereço | Integração com API ViaCEP para preencher campos automaticamente |
-| Validação | Verificar se o CEP tem formato válido |
-| Feedback visual | Indicador de carregamento durante a busca |
+O campo "Contexto Adicional para Sofia (IA)" será visível e editável **apenas** para usuários autorizados que inserirem a senha de desenvolvedor. Construtoras e imobiliárias regulares não verão este campo.
 
-## API Utilizada
+## Abordagem Escolhida
 
-A **ViaCEP** é uma API pública brasileira gratuita que não requer autenticação:
-- URL: `https://viacep.com.br/ws/{cep}/json/`
-- Retorna: logradouro, bairro, localidade (cidade), uf (estado)
+Implementar **verificação por senha de desenvolvedor** que o usuário pode digitar ao acessar o Step 3. Uma vez autenticado na sessão, o campo ficará visível.
 
-## Alterações no Arquivo
-
-**Arquivo**: `src/components/wizard/Step1BasicInfo.tsx`
-
-### 1. Adicionar Estados para Controle
-
-```text
-- isLoadingCep: boolean → Indica quando está buscando dados
-- cepError: string | null → Mensagem de erro se CEP inválido
 ```
-
-### 2. Criar Funções Auxiliares
-
-```text
-formatCep(value: string): string
-  - Remove caracteres não numéricos
-  - Adiciona hífen após o 5º dígito
-  - Retorna no formato 00000-000
-
-fetchAddressByCep(cep: string): Promise
-  - Limpa CEP (remove hífen)
-  - Verifica se tem 8 dígitos
-  - Chama API ViaCEP
-  - Preenche campos: endereco, bairro, cidade, estado
-```
-
-### 3. Atualizar Validação Zod
-
-```typescript
-cep: z.string()
-  .optional()
-  .refine(
-    (val) => !val || /^\d{5}-?\d{3}$/.test(val),
-    { message: 'CEP inválido (formato: 00000-000)' }
-  ),
-```
-
-### 4. Modificar Campo CEP no Formulário
-
-```text
-- Adicionar máscara de formatação no onChange
-- Chamar busca de endereço quando CEP tiver 9 caracteres (00000-000)
-- Exibir loading spinner durante a busca
-- Mostrar mensagem de erro se CEP não encontrado
-```
-
-## Fluxo de Uso
-
-```text
-1. Usuário digita CEP: "22630010"
-2. Sistema formata automaticamente: "22630-010"
-3. Ao completar 9 caracteres, sistema busca na API ViaCEP
-4. Se encontrado:
-   - Preenche automaticamente: Rua, Bairro, Cidade, Estado
-   - Usuário pode ajustar se necessário
-5. Se não encontrado:
-   - Mostra mensagem "CEP não encontrado"
-   - Mantém campos editáveis para preenchimento manual
-```
-
-## Exemplo Visual
-
-```text
+Fluxo Normal (sem senha):
 ┌─────────────────────────────────────────┐
-│  CEP                                    │
-│  ┌─────────────────┐                    │
-│  │ 22630-010   🔄  │  ← Loading spinner │
-│  └─────────────────┘                    │
-│  ✓ Endereço encontrado e preenchido!   │
+│  📝 Descrição do Imóvel                 │
 │                                         │
-│  Rua/Avenida *                          │
-│  ┌─────────────────────────────────────┐│
-│  │ Avenida Lúcio Costa                 ││  ← Preenchido
-│  └─────────────────────────────────────┘│
+│  Descrição Geral *                      │
+│  Diferenciais Exclusivos *              │
+│  Memorial Descritivo                    │
+│  Condições de Pagamento                 │
 │                                         │
-│  Bairro *           Cidade *            │
-│  ┌──────────────┐  ┌──────────────────┐ │
-│  │ Barra da     │  │ Rio de Janeiro   │ │  ← Preenchido
-│  │ Tijuca       │  │                  │ │
-│  └──────────────┘  └──────────────────┘ │
+│  ❌ Campo Sofia NÃO VISÍVEL             │
+└─────────────────────────────────────────┘
+
+Fluxo Desenvolvedor (com senha):
+┌─────────────────────────────────────────┐
+│  📝 Descrição do Imóvel                 │
+│                                         │
+│  Descrição Geral *                      │
+│  Diferenciais Exclusivos *              │
+│  Memorial Descritivo                    │
+│  Condições de Pagamento                 │
+│                                         │
+│  🔓 [Desbloquear área Dev] ← Botão      │
+│                                         │
+│  ✅ Campo Sofia VISÍVEL após senha      │
 └─────────────────────────────────────────┘
 ```
 
-## Detalhes Técnicos
+## Arquivos a Modificar
 
-### Ordem dos Campos Atualizada
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/wizard/Step3Description.tsx` | Adicionar lógica de verificação de senha e renderização condicional |
 
-Para melhor UX, o CEP será movido para ser o **primeiro campo de endereço**:
+## Implementação Detalhada
 
-```text
-Antes: Rua → Número → Complemento → Bairro → CEP → Cidade → Estado
-Depois: CEP → Rua → Número → Complemento → Bairro → Cidade → Estado
-```
-
-### Armazenamento no Banco
-
-O CEP será armazenado **com hífen** (formato 00000-000) no campo `text` existente.
-
-### Código da Busca
+### 1. Adicionar Estado e Constante de Senha
 
 ```typescript
-const fetchAddressByCep = async (cep: string) => {
-  const cleanCep = cep.replace(/\D/g, '');
-  if (cleanCep.length !== 8) return;
-  
-  setIsLoadingCep(true);
-  setCepError(null);
-  
-  try {
-    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-    const data = await response.json();
-    
-    if (data.erro) {
-      setCepError('CEP não encontrado');
-      return;
-    }
-    
-    // Preenche os campos automaticamente
-    form.setValue('endereco', data.logradouro || '');
-    form.setValue('bairro', data.bairro || '');
-    form.setValue('cidade', data.localidade || '');
-    form.setValue('estado', data.uf || '');
-  } catch {
-    setCepError('Erro ao buscar CEP');
-  } finally {
-    setIsLoadingCep(false);
+// Senha do desenvolvedor (pode ser movida para .env futuramente)
+const DEVELOPER_PASSWORD = "sofia2024dev";
+
+// Estados
+const [isDevUnlocked, setIsDevUnlocked] = useState(false);
+const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+const [passwordInput, setPasswordInput] = useState('');
+const [passwordError, setPasswordError] = useState('');
+```
+
+### 2. Função de Verificação
+
+```typescript
+const handleUnlockDev = () => {
+  if (passwordInput === DEVELOPER_PASSWORD) {
+    setIsDevUnlocked(true);
+    setShowPasswordDialog(false);
+    setPasswordError('');
+    // Persiste na sessão
+    sessionStorage.setItem('dev_unlocked', 'true');
+  } else {
+    setPasswordError('Senha incorreta');
   }
 };
 ```
 
-## Arquivo a Modificar
+### 3. Verificação na Montagem
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/wizard/Step1BasicInfo.tsx` | Adicionar formatação, validação e busca de CEP |
+```typescript
+useEffect(() => {
+  // Verificar se já foi desbloqueado na sessão
+  const unlocked = sessionStorage.getItem('dev_unlocked');
+  if (unlocked === 'true') {
+    setIsDevUnlocked(true);
+  }
+}, []);
+```
+
+### 4. UI Condicional
+
+```tsx
+{/* Seção Desenvolvedor - Apenas se autenticado */}
+{isDevUnlocked ? (
+  <Card className="border-primary/20 bg-primary/5">
+    <CardContent className="pt-6">
+      {/* Campo contextoAdicionalIA existente */}
+    </CardContent>
+  </Card>
+) : (
+  <Card className="border-dashed border-muted">
+    <CardContent className="pt-6 text-center">
+      <Lock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+      <p className="text-sm text-muted-foreground mb-3">
+        Área restrita ao desenvolvedor
+      </p>
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => setShowPasswordDialog(true)}
+      >
+        <Key className="h-4 w-4 mr-2" />
+        Desbloquear
+      </Button>
+    </CardContent>
+  </Card>
+)}
+```
+
+### 5. Dialog de Senha
+
+```tsx
+<Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+  <DialogContent className="sm:max-w-[400px]">
+    <DialogHeader>
+      <DialogTitle>Acesso Desenvolvedor</DialogTitle>
+      <DialogDescription>
+        Digite a senha para acessar o campo de contexto da IA
+      </DialogDescription>
+    </DialogHeader>
+    <div className="space-y-4">
+      <Input
+        type="password"
+        placeholder="Senha do desenvolvedor"
+        value={passwordInput}
+        onChange={(e) => setPasswordInput(e.target.value)}
+      />
+      {passwordError && (
+        <p className="text-sm text-destructive">{passwordError}</p>
+      )}
+    </div>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+        Cancelar
+      </Button>
+      <Button onClick={handleUnlockDev}>
+        Desbloquear
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+## Correção Adicional: Salvamento no NovoImovel.tsx
+
+Como identificado anteriormente, também é necessário adicionar os campos `condicoes_pagamento` e `contexto_adicional_ia` ao objeto de inserção:
+
+**Arquivo**: `src/pages/dashboard/construtora/NovoImovel.tsx`
+
+```typescript
+// Linha ~160, adicionar ao imovelData:
+condicoes_pagamento: formData.condicoesPagamento || null,
+contexto_adicional_ia: formData.contextoAdicionalIA || null,
+```
+
+## Segurança
+
+| Aspecto | Implementação |
+|---------|---------------|
+| Senha hardcoded | Armazenada no código, pode ser movida para variável de ambiente |
+| Persistência | `sessionStorage` - válido apenas na aba atual |
+| Visibilidade | Campo oculto por padrão, mesmo dados existentes não aparecem |
+| Salvamento | Dados são salvos independentemente da visualização |
 
 ## Resultado Esperado
 
-- Campo CEP com máscara automática 00000-000
-- Busca automática de endereço ao digitar CEP completo
-- Preenchimento automático de Rua, Bairro, Cidade e Estado
-- Validação visual com feedback de sucesso ou erro
-- Dados armazenados corretamente no banco
+1. Usuários regulares não verão o campo "Contexto para Sofia"
+2. Ao clicar em "Desbloquear", aparece dialog pedindo senha
+3. Com senha correta, campo fica visível para edição
+4. Estado persiste durante a sessão do navegador
+5. Dados são salvos corretamente no banco de dados
+
+## Componentes Utilizados
+
+- `Dialog` (Radix UI) - Para o modal de senha
+- `Lock`, `Key` (Lucide) - Ícones visuais
+- `sessionStorage` - Persistência temporária
