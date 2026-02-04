@@ -1434,6 +1434,101 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          agendamento_id: string | null
+          construtora_id: string | null
+          conteudo: string | null
+          created_at: string
+          entregue_em: string | null
+          enviado_em: string | null
+          erro: string | null
+          id: string
+          imobiliaria_id: string | null
+          lead_id: string | null
+          lido_em: string | null
+          modo_envio: string
+          nome_destino: string | null
+          status: string
+          telefone_destino: string
+          template_name: string | null
+          tipo_mensagem: string
+          updated_at: string
+          wamid: string | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          construtora_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          lead_id?: string | null
+          lido_em?: string | null
+          modo_envio?: string
+          nome_destino?: string | null
+          status?: string
+          telefone_destino: string
+          template_name?: string | null
+          tipo_mensagem?: string
+          updated_at?: string
+          wamid?: string | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          construtora_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          lead_id?: string | null
+          lido_em?: string | null
+          modo_envio?: string
+          nome_destino?: string | null
+          status?: string
+          telefone_destino?: string
+          template_name?: string | null
+          tipo_mensagem?: string
+          updated_at?: string
+          wamid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_visitas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       feedbacks_visitas_publico: {
