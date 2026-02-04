@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.send-visit-reminder]
 verify_jwt = false
+
+[functions.generate-property-copy]
+verify_jwt = false
