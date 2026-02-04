@@ -60,6 +60,19 @@ export default function EditarImovel() {
       const enderecoParts = imovel.endereco?.split(', ') || ['', ''];
       const numeroPart = enderecoParts[1]?.split(' - ') || ['', ''];
       
+      // Robust parsing for diferenciais (JSONB can come as array or string)
+      let diferenciaisArray: string[] = [];
+      if (Array.isArray(imovel.diferenciais)) {
+        diferenciaisArray = imovel.diferenciais as string[];
+      } else if (typeof imovel.diferenciais === 'string') {
+        try {
+          const parsed = JSON.parse(imovel.diferenciais);
+          diferenciaisArray = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          diferenciaisArray = [];
+        }
+      }
+      
       const mapped: Partial<Step1Data & Step2Data & Step3Data & Step4Data> = {
         titulo: imovel.titulo,
         endereco: enderecoParts[0] || '',
@@ -77,8 +90,9 @@ export default function EditarImovel() {
         banheiros: imovel.banheiros || undefined,
         vagas: imovel.vagas || undefined,
         descricao: imovel.descricao || '',
-        diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais as string[] : [],
+        diferenciais: diferenciaisArray,
         memorial: imovel.memorial_descritivo || '',
+        condicoesPagamento: imovel.condicoes_pagamento || '',
         contextoAdicionalIA: imovel.contexto_adicional_ia || '',
         imagens: Array.isArray(imovel.imagens) 
           ? (imovel.imagens as { url?: string; alt?: string; isPrimary?: boolean }[])
@@ -115,6 +129,7 @@ export default function EditarImovel() {
         descricao: data.descricao,
         diferenciais: JSON.stringify(data.diferenciais || []),
         memorial_descritivo: data.memorial || null,
+        condicoes_pagamento: data.condicoesPagamento || null,
         contexto_adicional_ia: data.contextoAdicionalIA || null,
         imagens: JSON.stringify(data.imagens || []),
         videos: JSON.stringify(data.videos || []),
