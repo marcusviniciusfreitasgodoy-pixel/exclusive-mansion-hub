@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Ruler, BedDouble, Bath, Car, Check, FileText, BookOpen, TrendingUp, DollarSign, LayoutGrid } from 'lucide-react';
 import { TemplateSelector } from '@/components/templates/TemplateSelector';
+import { LaunchChecklist } from '@/components/wizard/LaunchChecklist';
 import { cn } from '@/lib/utils';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 import type { MateriaisPromocionais } from '@/types/materiais-promocionais';
@@ -265,6 +266,12 @@ export function Step5Review({
           )}
         </CardContent>
       </Card>
+
+      {/* Launch Checklist */}
+      <LaunchChecklist 
+        data={data} 
+        onTemplateSuggestion={onTemplateChange}
+      />
 
       {/* Template Selector */}
       {onTemplateChange && onCustomizationChange && (
