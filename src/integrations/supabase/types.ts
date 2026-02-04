@@ -187,6 +187,44 @@ export type Database = {
           },
         ]
       }
+      bloqueios_agenda: {
+        Row: {
+          created_at: string | null
+          data_fim: string
+          data_inicio: string
+          id: string
+          imobiliaria_id: string
+          motivo: string | null
+          recorrente: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim: string
+          data_inicio: string
+          id?: string
+          imobiliaria_id: string
+          motivo?: string | null
+          recorrente?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          imobiliaria_id?: string
+          motivo?: string | null
+          recorrente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bloqueios_agenda_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatbot_knowledge_base: {
         Row: {
           ativo: boolean | null
@@ -427,6 +465,50 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disponibilidade_corretor: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          dia_semana: number
+          duracao_slot_minutos: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          imobiliaria_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dia_semana: number
+          duracao_slot_minutos?: number
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          imobiliaria_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dia_semana?: number
+          duracao_slot_minutos?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          imobiliaria_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disponibilidade_corretor_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
         ]
