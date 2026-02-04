@@ -1,66 +1,116 @@
 
-
-# Plano: Remover Descrição Duplicada no Step 5
+# Plano: Exibir Imagem Principal no Dashboard "Meus Imóveis"
 
 ## Problema Identificado
 
-Atualmente a descrição aparece em **dois locais** no Step 5 (Revisão):
+O dashboard "Meus Imóveis" sempre exibe a **primeira imagem do array** (`imagens[0]`), ignorando o campo `isPrimary` que indica qual imagem foi escolhida como principal pelo usuário.
 
-| Local | Comportamento | Problema |
-|-------|---------------|----------|
-| Preview Card (topo) | Truncada em 3 linhas | Exibe descrição "antiga" sem contexto |
-| Resumo das Informações | Expandível com "Mostrar mais" | Exibe descrição completa ✓ |
+### Evidência no Banco de Dados
 
-Isso causa confusão pois o usuário vê duas versões da mesma informação.
+```json
+// Imóvel "Linda Cobertura Lucio Costa"
+{
+  "imagens": [
+    {"url": "...temp/1770145127221-0.webp", "alt": "fachada 2", "isPrimary": false},
+    {"url": "...temp/1770145127221-1.webp", "alt": "FAchada", "isPrimary": false},
+    {"url": "...temp/1770145127221-2.webp", "alt": "Cob lucio Costa", "isPrimary": false},
+    {"url": "...temp/1770145127221-3.webp", "alt": "Ocean Front -54", "isPrimary": true}, // ← ESTA deveria aparecer
+    // ... mais imagens
+  ]
+}
+```
+
+## Problemas no Código
+
+| Local | Problema |
+|-------|----------|
+| Parsing (linha 67-69) | `isPrimary` é ignorado no mapeamento |
+| Renderização (linha 337) | Usa sempre `imagens[0]` |
 
 ## Solução
 
-Remover a descrição do Preview Card e manter apenas a seção de descrição expandível no "Resumo das Informações".
+### 1. Atualizar o Parsing para Incluir `isPrimary`
 
-## Alteração
+```typescript
+// ANTES (ignora isPrimary):
+imagens: imagensArray.map((img: any) => 
+  typeof img === 'string' ? { url: img } : { url: img?.url || '', alt: img?.alt }
+),
 
-### Arquivo: `src/components/wizard/Step5Review.tsx`
-
-**Remover linhas 116-120:**
-
-```tsx
-// REMOVER ESTE BLOCO:
-{data.descricao && (
-  <p className="text-muted-foreground line-clamp-3 mb-4">
-    {data.descricao}
-  </p>
-)}
+// DEPOIS (preserva isPrimary):
+imagens: imagensArray.map((img: any) => 
+  typeof img === 'string' 
+    ? { url: img } 
+    : { url: img?.url || '', alt: img?.alt, isPrimary: img?.isPrimary }
+),
 ```
 
-## Resultado Visual
+### 2. Criar Função Helper para Encontrar Imagem Principal
+
+```typescript
+const getPrimaryImage = (imagens: { url: string; alt?: string; isPrimary?: boolean }[]) => {
+  // Busca a imagem marcada como principal
+  const primary = imagens.find(img => img.isPrimary);
+  // Fallback para a primeira imagem se nenhuma for marcada
+  return primary || imagens[0];
+};
+```
+
+### 3. Usar a Imagem Principal na Renderização
+
+```typescript
+// ANTES:
+{imovel.imagens?.[0]?.url ? (
+  <img src={imovel.imagens[0].url} alt={imovel.titulo} ... />
+
+// DEPOIS:
+{(() => {
+  const primaryImg = imovel.imagens?.find(img => img.isPrimary) || imovel.imagens?.[0];
+  return primaryImg?.url ? (
+    <img src={primaryImg.url} alt={primaryImg.alt || imovel.titulo} ... />
+  ) : (
+    <div className="flex h-full items-center justify-center text-muted-foreground">
+      <Building2 className="h-12 w-12" />
+    </div>
+  );
+})()}
+```
+
+### 4. Atualizar o Type (Opcional mas Recomendado)
+
+```typescript
+// Em src/types/database.ts, linha 73:
+imagens: { url: string; alt?: string; isPrimary?: boolean }[];
+```
+
+## Arquivos a Modificar
+
+| Arquivo | Alterações |
+|---------|------------|
+| `src/pages/dashboard/construtora/index.tsx` | 1. Incluir `isPrimary` no parsing das imagens (linha 67-69)<br>2. Usar imagem principal na renderização (linhas 337-346) |
+| `src/types/database.ts` | Adicionar `isPrimary?: boolean` ao tipo de imagens (linha 73) |
+
+## Resultado Esperado
+
+| Antes | Depois |
+|-------|--------|
+| Sempre mostra primeira imagem do array | Mostra imagem marcada com ⭐ (isPrimary) |
+| "Ocean Front" fica escondido | "Ocean Front" aparece como capa |
+
+## Fluxo Visual
 
 ```text
-┌─────────────────────────────────────────────┐
-│ [PREVIEW CARD - IMAGEM COM OVERLAY]         │
-│                                             │
-│ R$ 12.000.000                               │
-│ 📏 980m² • 🛏️ 5 suítes • 🚿 7 banheiros     │
-│                                             │  ← Descrição REMOVIDA daqui
-│ Diferenciais: [badges...]                   │
-└─────────────────────────────────────────────┘
+Banco de Dados:
+┌────────────────────────────────────────────┐
+│ imagens[0]: "fachada 2"     isPrimary=false│
+│ imagens[1]: "FAchada"       isPrimary=false│
+│ imagens[2]: "Cob lucio"     isPrimary=false│
+│ imagens[3]: "Ocean Front"   isPrimary=true │ ← PRINCIPAL
+└────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────┐
-│ Resumo das Informações                      │
-│ Área Total: 1250m²  │  Área Privativa: 980m²│
-│ Condomínio: R$ 5000 │  IPTU: R$ 5000        │
-│ ...                                         │
-├─────────────────────────────────────────────┤
-│ 📝 Descrição                                │  ← Descrição ÚNICA aqui
-│ Porteira Fechada                            │
-│ Exclusividade e Sofisticação em Cada Detalhe│
-│ Apresentamos esta exclusiva cobertura...    │
-│ [Mostrar mais ▼]                            │
-└─────────────────────────────────────────────┘
+Dashboard Antes:              Dashboard Depois:
+┌──────────────────┐          ┌──────────────────┐
+│  [fachada 2]     │    →→→   │  [Ocean Front]   │
+│                  │          │        ⭐        │
+└──────────────────┘          └──────────────────┘
 ```
-
-## Arquivo a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/wizard/Step5Review.tsx` | Remover bloco de descrição do Preview Card (linhas 116-120) |
-
