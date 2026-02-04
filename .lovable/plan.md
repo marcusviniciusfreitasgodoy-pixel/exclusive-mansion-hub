@@ -1,120 +1,66 @@
 
 
-# Plano: Corrigir Exibição da Descrição no Step 5 (Revisão)
+# Plano: Remover Descrição Duplicada no Step 5
 
 ## Problema Identificado
 
-No Step 5 (Revisão), a descrição editada:
-1. **Aparece apenas no card de preview** com `line-clamp-3` (truncada em 3 linhas)
-2. **NÃO aparece no card de "Resumo das Informações"** - esse card lista área, condomínio, IPTU, imagens, vídeos, documentos, mas **não inclui a descrição**
+Atualmente a descrição aparece em **dois locais** no Step 5 (Revisão):
 
-Isso faz parecer que a descrição não foi atualizada.
+| Local | Comportamento | Problema |
+|-------|---------------|----------|
+| Preview Card (topo) | Truncada em 3 linhas | Exibe descrição "antiga" sem contexto |
+| Resumo das Informações | Expandível com "Mostrar mais" | Exibe descrição completa ✓ |
 
-## Solução Proposta
+Isso causa confusão pois o usuário vê duas versões da mesma informação.
 
-Adicionar a descrição completa ao card de "Resumo das Informações" com possibilidade de expansão, e melhorar a visualização no card de preview.
+## Solução
 
-## Alterações Necessárias
+Remover a descrição do Preview Card e manter apenas a seção de descrição expandível no "Resumo das Informações".
+
+## Alteração
 
 ### Arquivo: `src/components/wizard/Step5Review.tsx`
 
-| Seção | Alteração |
-|-------|-----------|
-| Preview Card | Remover `line-clamp-3` ou adicionar botão "ver mais" |
-| Resumo Card | Adicionar seção dedicada para "Descrição" com texto completo |
+**Remover linhas 116-120:**
 
-### Implementação Detalhada
+```tsx
+// REMOVER ESTE BLOCO:
+{data.descricao && (
+  <p className="text-muted-foreground line-clamp-3 mb-4">
+    {data.descricao}
+  </p>
+)}
+```
+
+## Resultado Visual
 
 ```text
 ┌─────────────────────────────────────────────┐
-│           RESUMO DAS INFORMAÇÕES            │
-├─────────────────────────────────────────────┤
-│  Área Total: 450m²     │  Área Priv: 380m²  │
-│  Condomínio: R$ 2.500  │  IPTU: R$ 800      │
-│  Imagens: 12 fotos     │  Vídeos: 2         │
-│  Documentos: 3         │  Tour 360°: ✓      │
-├─────────────────────────────────────────────┤
-│  📝 DESCRIÇÃO                               │  ← NOVA SEÇÃO
-│  ─────────────────────────────────────────  │
-│  Linda cobertura duplex com vista frontal   │
-│  para o mar, localizada na Avenida Lúcio    │
-│  Costa, Barra da Tijuca...                  │
+│ [PREVIEW CARD - IMAGEM COM OVERLAY]         │
 │                                             │
-│  [Mostrar mais ▼]  (se muito longo)         │
+│ R$ 12.000.000                               │
+│ 📏 980m² • 🛏️ 5 suítes • 🚿 7 banheiros     │
+│                                             │  ← Descrição REMOVIDA daqui
+│ Diferenciais: [badges...]                   │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ Resumo das Informações                      │
+│ Área Total: 1250m²  │  Área Privativa: 980m²│
+│ Condomínio: R$ 5000 │  IPTU: R$ 5000        │
+│ ...                                         │
+├─────────────────────────────────────────────┤
+│ 📝 Descrição                                │  ← Descrição ÚNICA aqui
+│ Porteira Fechada                            │
+│ Exclusividade e Sofisticação em Cada Detalhe│
+│ Apresentamos esta exclusiva cobertura...    │
+│ [Mostrar mais ▼]                            │
 └─────────────────────────────────────────────┘
 ```
 
-### Código a Adicionar
+## Arquivo a Modificar
 
-No card de Resumo (após a seção de Documentos):
-
-```tsx
-{/* Description Section */}
-{data.descricao && (
-  <div className="mt-4 pt-4 border-t">
-    <Label className="text-muted-foreground flex items-center gap-2 mb-2">
-      <FileText className="h-4 w-4" />
-      Descrição
-    </Label>
-    <div className="prose prose-sm max-w-none">
-      {data.descricao.split('\n').map((paragraph, index) => (
-        <p key={index} className="text-sm text-muted-foreground mb-2">
-          {paragraph}
-        </p>
-      ))}
-    </div>
-  </div>
-)}
-```
-
-### Opção Avançada: Expansão/Colapso
-
-Se a descrição for muito longa, adicionar estado para expandir/colapsar:
-
-```tsx
-const [showFullDescription, setShowFullDescription] = useState(false);
-
-// Na renderização:
-{data.descricao && (
-  <div className="mt-4 pt-4 border-t">
-    <Label className="text-muted-foreground flex items-center gap-2 mb-2">
-      <FileText className="h-4 w-4" />
-      Descrição
-    </Label>
-    <div className={cn(
-      "prose prose-sm max-w-none transition-all",
-      !showFullDescription && data.descricao.length > 300 && "line-clamp-4"
-    )}>
-      {data.descricao.split('\n').map((paragraph, index) => (
-        <p key={index} className="text-sm text-muted-foreground mb-2">
-          {paragraph}
-        </p>
-      ))}
-    </div>
-    {data.descricao.length > 300 && (
-      <Button 
-        variant="link" 
-        className="p-0 h-auto text-xs"
-        onClick={() => setShowFullDescription(!showFullDescription)}
-      >
-        {showFullDescription ? 'Mostrar menos ▲' : 'Mostrar mais ▼'}
-      </Button>
-    )}
-  </div>
-)}
-```
-
-## Resultado Esperado
-
-| Antes | Depois |
-|-------|--------|
-| Descrição truncada em 3 linhas no preview | Descrição mostrada por completo no resumo |
-| Não há seção de descrição no resumo | Nova seção "Descrição" com texto completo |
-| Usuário não vê a descrição atualizada | Descrição claramente visível e expansível |
-
-## Arquivos a Modificar
-
-| Arquivo | Alterações |
-|---------|------------|
-| `src/components/wizard/Step5Review.tsx` | Adicionar seção de Descrição no card de Resumo; Adicionar estado para expansão |
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/wizard/Step5Review.tsx` | Remover bloco de descrição do Preview Card (linhas 116-120) |
 
