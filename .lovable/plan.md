@@ -1,70 +1,86 @@
 
-# Plano: Criar Página de Leads para Imobiliária
+# Plano: Corrigir Edição de Imóvel da Construtora
 
-## Problema Identificado
-A rota `/dashboard/imobiliaria/leads` aparece no menu lateral "Meus Leads", porém:
-- A página correspondente não existe
-- A rota não está configurada no sistema de rotas
+## Diagnóstico
+
+Após análise detalhada, verifiquei que o problema de campos vazios na edição **afeta apenas o fluxo da construtora**, não das imobiliárias.
+
+### Por que apenas a Construtora?
+| Fluxo | Página | Problema? | Motivo |
+|-------|--------|-----------|--------|
+| Construtora | `EditarImovel.tsx` | **Sim** | Usa wizard Steps com `useForm` + `defaultValues` fixos na inicialização |
+| Imobiliária | `Configuracoes.tsx` | Não | Usa `form.reset()` no `useEffect` (abordagem correta) |
+| Imobiliária | `EditarFormulario.tsx` | Não | Usa `useState` + `setCampos` (atualiza dinamicamente) |
+
+### Causa Raiz no EditarImovel.tsx
+Os componentes Step1, Step2, Step3, Step4 usam `useForm` do React Hook Form com `defaultValues` que são definidos **apenas na montagem do componente**. Quando as props `defaultValues` mudam depois do carregamento assíncrono, os formulários já estão inicializados com valores vazios.
+
+```text
+Fluxo Atual (Problemático):
+1. EditarImovel renderiza -> formData = {}
+2. Steps são montados -> useForm inicializa com {}
+3. Query carrega imóvel do banco
+4. useEffect popula formData com dados do imóvel
+5. Mas os forms já estão inicializados com valores vazios
+```
 
 ## Solução
 
-### 1. Criar a Página de Leads da Imobiliária
-Criar o arquivo `src/pages/dashboard/imobiliaria/Leads.tsx` com funcionalidades:
+Aguardar o carregamento completo dos dados **antes** de renderizar os componentes de Step. Assim, quando os formulários forem inicializados, receberão os valores corretos.
 
-- **Listagem de Leads**: Exibir todos os leads vinculados à imobiliária logada
-- **Filtros**: Por status, por imóvel, por período (7/30/90 dias)
-- **Busca**: Por nome, e-mail ou telefone
-- **Cards de Resumo**:
-  - Total de leads
-  - Leads novos (últimas 24h)
-  - Taxa de conversão
-- **Tabela de Leads**: Com colunas de data, nome, e-mail, telefone, imóvel, status
-- **Ações Rápidas**:
-  - Atualizar status do lead
-  - Copiar e-mail
-  - Abrir WhatsApp
-  - Ver detalhes
-- **Exportar CSV**: Download dos leads filtrados
-- **Modal de Detalhes**: Visualização completa das informações do lead
+### Alterações no EditarImovel.tsx
 
-### 2. Configurar a Rota no App.tsx
-Adicionar no arquivo `src/App.tsx`:
-- Import lazy do componente
-- Rota protegida para perfil `imobiliaria`
-
----
-
-## Detalhes Técnicos
-
-### Estrutura de Dados (já existente)
-A tabela `leads` possui:
-- `imobiliaria_id` - filtragem por imobiliária
-- `imovel_id` - referência ao imóvel
-- `access_id` - referência ao link white-label
-- `status` - enum com valores: novo, contatado, qualificado, visita_agendada, perdido
-- `origem` - origem do lead
-
-### Queries Supabase
 ```text
-1. Buscar leads da imobiliária:
-   SELECT * FROM leads WHERE imobiliaria_id = {id}
-   
-2. Contar leads novos (24h):
-   SELECT COUNT(*) FROM leads 
-   WHERE imobiliaria_id = {id} AND status = 'novo' 
-   AND created_at >= now() - interval '1 day'
+1. Adicionar estado isDataLoaded inicializado como false
+2. No useEffect que popula formData, definir isDataLoaded = true ao final
+3. Exibir loading spinner enquanto isLoading || !isDataLoaded
+4. Renderizar Steps apenas quando dados estiverem prontos
 ```
 
-### Arquivos a Criar/Modificar
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/dashboard/imobiliaria/Leads.tsx` | Criar |
-| `src/App.tsx` | Adicionar rota e import |
+### Código a Implementar
 
-### Componentes Reutilizados
-- `DashboardLayout` - Layout padrão do dashboard
-- Componentes UI: Card, Table, Badge, Select, Input, Dialog, DropdownMenu
-- Hooks: `useAuth`, `useToast`, `useQuery`, `useMutation`
+```typescript
+// Novo estado
+const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-### Diferenças em Relação ao Leads da Construtora
-A página da imobiliária filtra diretamente por `imobiliaria_id`, enquanto a da construtora busca por todos os imóveis vinculados à construtora. A estrutura visual será similar para manter consistência.
+// Atualizar useEffect existente (linhas 43-74)
+useEffect(() => {
+  if (imovel) {
+    // ... mapeamento existente mantido ...
+    setFormData(mapped);
+    setIsDataLoaded(true);  // <- Adicionar
+  }
+}, [imovel]);
+
+// Condição de loading atualizada
+if (isLoading || !isDataLoaded) {
+  return (
+    <DashboardLayout title="Carregando...">
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    </DashboardLayout>
+  );
+}
+```
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/dashboard/construtora/EditarImovel.tsx` | Adicionar controle `isDataLoaded` para aguardar carregamento |
+
+## Benefícios
+
+- Solução simples e localizada (não altera os componentes Step)
+- Garante que os formulários sempre iniciem com dados corretos do banco
+- Mantém compatibilidade com o fluxo de criação de novo imóvel
+- Melhora a experiência do usuário com feedback visual de carregamento
+
+## Validação
+
+Após implementação, testar:
+1. Acessar a edição de um imóvel existente
+2. Verificar se todos os campos aparecem preenchidos corretamente
+3. Confirmar que todas as etapas (1-5) mostram os dados salvos
+4. Testar que imagens, vídeos e documentos aparecem na etapa de mídias
