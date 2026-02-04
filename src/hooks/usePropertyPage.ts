@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { PropertyPageData, PropertyData, PropertyBranding, Corretor } from "@/types/property-page";
 import type { Integracao } from "@/types/integrations";
+import { parseMateriaisPromocionais } from "@/types/materiais-promocionais";
 
 interface UsePropertyPageResult {
   data: PropertyPageData | null;
@@ -110,6 +111,7 @@ export function usePropertyPage(): UsePropertyPageResult {
               corretores,
               template_escolhido,
               customizacao_template,
+              materiais_promocionais,
               construtoras (
                 nome_empresa,
                 logo_url
@@ -251,6 +253,8 @@ export function usePropertyPage(): UsePropertyPageResult {
           customizacaoTemplate: typeof imovel.customizacao_template === 'object' 
             ? imovel.customizacao_template || {} 
             : {},
+          // Promotional materials
+          materiaisPromocionais: parseMateriaisPromocionais(imovel.materiais_promocionais),
         };
 
         const branding: PropertyBranding = {

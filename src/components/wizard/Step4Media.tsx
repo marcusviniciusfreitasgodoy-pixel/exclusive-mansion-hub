@@ -31,6 +31,32 @@ export const step4Schema = z.object({
     tipo: z.string(),
     tamanho_bytes: z.number().optional(),
   })).optional(),
+  materiais_promocionais: z.object({
+    bookDigital: z.object({
+      url: z.string(),
+      nome: z.string(),
+      tipo: z.enum(['pdf', 'image', 'video']),
+      tamanho_bytes: z.number().optional(),
+    }).optional(),
+    estudoRentabilidade: z.object({
+      url: z.string(),
+      nome: z.string(),
+      tipo: z.enum(['pdf', 'image', 'video']),
+      tamanho_bytes: z.number().optional(),
+    }).optional(),
+    tabelaVendas: z.object({
+      url: z.string(),
+      nome: z.string(),
+      tipo: z.enum(['pdf', 'image', 'video']),
+      tamanho_bytes: z.number().optional(),
+    }).optional(),
+    plantaUnidade: z.object({
+      url: z.string(),
+      nome: z.string(),
+      tipo: z.enum(['pdf', 'image', 'video']),
+      tamanho_bytes: z.number().optional(),
+    }).optional(),
+  }).optional(),
 });
 
 export type Step4Data = z.infer<typeof step4Schema>;
