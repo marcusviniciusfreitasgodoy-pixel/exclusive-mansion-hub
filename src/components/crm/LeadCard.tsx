@@ -93,18 +93,16 @@ export function LeadCard({ lead, onView, onQuickAction }: LeadCardProps) {
         
         {/* Quick Actions - appear on hover */}
         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickAction?.(lead, 'call');
-            }}
-            title="Ligar"
-          >
-            <Phone className="h-3 w-3" />
-          </Button>
+          {lead.telefone && (
+            <a
+              href={`tel:${lead.telefone.replace(/\D/g, '')}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center justify-center h-6 w-6 rounded-md hover:bg-accent hover:text-accent-foreground"
+              title="Ligar agora"
+            >
+              <Phone className="h-3 w-3" />
+            </a>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -117,18 +115,18 @@ export function LeadCard({ lead, onView, onQuickAction }: LeadCardProps) {
           >
             <Mail className="h-3 w-3" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickAction?.(lead, 'whatsapp');
-            }}
-            title="WhatsApp"
-          >
-            <MessageCircle className="h-3 w-3" />
-          </Button>
+          {lead.telefone && (
+            <a
+              href={`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center justify-center h-6 w-6 rounded-md hover:bg-accent hover:text-accent-foreground"
+              title="WhatsApp"
+            >
+              <MessageCircle className="h-3 w-3" />
+            </a>
+          )}
           <Button
             variant="ghost"
             size="icon"
