@@ -1,207 +1,120 @@
 
 
-# Plano: Corrigir IA para NÃO Inventar Informações
+# Plano: Corrigir Exibição da Descrição no Step 5 (Revisão)
 
 ## Problema Identificado
 
-A IA está gerando informações incorretas (ex: descrevendo uma cobertura **duplex** como **linear**) porque:
+No Step 5 (Revisão), a descrição editada:
+1. **Aparece apenas no card de preview** com `line-clamp-3` (truncada em 3 linhas)
+2. **NÃO aparece no card de "Resumo das Informações"** - esse card lista área, condomínio, IPTU, imagens, vídeos, documentos, mas **não inclui a descrição**
 
-1. O prompt não recebe informações cruciais como **tipo do imóvel**
-2. Não há instruções explícitas proibindo a IA de inventar dados
-3. O prompt incentiva "criatividade" sem restringir à fidelidade dos dados
+Isso faz parecer que a descrição não foi atualizada.
 
-## Solução em 3 Frentes
+## Solução Proposta
 
-### 1. Modificar o System Prompt (Edge Function)
+Adicionar a descrição completa ao card de "Resumo das Informações" com possibilidade de expansão, e melhorar a visualização no card de preview.
 
-Adicionar restrições explícitas e enfáticas:
+## Alterações Necessárias
 
-```text
-REGRAS ABSOLUTAS (NUNCA VIOLE):
-1. Use APENAS as informações fornecidas no contexto do imóvel
-2. NÃO invente características que não foram mencionadas
-3. NÃO altere dados factuais (tipo, metragem, localização, número de quartos)
-4. Se uma informação não foi fornecida, NÃO a mencione
-5. O título do imóvel geralmente indica o tipo (duplex, linear, casa, etc.) - RESPEITE
+### Arquivo: `src/components/wizard/Step5Review.tsx`
 
-EXEMPLOS DO QUE VOCÊ NÃO DEVE FAZER:
-- Se o título diz "Cobertura Duplex", NÃO descreva como "linear" ou "térreo"
-- Se tem 4 suítes, NÃO mencione "5 amplos dormitórios"
-- Se não foi informada piscina, NÃO mencione piscina
-```
+| Seção | Alteração |
+|-------|-----------|
+| Preview Card | Remover `line-clamp-3` ou adicionar botão "ver mais" |
+| Resumo Card | Adicionar seção dedicada para "Descrição" com texto completo |
 
-### 2. Enviar Mais Contexto para a IA
-
-Atualizar o `CopywriterAssistant` e a Edge Function para incluir:
-
-| Dado Atual | Novo Dado a Incluir |
-|------------|---------------------|
-| titulo | **property_type** (tipo do imóvel) |
-| bairro | **estilo_arquitetonico** |
-| area_total | **area_privativa** |
-| suites | **banheiros** |
-| valor | **vista** (se disponível) |
-| diferenciais | **headline** (se existir) |
-
-### 3. Reestruturar o User Prompt
-
-Deixar claro que os dados são FATOS, não sugestões:
+### Implementação Detalhada
 
 ```text
-DADOS FACTUAIS DO IMÓVEL (OBRIGATÓRIO RESPEITAR):
-- Tipo: Cobertura Duplex  ← NÃO ALTERE
-- Área Total: 450m²       ← NÃO ALTERE
-- Suítes: 4               ← NÃO ALTERE
-...
-
-DIFERENCIAIS REAIS DO IMÓVEL:
-- Vista frontal para o mar
-- Piscina privativa
-- Elevador privativo
-...
-
-INSTRUÇÕES:
-Crie um texto persuasivo usando EXCLUSIVAMENTE os dados acima.
-NÃO invente características adicionais.
+┌─────────────────────────────────────────────┐
+│           RESUMO DAS INFORMAÇÕES            │
+├─────────────────────────────────────────────┤
+│  Área Total: 450m²     │  Área Priv: 380m²  │
+│  Condomínio: R$ 2.500  │  IPTU: R$ 800      │
+│  Imagens: 12 fotos     │  Vídeos: 2         │
+│  Documentos: 3         │  Tour 360°: ✓      │
+├─────────────────────────────────────────────┤
+│  📝 DESCRIÇÃO                               │  ← NOVA SEÇÃO
+│  ─────────────────────────────────────────  │
+│  Linda cobertura duplex com vista frontal   │
+│  para o mar, localizada na Avenida Lúcio    │
+│  Costa, Barra da Tijuca...                  │
+│                                             │
+│  [Mostrar mais ▼]  (se muito longo)         │
+└─────────────────────────────────────────────┘
 ```
 
-## Arquivos a Modificar
+### Código a Adicionar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `supabase/functions/generate-property-copy/index.ts` | Atualizar SYSTEM_PROMPT com restrições; Expandir dados recebidos |
-| `src/components/wizard/CopywriterAssistant.tsx` | Enviar mais campos do imóvel |
-| `src/pages/dashboard/construtora/NovoImovel.tsx` | Passar mais dados para Step3 |
-| `src/pages/dashboard/construtora/EditarImovel.tsx` | Passar mais dados para Step3 |
+No card de Resumo (após a seção de Documentos):
 
-## Implementação Detalhada
-
-### 1. Novo System Prompt (Edge Function)
-
-```typescript
-const SYSTEM_PROMPT = `Aja como um especialista em marketing imobiliário de alto padrão, com foco exclusivo no mercado do Rio de Janeiro.
-
-**REGRAS CRÍTICAS - VIOLAÇÃO É PROIBIDA:**
-1. Use SOMENTE as informações fornecidas no contexto do imóvel
-2. NUNCA invente ou altere características (tipo, metragem, quartos, localização)
-3. Se o título indica "Duplex", a descrição DEVE mencionar "duplex" - JAMAIS "linear"
-4. Se o título indica "Cobertura", NÃO descreva como "apartamento térreo"
-5. Se uma característica NÃO foi informada, NÃO a mencione no texto
-6. Números são EXATOS: se tem 4 suítes, escreva "4 suítes", não "5 amplos quartos"
-7. Bairros devem ser mencionados EXATAMENTE como informados
-
-**Objetivo:** Criar descrições persuasivas que despertem interesse para visitas.
-
-**Estilo de Escrita:**
-- Evite clichês ("espetacular", "maravilhosa", "incrível", "deslumbrante")
-- Use linguagem sofisticada e exclusiva
-- Foque nos diferenciais REAIS fornecidos
-- Textos envolventes mas FIÉIS aos dados
-
-**Formato de Resposta:**
-Retorne APENAS o texto solicitado, sem marcações, aspas ou explicações.`;
+```tsx
+{/* Description Section */}
+{data.descricao && (
+  <div className="mt-4 pt-4 border-t">
+    <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+      <FileText className="h-4 w-4" />
+      Descrição
+    </Label>
+    <div className="prose prose-sm max-w-none">
+      {data.descricao.split('\n').map((paragraph, index) => (
+        <p key={index} className="text-sm text-muted-foreground mb-2">
+          {paragraph}
+        </p>
+      ))}
+    </div>
+  </div>
+)}
 ```
 
-### 2. Novo User Prompt com Dados Expandidos
+### Opção Avançada: Expansão/Colapso
 
-```typescript
-const userPrompt = `
-═══════════════════════════════════════════════════════════
-DADOS FACTUAIS DO IMÓVEL - NÃO ALTERE NENHUM DESTES DADOS
-═══════════════════════════════════════════════════════════
+Se a descrição for muito longa, adicionar estado para expandir/colapsar:
 
-IDENTIFICAÇÃO:
-- Título EXATO: ${dados_imovel.titulo || 'Não informado'}
-- Tipo do Imóvel: ${dados_imovel.property_type || 'Extrair do título'}
+```tsx
+const [showFullDescription, setShowFullDescription] = useState(false);
 
-LOCALIZAÇÃO:
-- Bairro: ${dados_imovel.bairro || 'Não informado'}
-- Cidade: ${dados_imovel.cidade || 'Rio de Janeiro'}
-
-METRAGENS (números exatos):
-- Área Total: ${dados_imovel.area_total ? `${dados_imovel.area_total}m²` : 'Não informada'}
-- Área Privativa: ${dados_imovel.area_privativa ? `${dados_imovel.area_privativa}m²` : 'Não informada'}
-
-CONFIGURAÇÃO (números exatos):
-- Suítes: ${dados_imovel.suites || 0}
-- Banheiros: ${dados_imovel.banheiros || 0}
-- Vagas: ${dados_imovel.vagas || 0}
-
-VALOR:
-- ${valorFormatado}
-
-DIFERENCIAIS REAIS (use apenas estes):
-${diferenciais}
-
-${dados_imovel.palavras_chave_adicionais ? `PALAVRAS-CHAVE EXTRAS:\n${dados_imovel.palavras_chave_adicionais}` : ''}
-
-═══════════════════════════════════════════════════════════
-INSTRUÇÕES DE GERAÇÃO
-═══════════════════════════════════════════════════════════
-
-${tipoInstrucao}
-
-LEMBRE-SE: Use APENAS os dados acima. NÃO invente informações.
-Se o título diz "Duplex", o texto DEVE dizer "duplex".
-Se o título diz "Linear", o texto DEVE dizer "linear".
-`;
-```
-
-### 3. Expandir PropertyData Interface
-
-```typescript
-interface PropertyData {
-  titulo?: string;
-  propertyType?: string;  // NOVO
-  bairro?: string;
-  cidade?: string;
-  areaTotal?: number;
-  areaPrivativa?: number; // NOVO
-  suites?: number;
-  banheiros?: number;     // NOVO
-  vagas?: number;
-  valor?: number;
-  vista?: string[];       // NOVO (opcional)
-  estiloArquitetonico?: string; // NOVO (opcional)
-}
-```
-
-### 4. Atualizar Passagem de Dados
-
-Em `NovoImovel.tsx` e `EditarImovel.tsx`:
-
-```typescript
-propertyData={{
-  titulo: formData.titulo,
-  propertyType: formData.propertyType,
-  bairro: formData.bairro,
-  cidade: formData.cidade,
-  areaTotal: formData.areaTotal,
-  areaPrivativa: formData.areaPrivativa,
-  suites: formData.suites,
-  banheiros: formData.banheiros,
-  vagas: formData.vagas,
-  valor: formData.valor,
-}}
+// Na renderização:
+{data.descricao && (
+  <div className="mt-4 pt-4 border-t">
+    <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+      <FileText className="h-4 w-4" />
+      Descrição
+    </Label>
+    <div className={cn(
+      "prose prose-sm max-w-none transition-all",
+      !showFullDescription && data.descricao.length > 300 && "line-clamp-4"
+    )}>
+      {data.descricao.split('\n').map((paragraph, index) => (
+        <p key={index} className="text-sm text-muted-foreground mb-2">
+          {paragraph}
+        </p>
+      ))}
+    </div>
+    {data.descricao.length > 300 && (
+      <Button 
+        variant="link" 
+        className="p-0 h-auto text-xs"
+        onClick={() => setShowFullDescription(!showFullDescription)}
+      >
+        {showFullDescription ? 'Mostrar menos ▲' : 'Mostrar mais ▼'}
+      </Button>
+    )}
+  </div>
+)}
 ```
 
 ## Resultado Esperado
 
 | Antes | Depois |
 |-------|--------|
-| "Esta cobertura linear oferece..." | "Esta cobertura duplex oferece..." |
-| IA inventa "5 amplos quartos" | "4 suítes espaçosas" (exatamente como informado) |
-| IA menciona "jardim" não informado | Menciona apenas diferenciais fornecidos |
+| Descrição truncada em 3 linhas no preview | Descrição mostrada por completo no resumo |
+| Não há seção de descrição no resumo | Nova seção "Descrição" com texto completo |
+| Usuário não vê a descrição atualizada | Descrição claramente visível e expansível |
 
-## Fluxo de Verificação
+## Arquivos a Modificar
 
-```text
-1. Usuário cadastra "Cobertura Duplex Frente-Mar"
-2. Adiciona diferenciais: piscina, vista mar, elevador
-3. Clica "Gerar com IA"
-4. IA recebe:
-   - Título: "Cobertura Duplex Frente-Mar" → DEVE usar "duplex"
-   - Diferenciais: piscina, vista mar, elevador → SÓ pode mencionar estes
-5. IA gera texto FIEL aos dados
-```
+| Arquivo | Alterações |
+|---------|------------|
+| `src/components/wizard/Step5Review.tsx` | Adicionar seção de Descrição no card de Resumo; Adicionar estado para expansão |
 
