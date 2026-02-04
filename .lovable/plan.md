@@ -1,102 +1,161 @@
 
-# Plano: Corrigir Campos Vazios na Seção Descrição ao Editar Imóvel
+# Plano: Implementar Campo CEP com Formatação e Busca de Endereço
 
-## Problema Identificado
+## Funcionalidades a Implementar
 
-Na página de edição de imóvel (`EditarImovel.tsx`), alguns campos da seção "Descrição" (Step 3) aparecem vazios:
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| Máscara de entrada | Formatação automática no padrão 00000-000 |
+| Busca de endereço | Integração com API ViaCEP para preencher campos automaticamente |
+| Validação | Verificar se o CEP tem formato válido |
+| Feedback visual | Indicador de carregamento durante a busca |
 
-| Campo no Formulário | Coluna no Banco | Status |
-|---------------------|-----------------|--------|
-| `descricao` | `descricao` | OK |
-| `diferenciais` | `diferenciais` | Possível problema com parsing |
-| `memorial` | `memorial_descritivo` | OK |
-| `condicoesPagamento` | `condicoes_pagamento` | **NÃO MAPEADO** |
-| `contextoAdicionalIA` | `contexto_adicional_ia` | OK |
+## API Utilizada
 
-### Causa Raiz
+A **ViaCEP** é uma API pública brasileira gratuita que não requer autenticação:
+- URL: `https://viacep.com.br/ws/{cep}/json/`
+- Retorna: logradouro, bairro, localidade (cidade), uf (estado)
 
-1. **Campo `condicoesPagamento`**: A coluna `condicoes_pagamento` existe no banco de dados mas **não está sendo carregada** no mapeamento do `useEffect` e também **não está sendo salva** na mutação de update.
+## Alterações no Arquivo
 
-2. **Campo `diferenciais`**: Pode vir como string JSON do banco (JSONB) e o código atual não faz parsing robusto se vier como string em vez de array nativo.
+**Arquivo**: `src/components/wizard/Step1BasicInfo.tsx`
 
-## Solução
+### 1. Adicionar Estados para Controle
 
-### 1. Adicionar Mapeamento do Campo `condicoesPagamento`
-
-**Arquivo**: `src/pages/dashboard/construtora/EditarImovel.tsx`
-
-**No `useEffect` (carregamento dos dados)** - adicionar:
-```typescript
-const mapped = {
-  // ... campos existentes ...
-  condicoesPagamento: imovel.condicoes_pagamento || '',
-};
+```text
+- isLoadingCep: boolean → Indica quando está buscando dados
+- cepError: string | null → Mensagem de erro se CEP inválido
 ```
 
-**No `updateMutation` (salvamento dos dados)** - adicionar:
-```typescript
-const updateData = {
-  // ... campos existentes ...
-  condicoes_pagamento: data.condicoesPagamento || null,
-};
+### 2. Criar Funções Auxiliares
+
+```text
+formatCep(value: string): string
+  - Remove caracteres não numéricos
+  - Adiciona hífen após o 5º dígito
+  - Retorna no formato 00000-000
+
+fetchAddressByCep(cep: string): Promise
+  - Limpa CEP (remove hífen)
+  - Verifica se tem 8 dígitos
+  - Chama API ViaCEP
+  - Preenche campos: endereco, bairro, cidade, estado
 ```
 
-### 2. Adicionar Parsing Robusto para `diferenciais`
+### 3. Atualizar Validação Zod
 
-O campo `diferenciais` é JSONB e pode vir como:
-- Array nativo do Postgres (quando parseado automaticamente)
-- String JSON (quando há dupla serialização)
-
-**Lógica de parsing**:
 ```typescript
-// Parsing robusto para diferenciais
-let diferenciaisArray: string[] = [];
-if (Array.isArray(imovel.diferenciais)) {
-  diferenciaisArray = imovel.diferenciais as string[];
-} else if (typeof imovel.diferenciais === 'string') {
-  try {
-    const parsed = JSON.parse(imovel.diferenciais);
-    diferenciaisArray = Array.isArray(parsed) ? parsed : [];
-  } catch {
-    diferenciaisArray = [];
-  }
-}
+cep: z.string()
+  .optional()
+  .refine(
+    (val) => !val || /^\d{5}-?\d{3}$/.test(val),
+    { message: 'CEP inválido (formato: 00000-000)' }
+  ),
 ```
 
----
+### 4. Modificar Campo CEP no Formulário
+
+```text
+- Adicionar máscara de formatação no onChange
+- Chamar busca de endereço quando CEP tiver 9 caracteres (00000-000)
+- Exibir loading spinner durante a busca
+- Mostrar mensagem de erro se CEP não encontrado
+```
+
+## Fluxo de Uso
+
+```text
+1. Usuário digita CEP: "22630010"
+2. Sistema formata automaticamente: "22630-010"
+3. Ao completar 9 caracteres, sistema busca na API ViaCEP
+4. Se encontrado:
+   - Preenche automaticamente: Rua, Bairro, Cidade, Estado
+   - Usuário pode ajustar se necessário
+5. Se não encontrado:
+   - Mostra mensagem "CEP não encontrado"
+   - Mantém campos editáveis para preenchimento manual
+```
+
+## Exemplo Visual
+
+```text
+┌─────────────────────────────────────────┐
+│  CEP                                    │
+│  ┌─────────────────┐                    │
+│  │ 22630-010   🔄  │  ← Loading spinner │
+│  └─────────────────┘                    │
+│  ✓ Endereço encontrado e preenchido!   │
+│                                         │
+│  Rua/Avenida *                          │
+│  ┌─────────────────────────────────────┐│
+│  │ Avenida Lúcio Costa                 ││  ← Preenchido
+│  └─────────────────────────────────────┘│
+│                                         │
+│  Bairro *           Cidade *            │
+│  ┌──────────────┐  ┌──────────────────┐ │
+│  │ Barra da     │  │ Rio de Janeiro   │ │  ← Preenchido
+│  │ Tijuca       │  │                  │ │
+│  └──────────────┘  └──────────────────┘ │
+└─────────────────────────────────────────┘
+```
 
 ## Detalhes Técnicos
 
-### Arquivo a Modificar
+### Ordem dos Campos Atualizada
+
+Para melhor UX, o CEP será movido para ser o **primeiro campo de endereço**:
+
+```text
+Antes: Rua → Número → Complemento → Bairro → CEP → Cidade → Estado
+Depois: CEP → Rua → Número → Complemento → Bairro → Cidade → Estado
+```
+
+### Armazenamento no Banco
+
+O CEP será armazenado **com hífen** (formato 00000-000) no campo `text` existente.
+
+### Código da Busca
+
+```typescript
+const fetchAddressByCep = async (cep: string) => {
+  const cleanCep = cep.replace(/\D/g, '');
+  if (cleanCep.length !== 8) return;
+  
+  setIsLoadingCep(true);
+  setCepError(null);
+  
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    const data = await response.json();
+    
+    if (data.erro) {
+      setCepError('CEP não encontrado');
+      return;
+    }
+    
+    // Preenche os campos automaticamente
+    form.setValue('endereco', data.logradouro || '');
+    form.setValue('bairro', data.bairro || '');
+    form.setValue('cidade', data.localidade || '');
+    form.setValue('estado', data.uf || '');
+  } catch {
+    setCepError('Erro ao buscar CEP');
+  } finally {
+    setIsLoadingCep(false);
+  }
+};
+```
+
+## Arquivo a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/dashboard/construtora/EditarImovel.tsx` | Adicionar mapeamento de `condicoesPagamento` e parsing robusto para `diferenciais` |
-
-### Localização das Alterações
-
-1. **Linhas 63-91** (useEffect): Adicionar `condicoesPagamento` ao objeto `mapped` e corrigir parsing de `diferenciais`
-2. **Linhas 101-123** (updateMutation): Adicionar `condicoes_pagamento` ao objeto `updateData`
-
-### Código Resumido das Alterações
-
-```text
-// No useEffect (carregamento)
-Antes:
-  diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais as string[] : [],
-
-Depois:
-  diferenciais: parseDiferenciais(imovel.diferenciais),
-  condicoesPagamento: imovel.condicoes_pagamento || '',
-
-// No updateMutation (salvamento)
-Adicionar:
-  condicoes_pagamento: data.condicoesPagamento || null,
-```
+| `src/components/wizard/Step1BasicInfo.tsx` | Adicionar formatação, validação e busca de CEP |
 
 ## Resultado Esperado
 
-Após a implementação:
-- O campo "Condições de Pagamento" será carregado corretamente ao editar
-- O campo "Diferenciais Exclusivos" será parseado corretamente em todos os cenários
-- Todas as alterações nesses campos serão salvas no banco de dados
+- Campo CEP com máscara automática 00000-000
+- Busca automática de endereço ao digitar CEP completo
+- Preenchimento automático de Rua, Bairro, Cidade e Estado
+- Validação visual com feedback de sucesso ou erro
+- Dados armazenados corretamente no banco
