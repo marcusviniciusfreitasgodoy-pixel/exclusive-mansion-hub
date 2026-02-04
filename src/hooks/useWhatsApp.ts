@@ -113,20 +113,37 @@ export function useWhatsApp() {
     const ownerId = construtora?.id || imobiliaria?.id;
     if (!ownerId) return;
 
-    const ownerField = construtora ? 'construtora_id' : 'imobiliaria_id';
+    try {
+      // Use raw insert since types may not be updated yet
+      const insertData: Record<string, unknown> = {
+        telefone_destino: formatPhone(params.telefone),
+        nome_destino: params.nome || null,
+        tipo_mensagem: params.tipo_mensagem || 'manual',
+        conteudo: params.mensagem || null,
+        modo_envio: 'wa_link',
+        status: 'enviado',
+        enviado_em: new Date().toISOString()
+      };
 
-    await supabase.from('whatsapp_messages').insert({
-      [ownerField]: ownerId,
-      lead_id: params.lead_id || null,
-      agendamento_id: params.agendamento_id || null,
-      telefone_destino: formatPhone(params.telefone),
-      nome_destino: params.nome || null,
-      tipo_mensagem: params.tipo_mensagem || 'manual',
-      conteudo: params.mensagem || null,
-      modo_envio: 'wa_link',
-      status: 'enviado',
-      enviado_em: new Date().toISOString()
-    });
+      if (construtora) {
+        insertData.construtora_id = ownerId;
+      } else {
+        insertData.imobiliaria_id = ownerId;
+      }
+
+      if (params.lead_id) {
+        insertData.lead_id = params.lead_id;
+      }
+      if (params.agendamento_id) {
+        insertData.agendamento_id = params.agendamento_id;
+      }
+
+      await supabase
+        .from('whatsapp_messages' as any)
+        .insert(insertData as any);
+    } catch (error) {
+      console.error('Error logging WhatsApp message:', error);
+    }
   };
 
   // Main send function - auto-detects mode
