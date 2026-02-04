@@ -4,10 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Ruler, BedDouble, Bath, Car, Check, FileText } from 'lucide-react';
+import { MapPin, Ruler, BedDouble, Bath, Car, Check, FileText, BookOpen, TrendingUp, DollarSign, LayoutGrid } from 'lucide-react';
 import { TemplateSelector } from '@/components/templates/TemplateSelector';
 import { cn } from '@/lib/utils';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
+import type { MateriaisPromocionais } from '@/types/materiais-promocionais';
 
 export interface ReviewData {
   titulo?: string;
@@ -35,6 +36,7 @@ export interface ReviewData {
   status?: 'ativo' | 'inativo';
   template_escolhido?: TemplateType;
   customizacao_template?: TemplateCustomization;
+  materiais_promocionais?: MateriaisPromocionais;
 }
 
 interface Step5Props {
@@ -184,6 +186,51 @@ export function Step5Review({
                     <Badge variant="outline" className="text-xs">{doc.tipo.toUpperCase()}</Badge>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Promotional Materials List */}
+          {data.materiais_promocionais && (
+            data.materiais_promocionais.bookDigital?.url ||
+            data.materiais_promocionais.estudoRentabilidade?.url ||
+            data.materiais_promocionais.tabelaVendas?.url ||
+            data.materiais_promocionais.plantaUnidade?.url
+          ) && (
+            <div className="mt-4 pt-4 border-t">
+              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+                <BookOpen className="h-4 w-4" />
+                Materiais Promocionais
+              </Label>
+              <div className="space-y-2">
+                {data.materiais_promocionais.bookDigital?.url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <span>Book Digital: {data.materiais_promocionais.bookDigital.nome}</span>
+                    <Badge variant="outline" className="text-xs">PDF</Badge>
+                  </div>
+                )}
+                {data.materiais_promocionais.estudoRentabilidade?.url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    <span>Estudo ROI: {data.materiais_promocionais.estudoRentabilidade.nome}</span>
+                    <Badge variant="outline" className="text-xs">{data.materiais_promocionais.estudoRentabilidade.tipo?.toUpperCase()}</Badge>
+                  </div>
+                )}
+                {data.materiais_promocionais.tabelaVendas?.url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="h-4 w-4 text-amber-600" />
+                    <span>Tabela de Vendas: {data.materiais_promocionais.tabelaVendas.nome}</span>
+                    <Badge variant="outline" className="text-xs">PDF</Badge>
+                  </div>
+                )}
+                {data.materiais_promocionais.plantaUnidade?.url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <LayoutGrid className="h-4 w-4 text-blue-600" />
+                    <span>Planta da Unidade: {data.materiais_promocionais.plantaUnidade.nome}</span>
+                    <Badge variant="outline" className="text-xs">{data.materiais_promocionais.plantaUnidade.tipo?.toUpperCase()}</Badge>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -19,6 +19,7 @@ import { Step3Description, step3Schema, type Step3Data } from '@/components/wiza
 import { Step4Media, step4Schema, type Step4Data } from '@/components/wizard/Step4Media';
 import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
+import type { MateriaisPromocionais } from '@/types/materiais-promocionais';
 
 const STEPS = [
   { id: 1, title: 'Informações Básicas', icon: '📋' },
@@ -44,9 +45,11 @@ export default function NovoImovel() {
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data> & {
     template_escolhido?: TemplateType;
     customizacao_template?: TemplateCustomization;
+    materiais_promocionais?: MateriaisPromocionais;
   }>({
     template_escolhido: 'moderno',
     customizacao_template: {},
+    materiais_promocionais: {},
   });
   const [confirmed, setConfirmed] = useState(false);
 
@@ -167,6 +170,7 @@ export default function NovoImovel() {
         status: formData.status || 'ativo',
         template_escolhido: formData.template_escolhido || 'moderno',
         customizacao_template: formData.customizacao_template || {},
+        materiais_promocionais: formData.materiais_promocionais || {},
       };
 
       console.log('[Publish] Creating imovel:', imovelData);

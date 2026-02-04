@@ -805,6 +805,7 @@ export type Database = {
           longitude: number | null
           lot_size: number | null
           lot_size_unit: string | null
+          materiais_promocionais: Json | null
           memorial_descritivo: string | null
           origem_cadastro: string | null
           parking_spaces: number | null
@@ -876,6 +877,7 @@ export type Database = {
           longitude?: number | null
           lot_size?: number | null
           lot_size_unit?: string | null
+          materiais_promocionais?: Json | null
           memorial_descritivo?: string | null
           origem_cadastro?: string | null
           parking_spaces?: number | null
@@ -947,6 +949,7 @@ export type Database = {
           longitude?: number | null
           lot_size?: number | null
           lot_size_unit?: string | null
+          materiais_promocionais?: Json | null
           memorial_descritivo?: string | null
           origem_cadastro?: string | null
           parking_spaces?: number | null

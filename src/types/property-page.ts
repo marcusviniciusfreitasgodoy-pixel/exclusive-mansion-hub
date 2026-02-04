@@ -1,4 +1,5 @@
 // Types for dynamic property page
+import type { MateriaisPromocionais } from './materiais-promocionais';
 
 export interface Corretor {
   nome: string;
@@ -96,6 +97,8 @@ export interface PropertyData {
     tamanho_hero?: 'fullscreen' | 'grande' | 'medio';
     animacoes_ativas?: boolean;
   };
+  // Promotional materials
+  materiaisPromocionais?: MateriaisPromocionais;
 }
 
 export interface PropertyPageData {

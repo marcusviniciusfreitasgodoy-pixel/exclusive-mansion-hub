@@ -17,6 +17,16 @@ import { PropertyContactSection } from "@/components/property/PropertyContactSec
 import { SofiaAssistentSection } from "@/components/property/SofiaAssistentSection";
 import { DynamicVideoSection } from "@/components/property/DynamicVideoSection";
 
+// Promotional materials sections
+import { PropertyBookSection } from "@/components/property/PropertyBookSection";
+import { PropertyROISection } from "@/components/property/PropertyROISection";
+import { PropertyPriceTableSection } from "@/components/property/PropertyPriceTableSection";
+import { PropertyFloorPlanSection } from "@/components/property/PropertyFloorPlanSection";
+import { PropertySecuritySection } from "@/components/property/PropertySecuritySection";
+import { PropertySustainabilitySection } from "@/components/property/PropertySustainabilitySection";
+import { PropertyInfrastructureSection } from "@/components/property/PropertyInfrastructureSection";
+import { PropertyCustomizationSection } from "@/components/property/PropertyCustomizationSection";
+
 // Moderno-specific components (The Agency Style)
 import { ModernoHero, ModernoGallery, ModernoDetailsGrid, ModernoFooter } from "@/components/property/moderno";
 
@@ -195,6 +205,39 @@ export default function TemplateModerno({ data, integracoes = [] }: TemplateMode
             <div className="bg-gray-50">
               <DynamicVideoSection videos={property.videos} tour360Url={property.tour360Url} />
             </div>
+          )}
+
+          {/* Promotional Materials - Conditional Sections */}
+          {property.materiaisPromocionais?.bookDigital?.url && (
+            <PropertyBookSection data={property.materiaisPromocionais.bookDigital} propertyTitle={property.titulo} />
+          )}
+
+          {property.materiaisPromocionais?.estudoRentabilidade?.url && (
+            <PropertyROISection data={property.materiaisPromocionais.estudoRentabilidade} />
+          )}
+
+          {property.materiaisPromocionais?.tabelaVendas?.url && (
+            <PropertyPriceTableSection data={property.materiaisPromocionais.tabelaVendas} />
+          )}
+
+          {property.materiaisPromocionais?.plantaUnidade?.url && (
+            <PropertyFloorPlanSection data={property.materiaisPromocionais.plantaUnidade} areaPrivativa={property.areaPrivativa} />
+          )}
+
+          {property.materiaisPromocionais?.seguranca && property.materiaisPromocionais.seguranca.length > 0 && (
+            <PropertySecuritySection items={property.materiaisPromocionais.seguranca} />
+          )}
+
+          {property.materiaisPromocionais?.sustentabilidade && property.materiaisPromocionais.sustentabilidade.length > 0 && (
+            <PropertySustainabilitySection items={property.materiaisPromocionais.sustentabilidade} />
+          )}
+
+          {property.materiaisPromocionais?.infraestrutura && property.materiaisPromocionais.infraestrutura.length > 0 && (
+            <PropertyInfrastructureSection items={property.materiaisPromocionais.infraestrutura} />
+          )}
+
+          {property.materiaisPromocionais?.personalizacao && property.materiaisPromocionais.personalizacao.length > 0 && (
+            <PropertyCustomizationSection items={property.materiaisPromocionais.personalizacao} />
           )}
 
           {/* Corretores */}
