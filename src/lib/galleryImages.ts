@@ -1,7 +1,7 @@
 // Static imports for gallery images
 // This file provides a mapping from relative paths to bundled asset URLs
 
-const galleryModules = import.meta.glob('@/assets/gallery/*.jpg', { eager: true, as: 'url' });
+const galleryModules = import.meta.glob<string>('@/assets/gallery/*.jpg', { eager: true, query: '?url', import: 'default' });
 
 // Create a map from filename to URL
 const galleryMap: Record<string, string> = {};
