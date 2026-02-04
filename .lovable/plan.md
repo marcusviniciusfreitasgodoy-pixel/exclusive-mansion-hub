@@ -1,86 +1,102 @@
 
-# Plano: Corrigir Edição de Imóvel da Construtora
+# Plano: Corrigir Campos Vazios na Seção Descrição ao Editar Imóvel
 
-## Diagnóstico
+## Problema Identificado
 
-Após análise detalhada, verifiquei que o problema de campos vazios na edição **afeta apenas o fluxo da construtora**, não das imobiliárias.
+Na página de edição de imóvel (`EditarImovel.tsx`), alguns campos da seção "Descrição" (Step 3) aparecem vazios:
 
-### Por que apenas a Construtora?
-| Fluxo | Página | Problema? | Motivo |
-|-------|--------|-----------|--------|
-| Construtora | `EditarImovel.tsx` | **Sim** | Usa wizard Steps com `useForm` + `defaultValues` fixos na inicialização |
-| Imobiliária | `Configuracoes.tsx` | Não | Usa `form.reset()` no `useEffect` (abordagem correta) |
-| Imobiliária | `EditarFormulario.tsx` | Não | Usa `useState` + `setCampos` (atualiza dinamicamente) |
+| Campo no Formulário | Coluna no Banco | Status |
+|---------------------|-----------------|--------|
+| `descricao` | `descricao` | OK |
+| `diferenciais` | `diferenciais` | Possível problema com parsing |
+| `memorial` | `memorial_descritivo` | OK |
+| `condicoesPagamento` | `condicoes_pagamento` | **NÃO MAPEADO** |
+| `contextoAdicionalIA` | `contexto_adicional_ia` | OK |
 
-### Causa Raiz no EditarImovel.tsx
-Os componentes Step1, Step2, Step3, Step4 usam `useForm` do React Hook Form com `defaultValues` que são definidos **apenas na montagem do componente**. Quando as props `defaultValues` mudam depois do carregamento assíncrono, os formulários já estão inicializados com valores vazios.
+### Causa Raiz
 
-```text
-Fluxo Atual (Problemático):
-1. EditarImovel renderiza -> formData = {}
-2. Steps são montados -> useForm inicializa com {}
-3. Query carrega imóvel do banco
-4. useEffect popula formData com dados do imóvel
-5. Mas os forms já estão inicializados com valores vazios
-```
+1. **Campo `condicoesPagamento`**: A coluna `condicoes_pagamento` existe no banco de dados mas **não está sendo carregada** no mapeamento do `useEffect` e também **não está sendo salva** na mutação de update.
+
+2. **Campo `diferenciais`**: Pode vir como string JSON do banco (JSONB) e o código atual não faz parsing robusto se vier como string em vez de array nativo.
 
 ## Solução
 
-Aguardar o carregamento completo dos dados **antes** de renderizar os componentes de Step. Assim, quando os formulários forem inicializados, receberão os valores corretos.
+### 1. Adicionar Mapeamento do Campo `condicoesPagamento`
 
-### Alterações no EditarImovel.tsx
+**Arquivo**: `src/pages/dashboard/construtora/EditarImovel.tsx`
 
-```text
-1. Adicionar estado isDataLoaded inicializado como false
-2. No useEffect que popula formData, definir isDataLoaded = true ao final
-3. Exibir loading spinner enquanto isLoading || !isDataLoaded
-4. Renderizar Steps apenas quando dados estiverem prontos
+**No `useEffect` (carregamento dos dados)** - adicionar:
+```typescript
+const mapped = {
+  // ... campos existentes ...
+  condicoesPagamento: imovel.condicoes_pagamento || '',
+};
 ```
 
-### Código a Implementar
-
+**No `updateMutation` (salvamento dos dados)** - adicionar:
 ```typescript
-// Novo estado
-const [isDataLoaded, setIsDataLoaded] = useState(false);
+const updateData = {
+  // ... campos existentes ...
+  condicoes_pagamento: data.condicoesPagamento || null,
+};
+```
 
-// Atualizar useEffect existente (linhas 43-74)
-useEffect(() => {
-  if (imovel) {
-    // ... mapeamento existente mantido ...
-    setFormData(mapped);
-    setIsDataLoaded(true);  // <- Adicionar
+### 2. Adicionar Parsing Robusto para `diferenciais`
+
+O campo `diferenciais` é JSONB e pode vir como:
+- Array nativo do Postgres (quando parseado automaticamente)
+- String JSON (quando há dupla serialização)
+
+**Lógica de parsing**:
+```typescript
+// Parsing robusto para diferenciais
+let diferenciaisArray: string[] = [];
+if (Array.isArray(imovel.diferenciais)) {
+  diferenciaisArray = imovel.diferenciais as string[];
+} else if (typeof imovel.diferenciais === 'string') {
+  try {
+    const parsed = JSON.parse(imovel.diferenciais);
+    diferenciaisArray = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    diferenciaisArray = [];
   }
-}, [imovel]);
-
-// Condição de loading atualizada
-if (isLoading || !isDataLoaded) {
-  return (
-    <DashboardLayout title="Carregando...">
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    </DashboardLayout>
-  );
 }
 ```
 
-## Arquivos a Modificar
+---
+
+## Detalhes Técnicos
+
+### Arquivo a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/dashboard/construtora/EditarImovel.tsx` | Adicionar controle `isDataLoaded` para aguardar carregamento |
+| `src/pages/dashboard/construtora/EditarImovel.tsx` | Adicionar mapeamento de `condicoesPagamento` e parsing robusto para `diferenciais` |
 
-## Benefícios
+### Localização das Alterações
 
-- Solução simples e localizada (não altera os componentes Step)
-- Garante que os formulários sempre iniciem com dados corretos do banco
-- Mantém compatibilidade com o fluxo de criação de novo imóvel
-- Melhora a experiência do usuário com feedback visual de carregamento
+1. **Linhas 63-91** (useEffect): Adicionar `condicoesPagamento` ao objeto `mapped` e corrigir parsing de `diferenciais`
+2. **Linhas 101-123** (updateMutation): Adicionar `condicoes_pagamento` ao objeto `updateData`
 
-## Validação
+### Código Resumido das Alterações
 
-Após implementação, testar:
-1. Acessar a edição de um imóvel existente
-2. Verificar se todos os campos aparecem preenchidos corretamente
-3. Confirmar que todas as etapas (1-5) mostram os dados salvos
-4. Testar que imagens, vídeos e documentos aparecem na etapa de mídias
+```text
+// No useEffect (carregamento)
+Antes:
+  diferenciais: Array.isArray(imovel.diferenciais) ? imovel.diferenciais as string[] : [],
+
+Depois:
+  diferenciais: parseDiferenciais(imovel.diferenciais),
+  condicoesPagamento: imovel.condicoes_pagamento || '',
+
+// No updateMutation (salvamento)
+Adicionar:
+  condicoes_pagamento: data.condicoesPagamento || null,
+```
+
+## Resultado Esperado
+
+Após a implementação:
+- O campo "Condições de Pagamento" será carregado corretamente ao editar
+- O campo "Diferenciais Exclusivos" será parseado corretamente em todos os cenários
+- Todas as alterações nesses campos serão salvas no banco de dados
