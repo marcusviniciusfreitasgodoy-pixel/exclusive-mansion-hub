@@ -54,24 +54,32 @@ export default function EditarImovel() {
   });
 
   // Populate form with existing data
+  // Robust JSON parsing helper for JSONB fields (can come as array or string)
+  const parseJsonArray = <T,>(value: unknown, defaultValue: T[] = []): T[] => {
+    if (Array.isArray(value)) {
+      return value as T[];
+    }
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : defaultValue;
+      } catch {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  };
+
   useEffect(() => {
     if (imovel) {
       // Parse address parts
       const enderecoParts = imovel.endereco?.split(', ') || ['', ''];
       const numeroPart = enderecoParts[1]?.split(' - ') || ['', ''];
       
-      // Robust parsing for diferenciais (JSONB can come as array or string)
-      let diferenciaisArray: string[] = [];
-      if (Array.isArray(imovel.diferenciais)) {
-        diferenciaisArray = imovel.diferenciais as string[];
-      } else if (typeof imovel.diferenciais === 'string') {
-        try {
-          const parsed = JSON.parse(imovel.diferenciais);
-          diferenciaisArray = Array.isArray(parsed) ? parsed : [];
-        } catch {
-          diferenciaisArray = [];
-        }
-      }
+      // Robust parsing for all JSONB fields
+      const diferenciaisArray = parseJsonArray<string>(imovel.diferenciais);
+      const imagensArray = parseJsonArray<{ url?: string; alt?: string; isPrimary?: boolean }>(imovel.imagens);
+      const videosArray = parseJsonArray<{ url?: string; tipo?: string }>(imovel.videos);
       
       const mapped: Partial<Step1Data & Step2Data & Step3Data & Step4Data> = {
         titulo: imovel.titulo,
@@ -94,12 +102,8 @@ export default function EditarImovel() {
         memorial: imovel.memorial_descritivo || '',
         condicoesPagamento: imovel.condicoes_pagamento || '',
         contextoAdicionalIA: imovel.contexto_adicional_ia || '',
-        imagens: Array.isArray(imovel.imagens) 
-          ? (imovel.imagens as { url?: string; alt?: string; isPrimary?: boolean }[])
-          : [],
-        videos: Array.isArray(imovel.videos) 
-          ? (imovel.videos as { url?: string; tipo?: string }[])
-          : [],
+        imagens: imagensArray,
+        videos: videosArray,
         tour360Url: imovel.tour_360_url || '',
         status: (imovel.status === 'vendido' ? 'inativo' : imovel.status) as 'ativo' | 'inativo',
       };
