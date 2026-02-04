@@ -287,6 +287,15 @@ export default function EditarImovel() {
           {currentStep === 3 && (
             <Step3Description
               defaultValues={formData}
+              propertyData={{
+                titulo: formData.titulo,
+                bairro: formData.bairro,
+                cidade: formData.cidade,
+                areaTotal: formData.areaTotal,
+                suites: formData.suites,
+                vagas: formData.vagas,
+                valor: formData.valor,
+              }}
               onComplete={(data) => {
                 handleStepComplete(data);
                 handleNext();

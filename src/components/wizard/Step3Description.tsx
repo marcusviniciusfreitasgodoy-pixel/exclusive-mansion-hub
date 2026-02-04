@@ -10,6 +10,7 @@ import { ArrowRight, Plus, X, Edit2, Check, Bot, Lock, Key } from 'lucide-react'
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CopywriterAssistant } from './CopywriterAssistant';
 
 export const step3Schema = z.object({
   descricao: z.string().min(50, 'Descrição deve ter no mínimo 50 caracteres'),
@@ -21,15 +22,26 @@ export const step3Schema = z.object({
 
 export type Step3Data = z.infer<typeof step3Schema>;
 
+export interface PropertyDataForCopy {
+  titulo?: string;
+  bairro?: string;
+  cidade?: string;
+  areaTotal?: number;
+  suites?: number;
+  vagas?: number;
+  valor?: number;
+}
+
 interface Step3Props {
   defaultValues?: Partial<Step3Data>;
+  propertyData?: PropertyDataForCopy;
   onComplete: (data: Step3Data) => void;
 }
 
 // Senha do desenvolvedor
 const DEVELOPER_PASSWORD = "sofia2024dev";
 
-export function Step3Description({ defaultValues, onComplete }: Step3Props) {
+export function Step3Description({ defaultValues, propertyData, onComplete }: Step3Props) {
   const [newDiferencial, setNewDiferencial] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -103,9 +115,21 @@ export function Step3Description({ defaultValues, onComplete }: Step3Props) {
     onComplete(data);
   };
 
+  // Handle text from AI assistant
+  const handleUseAIDescription = (text: string) => {
+    form.setValue('descricao', text, { shouldValidate: true });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* AI Copywriter Assistant */}
+        <CopywriterAssistant
+          propertyData={propertyData || {}}
+          diferenciais={diferenciais}
+          onUseDescription={handleUseAIDescription}
+        />
+
         <FormField
           control={form.control}
           name="descricao"
