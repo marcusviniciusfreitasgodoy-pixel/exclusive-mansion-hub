@@ -35,6 +35,7 @@ export default function EditarImovel() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data>>({});
   const [confirmed, setConfirmed] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Fetch existing imovel
   const { data: imovel, isLoading } = useQuery({
@@ -89,6 +90,7 @@ export default function EditarImovel() {
         status: (imovel.status === 'vendido' ? 'inativo' : imovel.status) as 'ativo' | 'inativo',
       };
       setFormData(mapped);
+      setIsDataLoaded(true);
     }
   }, [imovel]);
 
@@ -173,7 +175,7 @@ export default function EditarImovel() {
     updateMutation.mutate(formData);
   };
 
-  if (isLoading) {
+  if (isLoading || !isDataLoaded) {
     return (
       <DashboardLayout title="Carregando...">
         <div className="flex h-64 items-center justify-center">
