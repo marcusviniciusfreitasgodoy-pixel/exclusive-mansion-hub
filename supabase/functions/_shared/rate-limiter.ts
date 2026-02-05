@@ -1,7 +1,7 @@
 // Rate Limiter module for Edge Functions
 // Uses PostgreSQL as persistent counter for rate limiting
 
-import { SupabaseClient } from "npm:@supabase/supabase-js@2";
+// Using generic type to avoid import overhead
 
 interface RateLimitConfig {
   maxRequests: number;
@@ -29,7 +29,8 @@ const DEFAULT_CONFIGS: Record<string, RateLimitConfig> = {
  * Check and increment rate limit for a given identifier and function
  */
 export async function checkRateLimit(
-  supabase: SupabaseClient,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
   identifier: string,
   functionName: string,
   customConfig?: RateLimitConfig
