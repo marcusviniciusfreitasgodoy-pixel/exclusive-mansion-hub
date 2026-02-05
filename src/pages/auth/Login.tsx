@@ -107,6 +107,14 @@ export default function Login() {
             <div>
               <Label htmlFor="password">Senha</Label>
               <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className="mt-1" />
+              <div className="mt-1 text-right">
+                <Link 
+                  to="/auth/forgot-password" 
+                  className="text-sm text-primary hover:text-primary/80"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
           </div>
 
