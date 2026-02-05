@@ -16,13 +16,16 @@ import { Step2Specifications, type Step2Data } from '@/components/wizard/Step2Sp
 import { Step3Description, type Step3Data } from '@/components/wizard/Step3Description';
 import { Step4Media, type Step4Data } from '@/components/wizard/Step4Media';
 import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
+import { Step6Template, type Step6Data } from '@/components/wizard/Step6Template';
+import type { TemplateType, TemplateCustomization } from '@/types/database';
 
 const STEPS = [
   { id: 1, title: 'Informações Básicas', icon: '📋' },
   { id: 2, title: 'Especificações', icon: '📐' },
   { id: 3, title: 'Descrição', icon: '📝' },
   { id: 4, title: 'Mídias', icon: '🖼️' },
-  { id: 5, title: 'Revisão', icon: '✅' },
+  { id: 5, title: 'Template', icon: '🎨' },
+  { id: 6, title: 'Revisão', icon: '✅' },
 ];
 
 export default function EditarImovel() {
@@ -33,7 +36,7 @@ export default function EditarImovel() {
   const queryClient = useQueryClient();
   
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data>>({});
+  const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data & Step6Data>>({});
   const [confirmed, setConfirmed] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -91,7 +94,14 @@ export default function EditarImovel() {
         return mp as Step4Data['materiais_promocionais'];
       })();
       
-      const mapped: Partial<Step1Data & Step2Data & Step3Data & Step4Data> = {
+      // Parse template customization
+      const customizacaoTemplate = (() => {
+        const ct = imovel.customizacao_template;
+        if (!ct || typeof ct !== 'object') return {};
+        return ct as TemplateCustomization;
+      })();
+
+      const mapped: Partial<Step1Data & Step2Data & Step3Data & Step4Data & Step6Data> = {
         titulo: imovel.titulo,
         endereco: enderecoParts[0] || '',
         numero: numeroPart[0] || '',
@@ -118,6 +128,8 @@ export default function EditarImovel() {
         status: (imovel.status === 'vendido' ? 'inativo' : imovel.status) as 'ativo' | 'inativo',
         documentos: documentosArray,
         materiais_promocionais: materiaisPromocionais,
+        templateEscolhido: (imovel.template_escolhido as TemplateType) || 'luxo',
+        customizacaoTemplate: customizacaoTemplate,
       };
       setFormData(mapped);
       setIsDataLoaded(true);
@@ -153,6 +165,8 @@ export default function EditarImovel() {
         status: data.status || 'ativo',
         documentos: JSON.stringify(data.documentos || []),
         materiais_promocionais: data.materiais_promocionais || null,
+        template_escolhido: data.templateEscolhido || 'luxo',
+        customizacao_template: (data.customizacaoTemplate || null) as any,
       };
 
       const { error } = await supabase
@@ -185,7 +199,7 @@ export default function EditarImovel() {
   };
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -264,7 +278,7 @@ export default function EditarImovel() {
             </div>
           ))}
         </div>
-        <Progress value={(currentStep / 5) * 100} className="h-2" />
+        <Progress value={(currentStep / 6) * 100} className="h-2" />
       </div>
 
       {/* Step Content */}
@@ -276,7 +290,8 @@ export default function EditarImovel() {
             {currentStep === 2 && 'Especifique as dimensões e características'}
             {currentStep === 3 && 'Descreva o imóvel e seus diferenciais'}
             {currentStep === 4 && 'Gerencie fotos, vídeos e tour virtual'}
-            {currentStep === 5 && 'Revise todas as informações antes de salvar'}
+            {currentStep === 5 && 'Escolha o estilo visual do site do imóvel'}
+            {currentStep === 6 && 'Revise todas as informações antes de salvar'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -328,6 +343,25 @@ export default function EditarImovel() {
             />
           )}
           {currentStep === 5 && (
+            <Step6Template
+              defaultValues={{
+                templateEscolhido: formData.templateEscolhido,
+                customizacaoTemplate: formData.customizacaoTemplate,
+              }}
+              propertyData={{
+                titulo: formData.titulo,
+                bairro: formData.bairro,
+                cidade: formData.cidade,
+                valor: formData.valor,
+                imagens: formData.imagens,
+              }}
+              onComplete={(data) => {
+                handleStepComplete(data);
+                handleNext();
+              }}
+            />
+          )}
+          {currentStep === 6 && (
             <Step5Review
               data={formData as ReviewData}
               confirmed={confirmed}
@@ -358,13 +392,13 @@ export default function EditarImovel() {
           Cancelar
         </Button>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <div /> // Empty div - next handled by step forms
         ) : (
           <Button
             onClick={handleSave}
             disabled={updateMutation.isPending || !confirmed}
-            className="gap-2 bg-amber-600 hover:bg-amber-700"
+            className="gap-2"
           >
             {updateMutation.isPending ? (
               <>
