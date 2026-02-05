@@ -18,6 +18,7 @@ import { Step4Media, type Step4Data } from '@/components/wizard/Step4Media';
 import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
 import { Step6Template, type Step6Data } from '@/components/wizard/Step6Template';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
+import type { KnowledgeBaseEntry } from '@/types/knowledge-base';
 
 const STEPS = [
   { id: 1, title: 'Informações Básicas', icon: '📋' },
@@ -39,6 +40,20 @@ export default function EditarImovel() {
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data & Step4Data & Step6Data>>({});
   const [confirmed, setConfirmed] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [knowledgeBaseEntries, setKnowledgeBaseEntries] = useState<KnowledgeBaseEntry[]>([]);
+
+  // Fetch knowledge base entries
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from('imovel_knowledge_base')
+      .select('*')
+      .eq('imovel_id', id)
+      .order('prioridade', { ascending: false })
+      .then(({ data }) => {
+        if (data) setKnowledgeBaseEntries(data as unknown as KnowledgeBaseEntry[]);
+      });
+  }, [id]);
 
   // Fetch existing imovel
   const { data: imovel, isLoading } = useQuery({
@@ -175,6 +190,24 @@ export default function EditarImovel() {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Save knowledge base entries (delete + re-insert)
+      try {
+        await supabase
+          .from('imovel_knowledge_base')
+          .delete()
+          .eq('imovel_id', id);
+
+        if (knowledgeBaseEntries.length > 0) {
+          const entriesToInsert = knowledgeBaseEntries.map(({ id: _entryId, created_at, updated_at, ...entry }) => ({
+            ...entry,
+            imovel_id: id,
+          }));
+          await supabase.from('imovel_knowledge_base').insert(entriesToInsert);
+        }
+      } catch (kbError) {
+        console.error('Erro ao salvar base de conhecimento:', kbError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['imoveis'] });
@@ -336,6 +369,9 @@ export default function EditarImovel() {
           {currentStep === 4 && (
             <Step4Media
               defaultValues={formData}
+              imovelId={id}
+              knowledgeBaseEntries={knowledgeBaseEntries}
+              onKnowledgeBaseChange={setKnowledgeBaseEntries}
               onComplete={(data) => {
                 handleStepComplete(data);
                 handleNext();
