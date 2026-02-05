@@ -128,6 +128,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agendamentos_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agendamentos_visitas_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -223,6 +230,13 @@ export type Database = {
             referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bloqueios_agenda_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chatbot_knowledge_base: {
@@ -304,6 +318,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuracoes_formularios_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
         ]
@@ -454,6 +475,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "conversas_chatbot_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "conversas_chatbot_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -509,6 +537,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidade_corretor_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
         ]
@@ -801,6 +836,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "feedbacks_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "feedbacks_visitas_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -850,6 +892,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imobiliaria_imovel_access_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
           {
@@ -1200,6 +1249,13 @@ export type Database = {
             referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "integracoes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       leads: {
@@ -1295,6 +1351,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -1371,6 +1434,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "midias_pendentes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
           {
@@ -1473,6 +1543,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pageviews_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pageviews_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -1549,6 +1626,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
           {
@@ -1665,6 +1749,13 @@ export type Database = {
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
             referencedColumns: ["id"]
           },
           {
@@ -1788,6 +1879,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "feedbacks_visitas_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "feedbacks_visitas_imovel_id_fkey"
             columns: ["imovel_id"]
             isOneToOne: false
@@ -1795,6 +1893,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      imobiliarias_public: {
+        Row: {
+          cor_primaria: string | null
+          creci: string | null
+          favicon_url: string | null
+          id: string | null
+          instagram_url: string | null
+          logo_url: string | null
+          nome_empresa: string | null
+          site_url: string | null
+        }
+        Insert: {
+          cor_primaria?: string | null
+          creci?: string | null
+          favicon_url?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          logo_url?: string | null
+          nome_empresa?: string | null
+          site_url?: string | null
+        }
+        Update: {
+          cor_primaria?: string | null
+          creci?: string | null
+          favicon_url?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          logo_url?: string | null
+          nome_empresa?: string | null
+          site_url?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -1809,6 +1940,10 @@ export type Database = {
       }
       imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
       user_owns_imovel: { Args: { _imovel_id: string }; Returns: boolean }
+      validate_feedback_token: {
+        Args: { _feedback_id: string; _token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       access_status: "active" | "revoked"
