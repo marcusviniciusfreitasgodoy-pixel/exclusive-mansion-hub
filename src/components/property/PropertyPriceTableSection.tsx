@@ -1,15 +1,15 @@
-import { DollarSign, Download, ExternalLink, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { DollarSign, Download, Eye, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { MaterialArquivo } from '@/types/materiais-promocionais';
+import { PDFViewerModal } from './PDFViewerModal';
 
 interface PropertyPriceTableSectionProps {
   data: MaterialArquivo;
 }
 
 export function PropertyPriceTableSection({ data }: PropertyPriceTableSectionProps) {
-  const handleOpen = () => {
-    window.open(data.url, '_blank');
-  };
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -66,8 +66,8 @@ export function PropertyPriceTableSection({ data }: PropertyPriceTableSectionPro
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button onClick={handleOpen} className="gap-2">
-                  <ExternalLink className="h-4 w-4" />
+                <Button onClick={() => setIsViewerOpen(true)} className="gap-2">
+                  <Eye className="h-4 w-4" />
                   Ver Tabela de Vendas
                 </Button>
                 <Button variant="outline" onClick={handleDownload} className="gap-2">
@@ -75,6 +75,14 @@ export function PropertyPriceTableSection({ data }: PropertyPriceTableSectionPro
                   Download PDF
                 </Button>
               </div>
+
+              <PDFViewerModal
+                isOpen={isViewerOpen}
+                onClose={() => setIsViewerOpen(false)}
+                url={data.url}
+                title="Tabela de Vendas"
+                fileName={data.nome}
+              />
             </div>
           </div>
         </div>
