@@ -1,5 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, sanitizeInput, isValidEmail } from "../_shared/security.ts";
 
 interface SignupRequest {
@@ -31,9 +30,9 @@ function successResponse(data: Record<string, unknown>) {
   );
 }
 
-// Send confirmation email using Resend
+// Send confirmation email using Resend REST API (no npm dependency)
 async function sendConfirmationEmail(
-  resend: Resend,
+  resendApiKey: string,
   email: string,
   confirmationUrl: string,
   nomeEmpresa: string,
@@ -42,66 +41,56 @@ async function sendConfirmationEmail(
   const roleLabel = role === 'construtora' ? 'Construtora' : 'Imobiliária';
   
   try {
-    const { error } = await resend.emails.send({
-      from: "Godoy Prime <noreply@godoyprime.com.br>",
-      to: [email],
-      subject: `Confirme seu cadastro - ${roleLabel}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-            <tr>
-              <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 40px 30px; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Godoy Prime</h1>
-                <p style="color: #b8860b; margin: 10px 0 0 0; font-size: 14px; letter-spacing: 1px;">IMÓVEIS DE ALTO PADRÃO</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 40px 30px;">
-                <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">Bem-vindo(a), ${sanitizeInput(nomeEmpresa, 100)}!</h2>
-                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Obrigado por se cadastrar como <strong>${roleLabel}</strong> em nossa plataforma.
-                </p>
-                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                  Para ativar sua conta e começar a usar todos os recursos, clique no botão abaixo:
-                </p>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${confirmationUrl}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #b8860b 0%, #d4a84b 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);">
-                    Confirmar Meu E-mail
-                  </a>
-                </div>
-                <p style="color: #888888; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
-                  Se o botão não funcionar, copie e cole o link abaixo no seu navegador:
-                </p>
-                <p style="color: #1e3a5f; font-size: 12px; word-break: break-all; background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0 0 0;">
-                  ${confirmationUrl}
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
-                <p style="color: #888888; font-size: 12px; margin: 0;">
-                  Este link expira em 24 horas. Se você não solicitou este cadastro, ignore este e-mail.
-                </p>
-                <p style="color: #aaaaaa; font-size: 11px; margin: 15px 0 0 0;">
-                  © ${new Date().getFullYear()} Godoy Prime. Todos os direitos reservados.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `,
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Godoy Prime <noreply@godoyprime.com.br>",
+        to: [email],
+        subject: `Confirme seu cadastro - ${roleLabel}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <tr>
+                <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Godoy Prime</h1>
+                  <p style="color: #b8860b; margin: 10px 0 0 0; font-size: 14px; letter-spacing: 1px;">IMÓVEIS DE ALTO PADRÃO</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">Bem-vindo(a), ${sanitizeInput(nomeEmpresa, 100)}!</h2>
+                  <p style="color: #555555; font-size: 16px; line-height: 1.6;">Obrigado por se cadastrar como <strong>${roleLabel}</strong>.</p>
+                  <p style="color: #555555; font-size: 16px; line-height: 1.6;">Para ativar sua conta, clique no botão abaixo:</p>
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${confirmationUrl}" style="display: inline-block; background: linear-gradient(135deg, #b8860b 0%, #d4a84b 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-size: 16px; font-weight: 600;">Confirmar Meu E-mail</a>
+                  </div>
+                  <p style="color: #888888; font-size: 14px;">Se o botão não funcionar, copie e cole o link:</p>
+                  <p style="color: #1e3a5f; font-size: 12px; word-break: break-all; background-color: #f8f9fa; padding: 15px; border-radius: 4px;">${confirmationUrl}</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                  <p style="color: #888888; font-size: 12px;">Este link expira em 24 horas.</p>
+                  <p style="color: #aaaaaa; font-size: 11px; margin: 15px 0 0 0;">© ${new Date().getFullYear()} Godoy Prime.</p>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `,
+      }),
     });
 
-    if (error) {
-      console.error("Resend error:", error);
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error("Resend API error:", res.status, errBody);
       return false;
     }
     return true;
@@ -146,13 +135,12 @@ Deno.serve(async (req) => {
       return controlledError("validation_error", "CRECI é obrigatório para imobiliária");
     }
 
-    // Initialize Resend
+    // Get Resend API key
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       console.error("RESEND_API_KEY not configured");
       return controlledError("internal_error", "Serviço de e-mail não configurado");
     }
-    const resend = new Resend(resendApiKey);
 
     // Create Supabase client with service role for admin operations
     const supabaseAdmin = createClient(
@@ -284,7 +272,7 @@ Deno.serve(async (req) => {
 
     // Send confirmation email using Resend
     const emailSent = await sendConfirmationEmail(
-      resend,
+      resendApiKey,
       email,
       linkData.properties.action_link,
       profile.nome_empresa,
