@@ -513,6 +513,71 @@ export type Database = {
           },
         ]
       }
+      empreendimentos: {
+        Row: {
+          caracteristicas_principais: Json
+          componentes_ui: Json | null
+          construtora_id: string
+          cores_design_system: Json | null
+          created_at: string | null
+          descricao_curta: string
+          detalhes: Json
+          id: string
+          imagens: Json
+          link_visita_virtual: string | null
+          localizacao: Json
+          precos: Json
+          slug: string
+          status: Database["public"]["Enums"]["empreendimento_status"]
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          caracteristicas_principais?: Json
+          componentes_ui?: Json | null
+          construtora_id: string
+          cores_design_system?: Json | null
+          created_at?: string | null
+          descricao_curta: string
+          detalhes?: Json
+          id?: string
+          imagens?: Json
+          link_visita_virtual?: string | null
+          localizacao?: Json
+          precos?: Json
+          slug: string
+          status?: Database["public"]["Enums"]["empreendimento_status"]
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          caracteristicas_principais?: Json
+          componentes_ui?: Json | null
+          construtora_id?: string
+          cores_design_system?: Json | null
+          created_at?: string | null
+          descricao_curta?: string
+          detalhes?: Json
+          id?: string
+          imagens?: Json
+          link_visita_virtual?: string | null
+          localizacao?: Json
+          precos?: Json
+          slug?: string
+          status?: Database["public"]["Enums"]["empreendimento_status"]
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimentos_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks_visitas: {
         Row: {
           access_id: string | null
@@ -1755,6 +1820,10 @@ export type Database = {
         | "remarcado"
       app_role: "construtora" | "imobiliaria" | "admin"
       construtora_status: "active" | "suspended" | "cancelled"
+      empreendimento_status:
+        | "em_lancamento"
+        | "em_construcao"
+        | "pronto_para_morar"
       feedback_status:
         | "aguardando_corretor"
         | "aguardando_cliente"
@@ -1921,6 +1990,11 @@ export const Constants = {
       ],
       app_role: ["construtora", "imobiliaria", "admin"],
       construtora_status: ["active", "suspended", "cancelled"],
+      empreendimento_status: [
+        "em_lancamento",
+        "em_construcao",
+        "pronto_para_morar",
+      ],
       feedback_status: [
         "aguardando_corretor",
         "aguardando_cliente",
