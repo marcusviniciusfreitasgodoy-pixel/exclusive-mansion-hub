@@ -1182,6 +1182,62 @@ export type Database = {
           },
         ]
       }
+      imovel_knowledge_base: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          conteudo: string
+          created_at: string | null
+          fonte_arquivo_nome: string | null
+          fonte_arquivo_url: string | null
+          fonte_tipo: string
+          id: string
+          imovel_id: string
+          prioridade: number | null
+          tags: string[] | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          conteudo: string
+          created_at?: string | null
+          fonte_arquivo_nome?: string | null
+          fonte_arquivo_url?: string | null
+          fonte_tipo: string
+          id?: string
+          imovel_id: string
+          prioridade?: number | null
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          conteudo?: string
+          created_at?: string | null
+          fonte_arquivo_nome?: string | null
+          fonte_arquivo_url?: string | null
+          fonte_tipo?: string
+          id?: string
+          imovel_id?: string
+          prioridade?: number | null
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imovel_knowledge_base_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integracoes: {
         Row: {
           ativa: boolean | null

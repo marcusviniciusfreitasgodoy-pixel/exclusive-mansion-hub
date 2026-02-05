@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap, FileText, File, Link, Film } from 'lucide-react';
+import { ArrowRight, Upload, X, Star, StarOff, Image, Video, Globe, Loader2, Zap, FileText, File, Link, Film, Brain } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageOptimizer } from '@/hooks/useImageOptimizer';
 import { Progress } from '@/components/ui/progress';
+import { Step4KnowledgeBase } from './Step4KnowledgeBase';
+import type { KnowledgeBaseEntry } from '@/types/knowledge-base';
 
 export const step4Schema = z.object({
   imagens: z.array(z.object({
@@ -84,9 +86,18 @@ interface DocumentItem {
 interface Step4Props {
   defaultValues?: Partial<Step4Data>;
   onComplete: (data: Step4Data) => void;
+  imovelId?: string;
+  knowledgeBaseEntries?: KnowledgeBaseEntry[];
+  onKnowledgeBaseChange?: (entries: KnowledgeBaseEntry[]) => void;
 }
 
-export function Step4Media({ defaultValues, onComplete }: Step4Props) {
+export function Step4Media({ 
+  defaultValues, 
+  onComplete, 
+  imovelId,
+  knowledgeBaseEntries = [],
+  onKnowledgeBaseChange
+}: Step4Props) {
   const { construtora } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +111,7 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
     calculateSavings
   } = useImageOptimizer();
 
+  const [activeTab, setActiveTab] = useState('midias');
   const [imagens, setImagens] = useState<ImageItem[]>(
     (defaultValues?.imagens?.filter((img): img is ImageItem => !!img.url)) || []
   );
@@ -115,6 +127,13 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [uploadStats, setUploadStats] = useState<{ original: number; optimized: number } | null>(null);
+  const [kbEntries, setKbEntries] = useState<KnowledgeBaseEntry[]>(knowledgeBaseEntries);
+
+  // Sync KB entries with parent
+  const handleKbEntriesChange = (entries: KnowledgeBaseEntry[]) => {
+    setKbEntries(entries);
+    onKnowledgeBaseChange?.(entries);
+  };
 
   const form = useForm<Step4Data>({
     resolver: zodResolver(step4Schema),
@@ -510,14 +529,48 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Images Upload */}
-        <div className="space-y-4">
-          <Label className="flex items-center gap-2">
+    <div className="space-y-6">
+      {/* Main Tabs: Mídias vs Base de Conhecimento */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="midias" className="gap-2">
             <Image className="h-4 w-4" />
-            Imagens do Imóvel * (máx. 50)
-          </Label>
+            Mídias
+          </TabsTrigger>
+          <TabsTrigger value="conhecimento" className="gap-2">
+            <Brain className="h-4 w-4" />
+            Base de Conhecimento IA
+            {kbEntries.length > 0 && (
+              <span className="ml-1 bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
+                {kbEntries.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="conhecimento" className="mt-6">
+          <Step4KnowledgeBase
+            imovelId={imovelId}
+            entries={kbEntries}
+            onEntriesChange={handleKbEntriesChange}
+          />
+          <div className="flex justify-end mt-6">
+            <Button onClick={() => onSubmit()} className="gap-2">
+              Próximo
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="midias" className="mt-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Images Upload */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Imagens do Imóvel * (máx. 50)
+                </Label>
 
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer ${
@@ -895,15 +948,18 @@ export function Step4Media({ defaultValues, onComplete }: Step4Props) {
               ))}
             </div>
           )}
-        </div>
+              </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" className="gap-2">
-            Próximo
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </form>
-    </Form>
+              <div className="flex justify-end">
+                <Button type="submit" className="gap-2">
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

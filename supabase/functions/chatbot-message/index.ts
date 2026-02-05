@@ -138,6 +138,15 @@ serve(async (req) => {
       .order("prioridade", { ascending: false })
       .limit(50);
 
+    // 2.1 Fetch property-specific knowledge base
+    const { data: imovelKnowledge } = await supabase
+      .from("imovel_knowledge_base")
+      .select("categoria, titulo, conteudo")
+      .eq("imovel_id", imovel_id)
+      .eq("ativo", true)
+      .order("prioridade", { ascending: false })
+      .limit(30);
+
     const empresaNome = imobiliaria?.nome_empresa || imovel.construtoras?.nome_empresa || "nossa empresa";
     const empresaTelefone = imobiliaria?.telefone || imovel.construtoras?.telefone || "não informado";
     const empresaEmail = imobiliaria?.email_contato || imovel.construtoras?.email_contato || "não informado";
@@ -199,15 +208,32 @@ serve(async (req) => {
         kbByCategory[kb.categoria].push(`- ${kb.titulo}: ${kb.conteudo}`);
       }
       
-      knowledgeBaseSection = "\n\nBASE DE CONHECIMENTO ADICIONAL:";
+      knowledgeBaseSection = "\n\nBASE DE CONHECIMENTO GERAL:";
       for (const [categoria, items] of Object.entries(kbByCategory)) {
         knowledgeBaseSection += `\n\n[${categoria.toUpperCase()}]\n${items.join("\n")}`;
       }
     }
 
+    // Format property-specific knowledge base for prompt
+    let imovelKnowledgeSection = "";
+    if (imovelKnowledge && imovelKnowledge.length > 0) {
+      const ikbByCategory: Record<string, string[]> = {};
+      for (const kb of imovelKnowledge) {
+        if (!ikbByCategory[kb.categoria]) {
+          ikbByCategory[kb.categoria] = [];
+        }
+        ikbByCategory[kb.categoria].push(`- ${kb.titulo}: ${kb.conteudo}`);
+      }
+      
+      imovelKnowledgeSection = "\n\nBASE DE CONHECIMENTO ESPECÍFICA DESTE IMÓVEL:";
+      for (const [categoria, items] of Object.entries(ikbByCategory)) {
+        imovelKnowledgeSection += `\n\n[${categoria.toUpperCase()}]\n${items.join("\n")}`;
+      }
+    }
+
     // Add property-specific AI context if available
     const contextoAdicionalImovel = imovel.contexto_adicional_ia 
-      ? `\n\nCONTEXTO ESPECÍFICO DO IMÓVEL:\n${imovel.contexto_adicional_ia}`
+      ? `\n\nINSTRUÇÕES ADICIONAIS:\n${imovel.contexto_adicional_ia}`
       : "";
 
     const systemPrompt = `Você é Sofia, uma assistente virtual especializada em imóveis de alto padrão, representando a ${empresaNome}.
@@ -233,7 +259,7 @@ DIFERENCIAIS:
 ${diferenciais}
 
 AMENIDADES:
-${amenities || "Não informado"}${contextoAdicionalImovel}${knowledgeBaseSection}
+${amenities || "Não informado"}${contextoAdicionalImovel}${imovelKnowledgeSection}${knowledgeBaseSection}
 
 CONTATO:
 - Empresa: ${empresaNome}

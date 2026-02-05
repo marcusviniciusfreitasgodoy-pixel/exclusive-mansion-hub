@@ -18,6 +18,7 @@ import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
 import { Step6Template } from '@/components/wizard/Step6Template';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 import type { MateriaisPromocionais } from '@/types/materiais-promocionais';
+import type { KnowledgeBaseEntry } from '@/types/knowledge-base';
 
 const STEPS = [
   { id: 1, title: 'Informações Básicas', icon: '📋' },
@@ -51,6 +52,7 @@ export default function NovoImovel() {
     materiais_promocionais: {},
   });
   const [confirmed, setConfirmed] = useState(false);
+  const [knowledgeBaseEntries, setKnowledgeBaseEntries] = useState<KnowledgeBaseEntry[]>([]);
 
   // Load draft on mount
   useEffect(() => {
@@ -186,7 +188,31 @@ export default function NovoImovel() {
 
       console.log('[Publish] Imovel created:', imovel.id);
 
-      // Find an imobiliaria to create the public access
+      // Save knowledge base entries if any
+      if (knowledgeBaseEntries.length > 0) {
+        const kbData = knowledgeBaseEntries.map((entry, idx) => ({
+          imovel_id: imovel.id,
+          categoria: entry.categoria,
+          titulo: entry.titulo,
+          conteudo: entry.conteudo,
+          fonte_tipo: entry.fonte_tipo,
+          fonte_arquivo_url: entry.fonte_arquivo_url || null,
+          fonte_arquivo_nome: entry.fonte_arquivo_nome || null,
+          tags: entry.tags || [],
+          ativo: entry.ativo,
+          prioridade: knowledgeBaseEntries.length - idx,
+        }));
+
+        const { error: kbError } = await supabase
+          .from('imovel_knowledge_base')
+          .insert(kbData);
+
+        if (kbError) {
+          console.warn('[Publish] Error saving knowledge base:', kbError);
+        } else {
+          console.log('[Publish] Knowledge base saved:', kbData.length, 'entries');
+        }
+      }
       // First, try to find an imobiliaria associated with this user
       const { data: imobiliarias } = await supabase
         .from('imobiliarias')
@@ -388,6 +414,8 @@ export default function NovoImovel() {
           {currentStep === 4 && (
             <Step4Media
               defaultValues={formData}
+              knowledgeBaseEntries={knowledgeBaseEntries}
+              onKnowledgeBaseChange={setKnowledgeBaseEntries}
               onComplete={(data) => {
                 handleStepComplete(data);
                 handleNext();
