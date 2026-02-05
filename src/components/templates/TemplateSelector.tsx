@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { Palette, Crown, Zap, Home } from "lucide-react";
+import { Palette, Crown, Zap, Home, Building2, Eye } from "lucide-react";
 import type { TemplateType, TemplateCustomization } from "@/types/database";
 import { TemplateCustomizationModal } from "./TemplateCustomizationModal";
 import { templateDefaults } from "./templateStyles";
@@ -59,6 +59,17 @@ const templates: {
       accent: "bg-amber-700",
     },
   },
+  {
+    id: "alto_padrao",
+    name: "Alto Padrão",
+    description: "Ocean e natureza",
+    target: "Golf, praia, resorts exclusivos",
+    icon: <Building2 className="h-5 w-5" />,
+    preview: {
+      bg: "bg-sky-900",
+      accent: "bg-green-500",
+    },
+  },
 ];
 
 export function TemplateSelector({
@@ -83,7 +94,7 @@ export function TemplateSelector({
       <RadioGroup
         value={selectedTemplate}
         onValueChange={(v) => onTemplateChange(v as TemplateType)}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {templates.map((template) => (
           <Label
@@ -111,6 +122,8 @@ export function TemplateSelector({
                           ? "bg-amber-500/20 text-amber-500"
                           : template.preview.bg === "bg-white"
                           ? "bg-blue-500/20 text-blue-600"
+                          : template.preview.bg === "bg-sky-900"
+                          ? "bg-sky-500/20 text-sky-300"
                           : "bg-amber-700/20 text-amber-800"
                       }`}
                     >
@@ -140,15 +153,25 @@ export function TemplateSelector({
         ))}
       </RadioGroup>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setShowCustomization(true)}
-        className="w-full"
-      >
-        <Palette className="mr-2 h-4 w-4" />
-        Personalizar Cores e Fontes
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowCustomization(true)}
+          className="flex-1"
+        >
+          <Palette className="mr-2 h-4 w-4" />
+          Personalizar Cores e Fontes
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => window.open("/templates", "_blank")}
+        >
+          <Eye className="mr-2 h-4 w-4" />
+          Ver Preview
+        </Button>
+      </div>
 
       <TemplateCustomizationModal
         open={showCustomization}

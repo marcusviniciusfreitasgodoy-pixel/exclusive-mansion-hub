@@ -125,7 +125,7 @@ export interface Imovel {
     miniBio?: string;
   }>;
   // Template fields
-  template_escolhido: 'luxo' | 'moderno' | 'classico';
+  template_escolhido: TemplateType;
   customizacao_template: TemplateCustomization;
 }
 
