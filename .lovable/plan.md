@@ -1,176 +1,198 @@
 
-# Plano: Criar Template "Empreendimento Alto Padrão"
+# Plano: Criar Tabela "Empreendimentos" no Supabase
 
 ## Objetivo
-Criar um novo template de landing page chamado **"Empreendimento Alto Padrão"** (código interno: `alto_padrao`) com design tokens customizados inspirados em temas oceânicos (azul marinho) e de natureza/golf (verde), utilizando fontes Montserrat e Roboto.
+Criar uma nova tabela `empreendimentos` no banco de dados Supabase para armazenar dados de empreendimentos imobiliários de alto padrão, com estrutura otimizada usando JSONB para objetos complexos.
 
 ---
 
-## Arquitetura do Template
+## Estrutura da Tabela
 
-O template seguirá o mesmo padrão dos templates existentes (Luxo, Moderno, Clássico):
+### Colunas Principais
 
-```text
-src/components/property/altopadrao/
-├── AltoPadraoHero.tsx       (Hero com carrossel, overlay, CTAs)
-├── AltoPadraoDetailsGrid.tsx (Grid de especificações e descrição)
-├── AltoPadraoGallery.tsx    (Galeria com lightbox)
-├── AltoPadraoFooter.tsx     (Rodapé 4 colunas)
-└── index.ts                  (Exports)
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| id | uuid | No | gen_random_uuid() | Chave primária |
+| construtora_id | uuid | No | - | FK para construtoras (owner) |
+| titulo | text | No | - | Nome do empreendimento |
+| descricao_curta | text | No | - | Descrição resumida |
+| slug | text | No | - | URL amigável (UNIQUE) |
+| status | enum | No | 'em_lancamento' | Status do empreendimento |
+| localizacao | jsonb | No | '{}' | Cidade, bairro, endereço |
+| caracteristicas_principais | jsonb | No | '[]' | Array de destaques |
+| imagens | jsonb | No | '[]' | Array de {url, alt} |
+| precos | jsonb | No | '{}' | {minValor, maxValor, unidade} |
+| detalhes | jsonb | No | '{}' | {areaUtil, quartos, banheiros, vagasGaragem} |
+| link_visita_virtual | text | Yes | null | URL tour virtual |
+| cores_design_system | jsonb | Yes | '{}' | Tokens de cor customizados |
+| componentes_ui | jsonb | Yes | '{}' | Mapeamento de componentes |
+| created_at | timestamptz | Yes | now() | Data criação |
+| updated_at | timestamptz | Yes | now() | Data atualização |
 
-src/components/templates/
-├── TemplateAltoPadrao.tsx    (Componente principal)
+### Enum de Status
+
+```sql
+CREATE TYPE empreendimento_status AS ENUM (
+  'em_lancamento',
+  'em_construcao', 
+  'pronto_para_morar'
+);
 ```
 
 ---
 
-## Design Tokens a Implementar
+## Políticas RLS (Row Level Security)
 
-### Paleta de Cores
-| Token | Valor | Uso |
-|-------|-------|-----|
-| primary-500 | #0284c7 | Azul marinho (botões, headings) |
-| primary-800 | #0c4a6e | Azul escuro (backgrounds, texto heading) |
-| secondary-500 | #22c55e | Verde natureza (acentos, preços, ícones) |
-| neutral-800 | #262626 | Texto body |
-| neutral-500 | #737373 | Texto muted |
-| background-light | #ffffff | Fundo claro |
-| background-dark | #0c4a6e | Fundo escuro (hero, footer) |
-
-### Tipografia
-- **Fonte Primária**: Montserrat (headings)
-- **Fonte Secundária**: Roboto (body text)
-- **Pesos**: 300-700
-- **Tamanhos**: xs (12px) até 6xl (60px)
-
-### Espaçamentos (base 8px)
-- xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px, 2xl: 48px, 3xl: 64px, 4xl: 96px
-
-### Borders
-- Radius: sm (4px), md (8px), lg (12px), xl (16px), full (9999px)
-
-### Shadows
-- sm, md, lg, xl com opacidades suaves
+| Política | Comando | Condição |
+|----------|---------|----------|
+| Construtoras podem criar | INSERT | construtora_id = get_construtora_id(auth.uid()) |
+| Construtoras podem ver seus empreendimentos | SELECT | construtora_id = get_construtora_id(auth.uid()) |
+| Construtoras podem atualizar | UPDATE | construtora_id = get_construtora_id(auth.uid()) |
+| Construtoras podem deletar | DELETE | construtora_id = get_construtora_id(auth.uid()) |
+| Público pode ver empreendimentos ativos | SELECT | status IS NOT NULL |
 
 ---
 
-## Arquivos a Criar/Modificar
+## Índices
 
-### 1. Componentes do Template Alto Padrão
-
-**`src/components/property/altopadrao/AltoPadraoHero.tsx`**
-- Hero com altura 70vh
-- Carrossel automático de imagens
-- Overlay azul escuro (#0c4a6e) com 50% opacidade
-- Título em Montserrat bold, cor primary-500
-- Preço em verde secondary-500
-- Botão CTA com border-radius: 12px
-- Contadores de mídia (fotos, vídeos, 360°)
-
-**`src/components/property/altopadrao/AltoPadraoDetailsGrid.tsx`**
-- Layout 2 colunas
-- Descrição narrativa à esquerda
-- Especificações em cards à direita
-- Ícones em verde secondary-500
-- Headers em Montserrat semibold
-
-**`src/components/property/altopadrao/AltoPadraoGallery.tsx`**
-- Grid responsivo (1/3/4 colunas)
-- Hover com scale e overlay verde
-- Lightbox fullscreen
-
-**`src/components/property/altopadrao/AltoPadraoFooter.tsx`**
-- Background primary-800 (#0c4a6e)
-- 4 colunas: navegação, contato, social, newsletter
-- Destaques em verde secondary-500
-- Logo da imobiliária + "Tecnologia Godoy Prime"
-
-**`src/components/property/altopadrao/index.ts`**
-- Exports de todos os componentes
-
-### 2. Template Principal
-
-**`src/components/templates/TemplateAltoPadrao.tsx`**
-- Estrutura similar ao TemplateLuxo/TemplateModerno
-- Carrega fontes Montserrat e Roboto via Google Fonts
-- Estilos scoped com data-template="altopadrao"
-- CSS customizado com os design tokens
-- Integração com todos os componentes existentes (Navbar, ContactSection, Sofia, etc.)
-
-### 3. Atualizações de Configuração
-
-**`src/types/database.ts`**
-- Adicionar `'alto_padrao'` ao type `TemplateType`
-
-**`src/components/templates/templateStyles.ts`**
-- Adicionar entrada `alto_padrao` em `templateDefaults`
-- Configurar: colorPrimary (#0284c7), colorSecondary (#22c55e), fontes Montserrat/Roboto
-
-**`src/components/templates/index.ts`**
-- Exportar `TemplateAltoPadrao`
-
-**`src/components/wizard/Step6Template.tsx`**
-- Adicionar opção "Alto Padrão" com ícone (Building2) e descrição
-- Preview colors: bg-sky-900, accent-emerald-500
-
-**`src/pages/TemplatesShowcase.tsx`**
-- Adicionar preview do template Alto Padrão
-
-**`src/pages/imovel/PropertyPage.tsx`**
-- Adicionar case para renderizar TemplateAltoPadrao
+1. **slug** - UNIQUE para URLs amigáveis
+2. **status** - Filtros por status
+3. **construtora_id** - Queries por construtora
+4. **GIN em localizacao** - Busca em campos JSONB
 
 ---
 
-## Detalhes de Implementação CSS
+## Dados de Exemplo: Oceana Golf
 
-Os estilos scoped serão injetados no componente:
-
-```css
-[data-template="altopadrao"] {
-  font-family: 'Roboto', sans-serif;
-  color: #262626;
-}
-[data-template="altopadrao"] h1,
-[data-template="altopadrao"] h2,
-[data-template="altopadrao"] h3,
-[data-template="altopadrao"] h4 {
-  font-family: 'Montserrat', sans-serif;
-  color: #0c4a6e;
-}
-[data-template="altopadrao"] .btn-altopadrao {
-  background: #0284c7;
-  color: white;
-  border-radius: 12px;
-  transition: all 300ms ease-in-out;
-}
-[data-template="altopadrao"] .btn-altopadrao:hover {
-  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4);
-  transform: translateY(-2px);
-}
-[data-template="altopadrao"] .icon-accent {
-  color: #22c55e;
+```json
+{
+  "titulo": "Oceana Golf",
+  "descricao_curta": "Residencial de luxo com vista panorâmica para o oceano e acesso exclusivo ao campo de golf",
+  "slug": "oceana-golf",
+  "status": "em_lancamento",
+  "localizacao": {
+    "cidade": "Rio de Janeiro",
+    "bairro": "Barra da Tijuca",
+    "endereco": "Av. Lúcio Costa, 3500"
+  },
+  "caracteristicas_principais": [
+    "4 suítes com varanda",
+    "Vista panorâmica para o mar",
+    "Acesso exclusivo ao Golf Club",
+    "Piscina privativa",
+    "4 vagas de garagem",
+    "Área de lazer completa"
+  ],
+  "imagens": [
+    { "url": "/assets/gallery/ocean-front.jpg", "alt": "Fachada Oceana Golf" },
+    { "url": "/assets/gallery/principal.jpg", "alt": "Vista da varanda" }
+  ],
+  "precos": {
+    "minValor": 4500000,
+    "maxValor": 12000000,
+    "unidade": "R$"
+  },
+  "detalhes": {
+    "areaUtil": 380,
+    "quartos": 4,
+    "banheiros": 5,
+    "vagasGaragem": 4
+  },
+  "link_visita_virtual": "https://tour360.oceana-golf.com.br",
+  "cores_design_system": {
+    "primary": "#0284c7",
+    "secondary": "#22c55e"
+  },
+  "componentes_ui": {
+    "cardImovel": true,
+    "botaoCTA": true,
+    "formularioContato": true
+  }
 }
 ```
+
+---
+
+## SQL da Migration
+
+```sql
+-- 1. Criar enum de status
+CREATE TYPE empreendimento_status AS ENUM (
+  'em_lancamento',
+  'em_construcao',
+  'pronto_para_morar'
+);
+
+-- 2. Criar tabela empreendimentos
+CREATE TABLE public.empreendimentos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  construtora_id uuid NOT NULL REFERENCES public.construtoras(id) ON DELETE CASCADE,
+  titulo text NOT NULL,
+  descricao_curta text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  status empreendimento_status NOT NULL DEFAULT 'em_lancamento',
+  localizacao jsonb NOT NULL DEFAULT '{}',
+  caracteristicas_principais jsonb NOT NULL DEFAULT '[]',
+  imagens jsonb NOT NULL DEFAULT '[]',
+  precos jsonb NOT NULL DEFAULT '{}',
+  detalhes jsonb NOT NULL DEFAULT '{}',
+  link_visita_virtual text,
+  cores_design_system jsonb DEFAULT '{}',
+  componentes_ui jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- 3. Índices para performance
+CREATE INDEX idx_empreendimentos_status ON public.empreendimentos(status);
+CREATE INDEX idx_empreendimentos_construtora ON public.empreendimentos(construtora_id);
+CREATE INDEX idx_empreendimentos_localizacao ON public.empreendimentos USING GIN (localizacao);
+
+-- 4. Trigger para updated_at
+CREATE TRIGGER update_empreendimentos_updated_at
+  BEFORE UPDATE ON public.empreendimentos
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+
+-- 5. Habilitar RLS
+ALTER TABLE public.empreendimentos ENABLE ROW LEVEL SECURITY;
+
+-- 6. Políticas RLS
+CREATE POLICY "Construtoras podem criar empreendimentos"
+  ON public.empreendimentos FOR INSERT
+  WITH CHECK (construtora_id = get_construtora_id(auth.uid()));
+
+CREATE POLICY "Construtoras podem ver seus empreendimentos"
+  ON public.empreendimentos FOR SELECT
+  USING (construtora_id = get_construtora_id(auth.uid()));
+
+CREATE POLICY "Construtoras podem atualizar seus empreendimentos"
+  ON public.empreendimentos FOR UPDATE
+  USING (construtora_id = get_construtora_id(auth.uid()));
+
+CREATE POLICY "Construtoras podem deletar seus empreendimentos"
+  ON public.empreendimentos FOR DELETE
+  USING (construtora_id = get_construtora_id(auth.uid()));
+
+CREATE POLICY "Publico pode ver empreendimentos"
+  ON public.empreendimentos FOR SELECT
+  USING (true);
+```
+
+---
+
+## Inserção de Dados de Exemplo
+
+Após a criação da tabela, será inserido o empreendimento "Oceana Golf" vinculado a uma construtora existente no banco (usando service role para bypass de RLS durante seed).
 
 ---
 
 ## Resultado Esperado
 
-- Novo template disponível no wizard de cadastro/edição de imóveis
-- Preview visual na página /templates
-- Estilo inspirado em empreendimentos de golf/praia
-- Paleta azul oceânico + verde natureza
-- Tipografia moderna (Montserrat + Roboto)
-- Todos os componentes reutilizados (contato, chatbot, materiais promocionais, etc.)
+- Nova tabela `empreendimentos` criada com estrutura JSONB otimizada
+- RLS configurado para isolamento por construtora
+- Índices para queries performáticas
+- Dados de exemplo "Oceana Golf" inseridos
+- Pronto para integração com o template Alto Padrão
 
----
-
-## Próximos Passos Após Aprovação
-
-1. Criar pasta e componentes do template Alto Padrão
-2. Atualizar types e configurações
-3. Integrar ao wizard de seleção de templates
-4. Adicionar preview na showcase
-5. Testar end-to-end
-
-Quando aprovar, implementarei esta primeira etapa. Depois, você poderá enviar instruções adicionais para ajustes de layout ou seções específicas.
+Quando aprovar, executarei a migration e inserirei os dados de exemplo. Depois podemos seguir para a próxima etapa!
