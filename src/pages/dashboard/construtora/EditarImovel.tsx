@@ -80,6 +80,16 @@ export default function EditarImovel() {
       const diferenciaisArray = parseJsonArray<string>(imovel.diferenciais);
       const imagensArray = parseJsonArray<{ url?: string; alt?: string; isPrimary?: boolean }>(imovel.imagens);
       const videosArray = parseJsonArray<{ url?: string; tipo?: string }>(imovel.videos);
+      const documentosArray = parseJsonArray<{ url?: string; nome?: string; tipo?: string; tamanho_bytes?: number }>(
+        (imovel as any).documentos
+      );
+      
+      // Parse materiais_promocionais
+      const materiaisPromocionais = (() => {
+        const mp = imovel.materiais_promocionais;
+        if (!mp || typeof mp !== 'object') return undefined;
+        return mp as Step4Data['materiais_promocionais'];
+      })();
       
       const mapped: Partial<Step1Data & Step2Data & Step3Data & Step4Data> = {
         titulo: imovel.titulo,
@@ -106,6 +116,8 @@ export default function EditarImovel() {
         videos: videosArray,
         tour360Url: imovel.tour_360_url || '',
         status: (imovel.status === 'vendido' ? 'inativo' : imovel.status) as 'ativo' | 'inativo',
+        documentos: documentosArray,
+        materiais_promocionais: materiaisPromocionais,
       };
       setFormData(mapped);
       setIsDataLoaded(true);
@@ -139,6 +151,8 @@ export default function EditarImovel() {
         videos: JSON.stringify(data.videos || []),
         tour_360_url: data.tour360Url || null,
         status: data.status || 'ativo',
+        documentos: JSON.stringify(data.documentos || []),
+        materiais_promocionais: data.materiais_promocionais || null,
       };
 
       const { error } = await supabase
