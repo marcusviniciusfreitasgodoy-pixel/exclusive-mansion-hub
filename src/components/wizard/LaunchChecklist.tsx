@@ -128,6 +128,7 @@ export function LaunchChecklist({ data, onTemplateSuggestion }: LaunchChecklistP
     luxo: 'Luxo',
     moderno: 'Moderno',
     classico: 'Clássico',
+    alto_padrao: 'Alto Padrão',
   };
 
   const showTemplateSuggestion = data.template_escolhido !== suggestedTemplate && onTemplateSuggestion;

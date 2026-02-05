@@ -24,6 +24,7 @@ import { Loader2 } from "lucide-react";
 const TemplateLuxo = lazy(() => import("@/components/templates/TemplateLuxo"));
 const TemplateModerno = lazy(() => import("@/components/templates/TemplateModerno"));
 const TemplateClassico = lazy(() => import("@/components/templates/TemplateClassico"));
+const TemplateAltoPadrao = lazy(() => import("@/components/templates/TemplateAltoPadrao"));
 
 function LoadingSpinner() {
   return (
@@ -203,7 +204,8 @@ export default function PropertyPage() {
       {templateType === 'luxo' && <TemplateLuxo data={data} integracoes={integracoes} />}
       {templateType === 'moderno' && <TemplateModerno data={data} integracoes={integracoes} />}
       {templateType === 'classico' && <TemplateClassico data={data} integracoes={integracoes} />}
-      {!['luxo', 'moderno', 'classico'].includes(templateType) && <DefaultTemplate data={data} />}
+      {templateType === 'alto_padrao' && <TemplateAltoPadrao data={data} integracoes={integracoes} />}
+      {!['luxo', 'moderno', 'classico', 'alto_padrao'].includes(templateType) && <DefaultTemplate data={data} />}
     </Suspense>
   );
 }

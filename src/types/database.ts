@@ -129,7 +129,7 @@ export interface Imovel {
   customizacao_template: TemplateCustomization;
 }
 
-export type TemplateType = 'luxo' | 'moderno' | 'classico';
+export type TemplateType = 'luxo' | 'moderno' | 'classico' | 'alto_padrao';
 
 export interface TemplateCustomization {
   cor_primaria?: string;

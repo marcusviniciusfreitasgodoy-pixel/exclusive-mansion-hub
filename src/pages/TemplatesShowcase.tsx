@@ -19,7 +19,8 @@ import {
   Play,
   Images,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Building2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -448,6 +449,141 @@ function TemplateClassicoPreview() {
   );
 }
 
+// ==================== TEMPLATE ALTO PADRÃO (Ocean/Nature Style) ====================
+function TemplateAltoPadraoPreview() {
+  return (
+    <div className="bg-white text-gray-800 min-h-[600px] overflow-hidden rounded-lg border">
+      {/* Header */}
+      <header className="h-14 bg-white border-b flex items-center justify-between px-6">
+        <span className="font-sans text-xl font-bold text-[#0c4a6e]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          ALTO PADRÃO
+        </span>
+        <nav className="hidden md:flex gap-6 text-sm font-medium text-gray-600">
+          <span className="hover:text-[#0284c7] transition-colors cursor-pointer">Comprar</span>
+          <span className="hover:text-[#0284c7] transition-colors cursor-pointer">Vender</span>
+          <span className="hover:text-[#0284c7] transition-colors cursor-pointer">Alugar</span>
+          <span className="hover:text-[#0284c7] transition-colors cursor-pointer">Corretores</span>
+        </nav>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative h-[280px]">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-[#0c4a6e]/50" />
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+          <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wide mb-2" style={{ fontFamily: "'Montserrat', sans-serif", color: "#0284c7" }}>
+            {sampleProperty.titulo}
+          </h1>
+          <p className="text-white/80 mb-4" style={{ fontFamily: "'Roboto', sans-serif" }}>
+            {sampleProperty.bairro}, {sampleProperty.cidade}
+          </p>
+          <p className="text-2xl font-semibold mb-6" style={{ fontFamily: "'Montserrat', sans-serif", color: "#22c55e" }}>
+            {formatCurrency(sampleProperty.valor)}
+          </p>
+          <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#0284c7", borderRadius: "12px" }}>
+            Falar com Corretor
+          </Button>
+        </div>
+      </section>
+
+      {/* Image Grid */}
+      <section className="p-6 bg-[#fafafa]">
+        <div className="grid grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="aspect-square bg-gray-200 rounded-lg overflow-hidden hover:scale-105 transition-transform duration-300 cursor-pointer group"
+            >
+              <div className="w-full h-full bg-gradient-to-br from-sky-100 to-sky-200 flex items-center justify-center relative">
+                <Images className="w-8 h-8 text-sky-500" />
+                <div className="absolute inset-0 bg-[#22c55e]/0 group-hover:bg-[#22c55e]/30 transition-colors" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Details Grid - 2 Columns */}
+      <section className="p-6 bg-white">
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: "'Montserrat', sans-serif", color: "#0c4a6e" }}>Sobre o Imóvel</h3>
+            <p className="text-gray-600 text-sm leading-relaxed" style={{ fontFamily: "'Roboto', sans-serif" }}>
+              {sampleProperty.descricao.slice(0, 200)}...
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: "'Montserrat', sans-serif", color: "#0c4a6e" }}>Especificações</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <Bed className="w-4 h-4 text-[#22c55e]" />
+                <span className="text-sm text-gray-600">{sampleProperty.quartos} Quartos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bath className="w-4 h-4 text-[#22c55e]" />
+                <span className="text-sm text-gray-600">{sampleProperty.banheiros} Banheiros</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Car className="w-4 h-4 text-[#22c55e]" />
+                <span className="text-sm text-gray-600">{sampleProperty.vagas} Vagas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Maximize className="w-4 h-4 text-[#22c55e]" />
+                <span className="text-sm text-gray-600">{sampleProperty.area_total}m²</span>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {sampleProperty.amenidades.slice(0, 4).map((a) => (
+                <Badge key={a} variant="outline" className="text-[#22c55e] border-[#22c55e] text-xs">
+                  {a}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#0c4a6e] text-white p-6">
+        <div className="grid md:grid-cols-4 gap-6 text-sm">
+          <div>
+            <h4 className="font-semibold mb-2" style={{ color: "#22c55e", fontFamily: "'Montserrat', sans-serif" }}>Navegação</h4>
+            <div className="space-y-1 text-white/70">
+              <p>Comprar</p>
+              <p>Vender</p>
+              <p>Alugar</p>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2" style={{ color: "#22c55e", fontFamily: "'Montserrat', sans-serif" }}>Contato</h4>
+            <p className="text-white/70">+55 21 99999-9999</p>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2" style={{ color: "#22c55e", fontFamily: "'Montserrat', sans-serif" }}>Redes Sociais</h4>
+            <div className="flex gap-3 text-[#22c55e]">
+              <span>Instagram</span>
+              <span>LinkedIn</span>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2" style={{ color: "#22c55e", fontFamily: "'Montserrat', sans-serif" }}>Newsletter</h4>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Seu e-mail"
+                className="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-sm flex-1 placeholder:text-white/50"
+              />
+              <Button size="sm" className="text-white rounded-xl" style={{ backgroundColor: "#22c55e" }}>
+                Assinar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
 // ==================== MAIN SHOWCASE PAGE ====================
 export default function TemplatesShowcase() {
   const [activeTemplate, setActiveTemplate] = useState<string>("luxo");
@@ -484,6 +620,16 @@ export default function TemplatesShowcase() {
       font: "Inter",
       preview: <TemplateClassicoPreview />,
     },
+    {
+      id: "alto_padrao",
+      name: "Alto Padrão",
+      subtitle: "Estilo Ocean & Nature",
+      description: "Inspirado em empreendimentos de golf e praia. Paleta azul oceânico e verde natureza. Ideal para resorts e empreendimentos exclusivos.",
+      icon: <Building2 className="w-6 h-6" />,
+      colors: ["#0284c7", "#22c55e", "#0c4a6e"],
+      font: "Montserrat + Roboto",
+      preview: <TemplateAltoPadraoPreview />,
+    },
   ];
 
   const currentTemplate = templates.find((t) => t.id === activeTemplate);
@@ -505,7 +651,7 @@ export default function TemplatesShowcase() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Template Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {templates.map((template) => (
             <Card
               key={template.id}
@@ -597,6 +743,9 @@ export default function TemplatesShowcase() {
                 <TabsTrigger value="classico" className="flex items-center gap-1">
                   <Home className="w-4 h-4" /> Clássico
                 </TabsTrigger>
+                <TabsTrigger value="alto_padrao" className="flex items-center gap-1">
+                  <Building2 className="w-4 h-4" /> Alto Padrão
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -607,7 +756,7 @@ export default function TemplatesShowcase() {
         </div>
 
         {/* Legend */}
-        <div className="mt-8 grid md:grid-cols-3 gap-6">
+        <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-[#D4AF37]/50 bg-[#D4AF37]/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -649,6 +798,21 @@ export default function TemplatesShowcase() {
                 <li>• Barra de métricas resumida</li>
                 <li>• Design azul/dourado tradicional</li>
                 <li>• CTA de contato destacado</li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-[#0284c7]/50 bg-[#0284c7]/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-5 h-5 text-[#0284c7]" />
+                <span className="font-semibold">Alto Padrão (Ocean)</span>
+              </div>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Hero 70vh overlay oceânico</li>
+                <li>• Tipografia Montserrat + Roboto</li>
+                <li>• Galeria com hover verde</li>
+                <li>• Paleta azul + verde natureza</li>
               </ul>
             </CardContent>
           </Card>
