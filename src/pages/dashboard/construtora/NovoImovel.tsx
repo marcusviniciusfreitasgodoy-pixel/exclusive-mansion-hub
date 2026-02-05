@@ -18,6 +18,7 @@ import { Step2Specifications, step2Schema, type Step2Data } from '@/components/w
 import { Step3Description, step3Schema, type Step3Data } from '@/components/wizard/Step3Description';
 import { Step4Media, step4Schema, type Step4Data } from '@/components/wizard/Step4Media';
 import { Step5Review, type ReviewData } from '@/components/wizard/Step5Review';
+import { Step6Template } from '@/components/wizard/Step6Template';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 import type { MateriaisPromocionais } from '@/types/materiais-promocionais';
 
@@ -26,7 +27,8 @@ const STEPS = [
   { id: 2, title: 'Especificações', icon: '📐' },
   { id: 3, title: 'Descrição', icon: '📝' },
   { id: 4, title: 'Mídias', icon: '🖼️' },
-  { id: 5, title: 'Revisão', icon: '✅' },
+  { id: 5, title: 'Template', icon: '🎨' },
+  { id: 6, title: 'Revisão', icon: '✅' },
 ];
 
 const DRAFT_KEY = 'imovel_draft';
@@ -107,7 +109,7 @@ export default function NovoImovel() {
   };
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -331,7 +333,7 @@ export default function NovoImovel() {
             </div>
           ))}
         </div>
-        <Progress value={(currentStep / 5) * 100} className="h-2" />
+        <Progress value={(currentStep / 6) * 100} className="h-2" />
       </div>
 
       {/* Step Content */}
@@ -343,7 +345,8 @@ export default function NovoImovel() {
             {currentStep === 2 && 'Especifique as dimensões e características'}
             {currentStep === 3 && 'Descreva o imóvel e seus diferenciais'}
             {currentStep === 4 && 'Adicione fotos, vídeos e tour virtual'}
-            {currentStep === 5 && 'Revise todas as informações antes de publicar'}
+            {currentStep === 5 && 'Escolha o estilo visual da página do imóvel'}
+            {currentStep === 6 && 'Revise todas as informações antes de publicar'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -395,6 +398,14 @@ export default function NovoImovel() {
             />
           )}
           {currentStep === 5 && (
+            <Step6Template
+              formData={formData}
+              onTemplateChange={(template) => setFormData(prev => ({ ...prev, template_escolhido: template }))}
+              onCustomizationChange={(custom) => setFormData(prev => ({ ...prev, customizacao_template: custom }))}
+              onNext={handleNext}
+            />
+          )}
+          {currentStep === 6 && (
             <Step5Review
               data={formData as ReviewData}
               confirmed={confirmed}
@@ -423,7 +434,7 @@ export default function NovoImovel() {
           Salvar Rascunho
         </Button>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <div /> // Empty div for spacing - actual next is handled by step forms
         ) : (
           <Button

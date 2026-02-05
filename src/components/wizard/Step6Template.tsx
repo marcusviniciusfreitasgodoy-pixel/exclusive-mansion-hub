@@ -22,7 +22,13 @@ interface Step6TemplateProps {
     valor?: number;
     imagens?: { url?: string; alt?: string }[];
   };
-  onComplete: (data: Step6Data) => void;
+  // Mode 1: Complete wizard step (used in EditarImovel)
+  onComplete?: (data: Step6Data) => void;
+  // Mode 2: Inline step (used in NovoImovel)
+  formData?: any;
+  onTemplateChange?: (template: TemplateType) => void;
+  onCustomizationChange?: (custom: TemplateCustomization) => void;
+  onNext?: () => void;
 }
 
 const templates: {
@@ -79,13 +85,21 @@ const templates: {
   },
 ];
 
-export function Step6Template({ defaultValues, propertyData, onComplete }: Step6TemplateProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
-    defaultValues?.templateEscolhido || 'luxo'
-  );
-  const [customization, setCustomization] = useState<TemplateCustomization>(
-    defaultValues?.customizacaoTemplate || {}
-  );
+export function Step6Template({ 
+  defaultValues, 
+  propertyData, 
+  onComplete,
+  formData,
+  onTemplateChange,
+  onCustomizationChange,
+  onNext
+}: Step6TemplateProps) {
+  // Support both modes: defaultValues from wizard OR formData from inline step
+  const initialTemplate = defaultValues?.templateEscolhido || formData?.template_escolhido || 'luxo';
+  const initialCustomization = defaultValues?.customizacaoTemplate || formData?.customizacao_template || {};
+
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(initialTemplate);
+  const [customization, setCustomization] = useState<TemplateCustomization>(initialCustomization);
   const [showCustomization, setShowCustomization] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateType>('luxo');
@@ -93,11 +107,15 @@ export function Step6Template({ defaultValues, propertyData, onComplete }: Step6
   useEffect(() => {
     if (defaultValues?.templateEscolhido) {
       setSelectedTemplate(defaultValues.templateEscolhido);
+    } else if (formData?.template_escolhido) {
+      setSelectedTemplate(formData.template_escolhido);
     }
     if (defaultValues?.customizacaoTemplate) {
       setCustomization(defaultValues.customizacaoTemplate);
+    } else if (formData?.customizacao_template) {
+      setCustomization(formData.customizacao_template);
     }
-  }, [defaultValues]);
+  }, [defaultValues, formData]);
 
   const handlePreview = (templateId: TemplateType) => {
     setPreviewTemplate(templateId);
@@ -105,10 +123,26 @@ export function Step6Template({ defaultValues, propertyData, onComplete }: Step6
   };
 
   const handleSubmit = () => {
-    onComplete({
-      templateEscolhido: selectedTemplate,
-      customizacaoTemplate: customization,
-    });
+    if (onComplete) {
+      // Mode 1: Complete wizard step
+      onComplete({
+        templateEscolhido: selectedTemplate,
+        customizacaoTemplate: customization,
+      });
+    } else {
+      // Mode 2: Inline step - callbacks already called on change, just navigate
+      onNext?.();
+    }
+  };
+
+  const handleTemplateSelect = (template: TemplateType) => {
+    setSelectedTemplate(template);
+    onTemplateChange?.(template);
+  };
+
+  const handleCustomizationSave = (custom: TemplateCustomization) => {
+    setCustomization(custom);
+    onCustomizationChange?.(custom);
   };
 
   const getTemplatePreviewUrl = (templateId: TemplateType) => {
@@ -128,7 +162,7 @@ export function Step6Template({ defaultValues, propertyData, onComplete }: Step6
 
       <RadioGroup
         value={selectedTemplate}
-        onValueChange={(v) => setSelectedTemplate(v as TemplateType)}
+        onValueChange={(v) => handleTemplateSelect(v as TemplateType)}
         className="grid grid-cols-1 gap-4"
       >
         {templates.map((template) => (
@@ -258,7 +292,7 @@ export function Step6Template({ defaultValues, propertyData, onComplete }: Step6
         onOpenChange={setShowCustomization}
         templateType={selectedTemplate}
         customization={customization}
-        onSave={setCustomization}
+        onSave={handleCustomizationSave}
       />
     </div>
   );
