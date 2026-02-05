@@ -1,88 +1,101 @@
 
-# Plano: Adicionar Template Alto Padrao e Preview no Seletor
+# Plano: HeyGen LiveAvatar Exclusivo para Casa Malibu
 
-## Problema Identificado
-O componente `TemplateSelector.tsx` apresenta apenas 3 templates (Luxo, Moderno, Classico), faltando o template **Alto Padrao**. Alem disso, nao ha funcionalidade de preview/visualizacao dos templates antes de seleciona-los.
+## Objetivo
+Adicionar o avatar visual interativo da HeyGen apenas na página da **Casa Triplex no Condomínio Malibu**, mantendo o avatar estático padrão para os demais imóveis.
 
-## Alteracoes Necessarias
+## Identificação do Imóvel
+- **Título:** Casa Triplex no Condomínio Malibu
+- **ID:** `996ec17b-a35c-4070-b74e-63194b5096a8`
 
-### 1. Corrigir Tipo no database.ts
-**Arquivo:** `src/types/database.ts`
+## Alterações Necessárias
 
-O campo `template_escolhido` na interface `Imovel` esta limitado a 3 opcoes:
-```typescript
-template_escolhido: 'luxo' | 'moderno' | 'classico';
+### 1. Criar Componente HeyGenAvatar
+**Arquivo:** `src/components/property/HeyGenAvatar.tsx`
+
+Componente encapsulado para o iframe do LiveAvatar:
+- Aspect ratio 16:9 responsivo
+- Permissão de microfone habilitada
+- Estilização integrada com o design atual
+
+### 2. Atualizar SofiaAssistentSection
+**Arquivo:** `src/components/property/SofiaAssistentSection.tsx`
+
+Adicionar lógica condicional baseada no `imovelId`:
+
+```text
+SE imovelId === "996ec17b-a35c-4070-b74e-63194b5096a8"
+  → Renderiza HeyGenAvatar (iframe visual animado)
+SENÃO
+  → Renderiza avatar estático padrão (círculo com "S")
 ```
 
-Precisa ser atualizado para:
+## Código Proposto
+
+### HeyGenAvatar.tsx (Novo arquivo)
 ```typescript
-template_escolhido: TemplateType;
-```
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-Isso permitira usar o tipo `TemplateType` que ja inclui `alto_padrao`.
+interface HeyGenAvatarProps {
+  agentId?: string;
+  className?: string;
+}
 
-### 2. Adicionar Template Alto Padrao no Seletor
-**Arquivo:** `src/components/templates/TemplateSelector.tsx`
+const DEFAULT_AGENT_ID = "2f42c097-5fdf-4e1c-9b3e-263c5652e92e";
 
-Adicionar o quarto template na lista:
-```typescript
-{
-  id: "alto_padrao",
-  name: "Alto Padrao",
-  description: "Ocean e natureza",
-  target: "Golf, praia, resorts exclusivos",
-  icon: <Building2 className="h-5 w-5" />,
-  preview: {
-    bg: "bg-sky-900",
-    accent: "bg-green-500",
-  },
+export function HeyGenAvatar({ 
+  agentId = DEFAULT_AGENT_ID, 
+  className 
+}: HeyGenAvatarProps) {
+  return (
+    <div className={className}>
+      <AspectRatio ratio={16 / 9}>
+        <iframe
+          src={`https://embed.liveavatar.com/v1/${agentId}`}
+          allow="microphone"
+          title="Assistente Virtual Sofia"
+          className="w-full h-full rounded-2xl shadow-2xl border-2 border-accent/20"
+        />
+      </AspectRatio>
+    </div>
+  );
 }
 ```
 
-Ajustar o grid para 4 colunas:
-```typescript
-className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-```
-
-### 3. Adicionar Botao de Preview
-**Arquivo:** `src/components/templates/TemplateSelector.tsx`
-
-Adicionar um botao "Visualizar Templates" que abre o showcase:
-- Link para `/templates` em nova aba
-- Ou modal com preview embutido
-
-**Opcao escolhida:** Link externo para `/templates` (reutiliza a pagina de showcase existente)
+### SofiaAssistentSection.tsx (Edição)
+Substituir o bloco do avatar (linhas 108-135) por renderização condicional:
 
 ```typescript
-<div className="flex gap-2">
-  <Button
-    type="button"
-    variant="outline"
-    onClick={() => setShowCustomization(true)}
-  >
-    <Palette className="mr-2 h-4 w-4" />
-    Personalizar Cores
-  </Button>
-  <Button
-    type="button"
-    variant="ghost"
-    onClick={() => window.open("/templates", "_blank")}
-  >
-    <Eye className="mr-2 h-4 w-4" />
-    Ver Preview
-  </Button>
-</div>
+// ID do imóvel Casa Malibu
+const MALIBU_PROPERTY_ID = "996ec17b-a35c-4070-b74e-63194b5096a8";
+const showHeyGenAvatar = imovelId === MALIBU_PROPERTY_ID;
+
+// Na renderização:
+{showHeyGenAvatar ? (
+  <div className="order-1 lg:order-2 flex justify-center">
+    <div className="relative w-full max-w-md lg:max-w-lg">
+      <HeyGenAvatar />
+      <div className="absolute -top-2 -right-2 bg-green-600 ...">
+        Online
+      </div>
+    </div>
+  </div>
+) : (
+  // Avatar estático atual (círculo com S)
+  <div className="order-1 lg:order-2 ...">
+    ...código existente...
+  </div>
+)}
 ```
 
 ## Resumo de Arquivos
 
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/types/database.ts` | Atualizar `template_escolhido` para usar `TemplateType` |
-| `src/components/templates/TemplateSelector.tsx` | Adicionar template Alto Padrao + botao preview |
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/components/property/HeyGenAvatar.tsx` | Criar | Componente do iframe HeyGen |
+| `src/components/property/SofiaAssistentSection.tsx` | Editar | Renderização condicional por imovelId |
 
 ## Resultado Final
-- 4 templates visiveis no seletor (Luxo, Moderno, Classico, Alto Padrao)
-- Cada template com icone, descricao e indicacao de uso
-- Botao para visualizar preview completo dos templates na pagina /templates
-- Grid responsivo 1-2-4 colunas conforme tela
+- **Casa Malibu**: Avatar visual animado da HeyGen (iframe interativo)
+- **Demais imóveis**: Avatar estático padrão (círculo com "S")
+- Chatbot de texto/voz funciona normalmente em ambos os casos
