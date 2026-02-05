@@ -2,6 +2,10 @@ import { useState, useCallback } from "react";
 import { MessageSquare, Sparkles, HelpCircle, MapPin, Home, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
+import { HeyGenAvatar } from "./HeyGenAvatar";
+
+// ID do imóvel Casa Malibu que terá o avatar HeyGen
+const MALIBU_PROPERTY_ID = "996ec17b-a35c-4070-b74e-63194b5096a8";
 
 interface SofiaAssistentSectionProps {
   propertyTitle: string;
@@ -106,33 +110,45 @@ export function SofiaAssistentSection({
             </div>
 
             {/* Right - Sofia Avatar */}
-            <div className="order-1 lg:order-2 flex justify-center">
-              <div className="relative">
-                {/* Decorative circles */}
-                <div className="absolute inset-0 -m-3 md:-m-4 rounded-full bg-accent/10 animate-pulse" />
-                <div className="absolute inset-0 -m-6 md:-m-8 rounded-full bg-accent/5" />
-                
-                {/* Avatar Container */}
-                <div className="relative w-32 h-32 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-accent/20">
-                  {/* Sofia Avatar */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 mx-auto rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
-                      <span className="text-2xl md:text-5xl lg:text-6xl font-bold text-primary">
-                        S
-                      </span>
-                    </div>
-                    <p className="mt-2 md:mt-3 text-white font-semibold text-xs md:text-base">Sofia</p>
-                    <p className="text-accent/80 text-[10px] md:text-xs">Assistente IA • Texto & Voz</p>
+            {imovelId === MALIBU_PROPERTY_ID ? (
+              <div className="order-1 lg:order-2 flex justify-center">
+                <div className="relative w-full max-w-md lg:max-w-lg">
+                  <HeyGenAvatar className="w-full" />
+                  <div className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg z-10">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    Online
                   </div>
                 </div>
+              </div>
+            ) : (
+              <div className="order-1 lg:order-2 flex justify-center">
+                <div className="relative">
+                  {/* Decorative circles */}
+                  <div className="absolute inset-0 -m-3 md:-m-4 rounded-full bg-accent/10 animate-pulse" />
+                  <div className="absolute inset-0 -m-6 md:-m-8 rounded-full bg-accent/5" />
+                  
+                  {/* Avatar Container */}
+                  <div className="relative w-32 h-32 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-accent/20">
+                    {/* Sofia Avatar */}
+                    <div className="text-center">
+                      <div className="w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 mx-auto rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
+                        <span className="text-2xl md:text-5xl lg:text-6xl font-bold text-primary">
+                          S
+                        </span>
+                      </div>
+                      <p className="mt-2 md:mt-3 text-white font-semibold text-xs md:text-base">Sofia</p>
+                      <p className="text-accent/80 text-[10px] md:text-xs">Assistente IA • Texto & Voz</p>
+                    </div>
+                  </div>
 
-                {/* Floating badges */}
-                <div className="absolute -top-2 -right-2 md:top-0 md:right-0 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  Online
+                  {/* Floating badges */}
+                  <div className="absolute -top-2 -right-2 md:top-0 md:right-0 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    Online
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Bottom note */}
