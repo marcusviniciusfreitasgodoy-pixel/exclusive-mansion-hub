@@ -51,6 +51,8 @@ const ConfigurarAgenda = lazy(() => import("./pages/dashboard/imobiliaria/Config
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
 const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClientePublico"));
 const TemplatesShowcase = lazy(() => import("./pages/TemplatesShowcase"));
+const EmpreendimentosHome = lazy(() => import("./pages/empreendimentos/Home"));
+const EmpreendimentoDetalhe = lazy(() => import("./pages/empreendimentos/EmpreendimentoDetalhe"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -88,7 +90,15 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/empreendimentos" replace />} />
+              
+              {/* Empreendimentos Routes */}
+              <Route path="/empreendimentos" element={
+                <LazyRoute><EmpreendimentosHome /></LazyRoute>
+              } />
+              <Route path="/empreendimento/:slug" element={
+                <LazyRoute><EmpreendimentoDetalhe /></LazyRoute>
+              } />
               
               {/* Templates Showcase - Public */}
               <Route path="/templates" element={
