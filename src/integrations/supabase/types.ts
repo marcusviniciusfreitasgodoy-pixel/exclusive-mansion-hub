@@ -1558,6 +1558,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          function_name: string
+          id: string
+          identifier: string
+          request_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          function_name: string
+          id?: string
+          identifier: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          function_name?: string
+          id?: string
+          identifier?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       tarefas: {
         Row: {
           construtora_id: string | null
@@ -1929,6 +1956,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_and_increment_rate_limit: {
+        Args: {
+          p_function_name: string
+          p_identifier: string
+          p_max_requests: number
+          p_window_seconds: number
+        }
+        Returns: Json
+      }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_construtora_id: { Args: { _user_id: string }; Returns: string }
       get_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       has_role: {

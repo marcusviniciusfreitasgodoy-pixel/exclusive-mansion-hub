@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { 
   htmlEncode, 
   isValidEmail, 
@@ -9,6 +9,7 @@ import {
   errorResponse, 
   successResponse 
 } from "../_shared/security.ts";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -28,6 +29,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting check
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "send-feedback-request");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[send-feedback-request] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const data: FeedbackRequestData = await req.json();
     const { feedbackId, token, clienteNome, clienteEmail, imovelTitulo } = data;
 
@@ -63,8 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
     const safeNome = htmlEncode(clienteNome);
     const safeTitulo = htmlEncode(imovelTitulo);
 
-    // Create Supabase client to verify feedback exists
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Verify the feedback exists and has the correct token (reuse supabase from rate limit check)
 
     // Verify the feedback exists and has the correct token
     const { data: feedback, error: feedbackError } = await supabase

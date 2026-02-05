@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const SYSTEM_PROMPT = `Aja como um especialista em marketing imobiliário de alto padrão, com foco exclusivo no mercado do Rio de Janeiro.
 
@@ -42,6 +47,16 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "generate-property-copy");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[generate-property-copy] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const { tipo, dados_imovel } = await req.json();
 
     if (!tipo || !dados_imovel) {
