@@ -49,11 +49,12 @@ const CardImovel = ({
         transition-all duration-300 ease-in-out
         hover:shadow-xl hover:-translate-y-1
         cursor-pointer
+        animate-fade-in
         ${className}
       `}
     >
-      {/* Image Container */}
-      <div className="relative h-56 overflow-hidden">
+      {/* Image Container - 16:9 Aspect Ratio */}
+      <div className="relative aspect-video overflow-hidden">
         <img
           src={imagem}
           alt={imagemAlt || titulo}
