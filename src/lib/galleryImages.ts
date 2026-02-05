@@ -1,77 +1,62 @@
-// Static imports for gallery images
-// This file provides a mapping from relative paths to bundled asset URLs
-// Using lazy loading to avoid bundling all images upfront
+// Gallery image URL resolver
+//
+// IMPORTANT: To keep production builds fast and reliable, we serve gallery assets from /public
+// (public/assets/gallery/*) instead of bundling them via import.meta.glob.
+//
+// Expected input format in the app: "/assets/gallery/01.jpg" (or any filename under that folder)
+// This resolver keeps those URLs working and provides a simple preload helper.
 
-const galleryModules = import.meta.glob<{ default: string }>('@/assets/gallery/*.jpg', { 
-  eager: false,
-  query: '?url'
-});
-
-// Cache for resolved URLs
 const resolvedCache: Record<string, string> = {};
 
-// Extract filenames for quick lookup
-const filenameToPath: Record<string, string> = {};
-Object.keys(galleryModules).forEach((path) => {
-  const filename = path.split('/').pop() || '';
-  filenameToPath[filename] = path;
-});
+function normalizeGalleryUrl(url: string): string {
+  // Absolute URLs (http/https) are returned as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
 
-export async function resolveImageUrlAsync(url: string): Promise<string> {
-  // If it's an absolute URL (http/https), return as-is
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
+  // If it's already a public gallery path, keep it
+  if (url.startsWith('/assets/gallery/')) return url;
+
+  // If someone passes just a filename, normalize it
+  if (!url.includes('/') && url.toLowerCase().endsWith('.jpg')) {
+    return `/assets/gallery/${url}`;
   }
-  
-  // If it's a local gallery path like "/assets/gallery/01.jpg"
-  if (url.includes('/assets/gallery/')) {
-    const filename = url.split('/').pop() || '';
-    
-    // Check cache first
-    if (resolvedCache[filename]) {
-      return resolvedCache[filename];
-    }
-    
-    const modulePath = filenameToPath[filename];
-    if (modulePath && galleryModules[modulePath]) {
-      try {
-        const module = await galleryModules[modulePath]();
-        resolvedCache[filename] = module.default;
-        return module.default;
-      } catch {
-        // Fallback to original URL on error
-      }
-    }
-  }
-  
+
   // Fallback to original URL
   return url;
 }
 
-// Synchronous version for backward compatibility
-// Returns the original URL if not cached (images load from public path)
+export async function resolveImageUrlAsync(url: string): Promise<string> {
+  const normalized = normalizeGalleryUrl(url);
+
+  // Cache by exact normalized URL
+  if (resolvedCache[normalized]) return resolvedCache[normalized];
+
+  // We don't need async work anymore, but keep the async API for compatibility
+  resolvedCache[normalized] = normalized;
+  return normalized;
+}
+
 export function resolveImageUrl(url: string): string {
-  // If it's an absolute URL (http/https), return as-is
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  
-  // If it's a local gallery path, check cache
-  if (url.includes('/assets/gallery/')) {
-    const filename = url.split('/').pop() || '';
-    if (resolvedCache[filename]) {
-      return resolvedCache[filename];
-    }
-  }
-  
-  // Return original URL - images in public folder work directly
-  return url;
+  return normalizeGalleryUrl(url);
 }
 
-// Preload a specific image (useful for hero images)
 export async function preloadImage(url: string): Promise<string> {
-  return resolveImageUrlAsync(url);
+  const resolved = await resolveImageUrlAsync(url);
+
+  // Best-effort preload (won't throw on errors)
+  try {
+    await new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = resolved;
+    });
+  } catch {
+    // ignore
+  }
+
+  return resolved;
 }
 
-// Export for debugging
-export { resolvedCache, filenameToPath };
+// Export for debugging/compatibility
+export { resolvedCache };
+export const filenameToPath: Record<string, string> = {};
