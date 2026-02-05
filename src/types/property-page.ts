@@ -86,7 +86,7 @@ export interface PropertyData {
   tags: string[];
   corretores: Corretor[];
   // Template fields
-  templateEscolhido: 'luxo' | 'moderno' | 'classico';
+  templateEscolhido: 'luxo' | 'moderno' | 'classico' | 'alto_padrao';
   customizacaoTemplate: {
     cor_primaria?: string;
     cor_secundaria?: string;

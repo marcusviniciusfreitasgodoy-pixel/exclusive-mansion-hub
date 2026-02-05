@@ -59,6 +59,19 @@ export const templateDefaults: Record<TemplateType, TemplateStyles> = {
     transitionEasing: "ease",
     animationsEnabled: false,
   },
+  alto_padrao: {
+    colorPrimary: "#0284c7",    // Azul marinho oceânico
+    colorSecondary: "#22c55e",  // Verde natureza/golf
+    colorText: "#262626",
+    fontHeading: "'Montserrat', sans-serif",
+    fontBody: "'Roboto', sans-serif",
+    heroHeight: "70vh",
+    sectionPadding: "48px",
+    buttonRadius: "12px",
+    transitionDuration: "300ms",
+    transitionEasing: "ease-in-out",
+    animationsEnabled: true,
+  },
 };
 
 export function getTemplateStyles(

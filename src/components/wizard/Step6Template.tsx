@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Crown, Zap, Home, Palette, Eye, ExternalLink } from 'lucide-react';
+import { Crown, Zap, Home, Palette, Eye, ExternalLink, Building2 } from 'lucide-react';
 import type { TemplateType, TemplateCustomization } from '@/types/database';
 import { TemplateCustomizationModal } from '@/components/templates/TemplateCustomizationModal';
 
@@ -82,6 +82,19 @@ const templates: {
       textColor: 'text-amber-800',
     },
     showcaseUrl: '/templates?template=classico',
+  },
+  {
+    id: 'alto_padrao',
+    name: 'Alto Padrão',
+    description: 'Oceânico e natural, inspirado em golf & praia',
+    target: 'Empreendimentos de alto padrão, resorts',
+    icon: <Building2 className="h-6 w-6" />,
+    preview: {
+      bg: 'bg-sky-900',
+      accent: 'bg-emerald-500',
+      textColor: 'text-emerald-400',
+    },
+    showcaseUrl: '/templates?template=alto_padrao',
   },
 ];
 

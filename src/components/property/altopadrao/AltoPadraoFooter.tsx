@@ -1,0 +1,235 @@
+import { useState } from "react";
+import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import type { PropertyBranding } from "@/types/property-page";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import logoWhite from "@/assets/logo-godoy-negativo.png";
+
+interface AltoPadraoFooterProps {
+  branding: PropertyBranding;
+  construtora: {
+    nome: string;
+    logo: string | null;
+  };
+}
+
+export function AltoPadraoFooter({ branding, construtora }: AltoPadraoFooterProps) {
+  const [email, setEmail] = useState("");
+  const currentYear = new Date().getFullYear();
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Newsletter signup logic here
+    setEmail("");
+  };
+
+  const socialLinks = [
+    { icon: Facebook, href: "#", label: "Facebook" },
+    { icon: Instagram, href: "#", label: "Instagram" },
+    { icon: Linkedin, href: "#", label: "LinkedIn" },
+    { icon: Twitter, href: "#", label: "Twitter" },
+  ];
+
+  const navLinks = [
+    { label: "Comprar", href: "#" },
+    { label: "Vender", href: "#" },
+    { label: "Alugar", href: "#" },
+    { label: "Corretores", href: "#" },
+  ];
+
+  return (
+    <footer className="bg-[#0c4a6e] text-white">
+      {/* Main Footer Content */}
+      <div className="container mx-auto px-6 py-16 md:px-10 lg:px-20">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+          {/* Column 1 - Navigation */}
+          <div>
+            <h4
+              className="mb-6 text-sm font-semibold uppercase tracking-wider"
+              style={{ 
+                color: "#22c55e",
+                fontFamily: "'Montserrat', sans-serif",
+              }}
+            >
+              Navegação
+            </h4>
+            <ul className="space-y-3">
+              {navLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-white/70 transition-colors hover:text-[#22c55e]"
+                    style={{ fontFamily: "'Roboto', sans-serif" }}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 2 - Contact */}
+          <div>
+            <h4
+              className="mb-6 text-sm font-semibold uppercase tracking-wider"
+              style={{ 
+                color: "#22c55e",
+                fontFamily: "'Montserrat', sans-serif",
+              }}
+            >
+              Contato
+            </h4>
+            <ul className="space-y-4">
+              {branding.telefone && (
+                <li className="flex items-center gap-3 text-sm text-white/70">
+                  <Phone className="h-4 w-4 text-[#22c55e]" />
+                  <span style={{ fontFamily: "'Roboto', sans-serif" }}>{branding.telefone}</span>
+                </li>
+              )}
+              {branding.emailContato && (
+                <li className="flex items-center gap-3 text-sm text-white/70">
+                  <Mail className="h-4 w-4 text-[#22c55e]" />
+                  <span style={{ fontFamily: "'Roboto', sans-serif" }}>{branding.emailContato}</span>
+                </li>
+              )}
+              <li className="flex items-start gap-3 text-sm text-white/70">
+                <MapPin className="h-4 w-4 flex-shrink-0 text-[#22c55e]" />
+                <span style={{ fontFamily: "'Roboto', sans-serif" }}>{branding.imobiliariaNome}</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3 - Social Media */}
+          <div>
+            <h4
+              className="mb-6 text-sm font-semibold uppercase tracking-wider"
+              style={{ 
+                color: "#22c55e",
+                fontFamily: "'Montserrat', sans-serif",
+              }}
+            >
+              Redes Sociais
+            </h4>
+            <div className="flex gap-4">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  className="rounded-full border border-[#22c55e]/30 p-2 text-[#22c55e] transition-all hover:border-[#22c55e] hover:bg-[#22c55e] hover:text-white"
+                  aria-label={social.label}
+                >
+                  <social.icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 4 - Newsletter */}
+          <div>
+            <h4
+              className="mb-6 text-sm font-semibold uppercase tracking-wider"
+              style={{ 
+                color: "#22c55e",
+                fontFamily: "'Montserrat', sans-serif",
+              }}
+            >
+              Newsletter
+            </h4>
+            <p className="mb-4 text-sm text-white/70" style={{ fontFamily: "'Roboto', sans-serif" }}>
+              Receba imóveis exclusivos e novidades do mercado.
+            </p>
+            <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Seu e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-[#22c55e]"
+                required
+              />
+              <Button
+                type="submit"
+                className="bg-[#22c55e] px-4 text-white hover:bg-[#16a34a]"
+                style={{ borderRadius: "12px" }}
+              >
+                Assinar
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="mx-auto h-px w-full max-w-6xl bg-white/10" />
+
+      {/* Bottom Section */}
+      <div className="container mx-auto px-6 py-8 md:px-10 lg:px-20">
+        <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+          {/* Logo/Branding */}
+          <div className="flex items-center gap-4">
+            {branding.imobiliariaLogo ? (
+              <img
+                src={branding.imobiliariaLogo}
+                alt={branding.imobiliariaNome}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <span
+                className="text-lg font-semibold"
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  color: "#0284c7",
+                }}
+              >
+                {branding.imobiliariaNome}
+              </span>
+            )}
+          </div>
+
+          {/* Powered by Godoy Prime */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/40">Tecnologia</span>
+            <img
+              src={logoWhite}
+              alt="Godoy Prime Realty"
+              className="h-6 object-contain opacity-60"
+            />
+          </div>
+
+          {/* Copyright & Legal */}
+          <div className="text-center md:text-right">
+            <p className="text-xs text-white/50">
+              © {currentYear} {branding.imobiliariaNome}. Todos os direitos reservados.
+            </p>
+            <div className="mt-2 flex justify-center gap-4 text-xs text-white/40 md:justify-end">
+              <a
+                href="https://docs.google.com/document/d/1WKh-v-HKJz5rHLhqzaPRlj34YzSe78NhhiQgTnRShls/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="italic hover:text-[#22c55e]"
+              >
+                Política de Privacidade
+              </a>
+              <span>|</span>
+              <a
+                href="https://docs.google.com/document/d/1JqColkt5uzQnajZDWVPTdy423kJlVDEpQepGRGlGFp8/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="italic hover:text-[#22c55e]"
+              >
+                Termos de Uso
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Developer Credit */}
+        {construtora.nome && (
+          <p className="mt-6 text-center text-xs text-white/30">
+            Imóvel comercializado por {construtora.nome}
+          </p>
+        )}
+      </div>
+    </footer>
+  );
+}
