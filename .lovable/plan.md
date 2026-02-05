@@ -1,290 +1,188 @@
 
-# Plano: Implementar Rate Limiting nas Edge Functions
+# Plano: Base de Conhecimento por Imovel para Agente de IA
 
-## Visao Geral
-Implementar um sistema de rate limiting usando o banco de dados PostgreSQL como contador persistente, protegendo as Edge Functions contra abuso de requisicoes.
+## Resumo
+Criar um sistema de base de conhecimento especifica para cada imovel, permitindo upload de documentos PDF e textos que alimentarao o chatbot Sofia com informacoes detalhadas sobre aquele imovel especifico. A funcionalidade estara disponivel tanto no cadastro de novos imoveis quanto na edicao de imoveis existentes.
 
-## Abordagem Tecnica
-
-### Por que usar o banco de dados ao inves de Redis?
-- Nao requer servico externo adicional
-- Aproveitamos a infraestrutura existente do Lovable Cloud
-- Simplicidade de implementacao
-- Funciona bem para o volume de requisicoes esperado
-
-### Arquitetura
+## Arquitetura
 
 ```text
-+------------------+     +-------------------+     +------------------+
-|   Cliente        | --> |  Edge Function    | --> |  rate_limits     |
-|   (Browser)      |     |  (com middleware) |     |  (tabela PG)     |
-+------------------+     +-------------------+     +------------------+
-                               |
-                               v
-                         Verifica limite
-                         Incrementa contador
-                         Limpa entradas antigas
++------------------+     +------------------------+     +-------------------+
+|  Wizard Step 4   | --> |  imovel_knowledge_base | <-- | chatbot-message   |
+|  (Upload + CRUD) |     |  (tabela por imovel)   |     | (Edge Function)   |
++------------------+     +------------------------+     +-------------------+
+        |                          |
+        v                          v
++------------------+     +------------------------+
+| process-pdf-kb   |     | Storage: documentos_kb |
+| (Edge Function)  |     | (bucket para PDFs)     |
++------------------+     +------------------------+
 ```
 
 ## Alteracoes
 
-### 1. Criar Tabela de Rate Limiting
+### 1. Migracao de Banco de Dados
 
-**Nova tabela: `rate_limits`**
-```sql
-CREATE TABLE public.rate_limits (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  identifier text NOT NULL,           -- IP, session_id, ou user_id
-  function_name text NOT NULL,        -- Nome da edge function
-  request_count integer DEFAULT 1,
-  window_start timestamptz DEFAULT now(),
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(identifier, function_name)
-);
+**Nova tabela: `imovel_knowledge_base`**
 
--- Indice para consultas rapidas
-CREATE INDEX idx_rate_limits_lookup ON public.rate_limits(identifier, function_name, window_start);
+| Coluna | Tipo | Descricao |
+|--------|------|-----------|
+| id | uuid | Chave primaria |
+| imovel_id | uuid | FK para imoveis |
+| categoria | text | FAQ, Especificacao, Financiamento, Documentacao, Outros |
+| titulo | text | Titulo da entrada |
+| conteudo | text | Conteudo textual |
+| fonte_tipo | text | 'manual', 'pdf_extraido' |
+| fonte_arquivo_url | text | URL do PDF origem (se aplicavel) |
+| fonte_arquivo_nome | text | Nome do arquivo origem |
+| tags | text[] | Tags para busca |
+| ativo | boolean | Se a entrada esta ativa |
+| prioridade | integer | Prioridade de exibicao |
+| created_at | timestamptz | Data de criacao |
+| updated_at | timestamptz | Data de atualizacao |
 
--- Funcao para limpar registros antigos (executa periodicamente)
-CREATE OR REPLACE FUNCTION public.cleanup_old_rate_limits()
-RETURNS void
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  DELETE FROM public.rate_limits 
-  WHERE window_start < now() - interval '1 hour';
-$$;
+**Indices e RLS:**
+- Indice em `imovel_id` para consultas rapidas
+- RLS: Construtora dona do imovel pode CRUD
+- Leitura publica para Edge Functions via service role
+
+### 2. Nova Edge Function: `process-knowledge-pdf`
+
+Processa PDFs enviados para a base de conhecimento, extraindo texto usando Gemini Vision.
+
+**Fluxo:**
+1. Recebe URL do PDF e `imovel_id`
+2. Baixa o PDF
+3. Envia para Gemini Vision com prompt para extrair informacoes estruturadas
+4. Cria entradas na tabela `imovel_knowledge_base` automaticamente
+5. Retorna lista de entradas criadas
+
+**Prompt de extracao:**
+```
+Analise este documento PDF sobre um imovel/empreendimento e extraia as informacoes mais relevantes.
+
+Para cada informacao importante encontrada, retorne no formato JSON:
+[
+  {
+    "categoria": "FAQ|Especificacao|Financiamento|Documentacao|Outros",
+    "titulo": "Titulo curto e descritivo",
+    "conteudo": "Conteudo detalhado da informacao",
+    "tags": ["tag1", "tag2"]
+  }
+]
+
+Extraia informacoes como:
+- Especificacoes tecnicas (metragem, materiais, acabamentos)
+- Condicoes de pagamento e financiamento
+- Diferenciais do empreendimento
+- Regras e normas do condominio
+- Informacoes sobre entrega e cronograma
+- FAQs comuns sobre o imovel
 ```
 
-### 2. Criar Modulo Compartilhado de Rate Limiting
+### 3. Novo Componente: `Step4KnowledgeBase.tsx`
 
-**Novo arquivo: `supabase/functions/_shared/rate-limiter.ts`**
+Secao no wizard de cadastro para gerenciar a base de conhecimento do imovel.
 
-```typescript
-import { createClient } from "npm:@supabase/supabase-js@2";
+**Funcionalidades:**
+- Upload de PDFs com extracao automatica via IA
+- Adicao manual de entradas (titulo + conteudo)
+- Lista de entradas com edicao inline
+- Toggle de ativo/inativo por entrada
+- Exclusao de entradas
+- Preview do conteudo
 
-interface RateLimitConfig {
-  maxRequests: number;      // Maximo de requisicoes
-  windowSeconds: number;    // Janela de tempo em segundos
-}
-
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetAt: Date;
-}
-
-const DEFAULT_CONFIGS: Record<string, RateLimitConfig> = {
-  "chatbot-message": { maxRequests: 20, windowSeconds: 60 },    // 20 msgs/min
-  "elevenlabs-tts": { maxRequests: 10, windowSeconds: 60 },     // 10 audios/min
-  "generate-property-copy": { maxRequests: 5, windowSeconds: 60 }, // 5 copys/min
-  "send-lead-notification": { maxRequests: 10, windowSeconds: 60 },
-  "send-visit-notification": { maxRequests: 10, windowSeconds: 60 },
-  "send-feedback-request": { maxRequests: 10, windowSeconds: 60 },
-  "default": { maxRequests: 30, windowSeconds: 60 }
-};
-
-export async function checkRateLimit(
-  supabase: ReturnType<typeof createClient>,
-  identifier: string,
-  functionName: string,
-  customConfig?: RateLimitConfig
-): Promise<RateLimitResult> {
-  const config = customConfig || DEFAULT_CONFIGS[functionName] || DEFAULT_CONFIGS["default"];
-  const windowStart = new Date(Date.now() - config.windowSeconds * 1000);
-
-  // Upsert com incremento atomico
-  const { data, error } = await supabase.rpc("check_and_increment_rate_limit", {
-    p_identifier: identifier,
-    p_function_name: functionName,
-    p_window_seconds: config.windowSeconds,
-    p_max_requests: config.maxRequests
-  });
-
-  if (error) {
-    console.error("Rate limit check error:", error);
-    // Em caso de erro, permite a requisicao (fail-open)
-    return { allowed: true, remaining: config.maxRequests, resetAt: new Date() };
-  }
-
-  return {
-    allowed: data.allowed,
-    remaining: data.remaining,
-    resetAt: new Date(data.reset_at)
-  };
-}
-
-export function rateLimitResponse(resetAt: Date): Response {
-  const retryAfter = Math.ceil((resetAt.getTime() - Date.now()) / 1000);
-  return new Response(
-    JSON.stringify({
-      error: "rate_limit_exceeded",
-      message: "Muitas requisicoes. Por favor, aguarde antes de tentar novamente.",
-      retry_after_seconds: retryAfter
-    }),
-    {
-      status: 429,
-      headers: {
-        "Content-Type": "application/json",
-        "Retry-After": String(retryAfter),
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
-      }
-    }
-  );
-}
-
-export function getClientIdentifier(req: Request): string {
-  // Prioridade: header X-Forwarded-For > X-Real-IP > fallback
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-  
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp;
-  }
-  
-  // Fallback para identificador generico
-  return "unknown-client";
-}
+**UI:**
+```text
++-----------------------------------------------+
+| Base de Conhecimento da IA                    |
+| Informacoes que a Sofia usara para responder  |
++-----------------------------------------------+
+| [Upload PDF] [+ Adicionar Manual]             |
++-----------------------------------------------+
+| Entradas (5):                                 |
+| +-------------------------------------------+ |
+| | [FAQ] Qual a metragem?                    | |
+| | A unidade possui 85m2 privativos...       | |
+| | [Editar] [Excluir] [Ativo: ON]            | |
+| +-------------------------------------------+ |
+| | [Especificacao] Materiais de acabamento   | |
+| | Piso em porcelanato, bancadas em granito  | |
+| | [Editar] [Excluir] [Ativo: ON]            | |
+| +-------------------------------------------+ |
++-----------------------------------------------+
 ```
 
-### 3. Criar Funcao PostgreSQL para Verificacao Atomica
+### 4. Integrar no Wizard de Cadastro
 
-**Nova funcao: `check_and_increment_rate_limit`**
+**Arquivo: `src/pages/dashboard/construtora/NovoImovel.tsx`**
 
-```sql
-CREATE OR REPLACE FUNCTION public.check_and_increment_rate_limit(
-  p_identifier text,
-  p_function_name text,
-  p_window_seconds integer,
-  p_max_requests integer
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_window_start timestamptz;
-  v_current_count integer;
-  v_allowed boolean;
-  v_remaining integer;
-  v_reset_at timestamptz;
-BEGIN
-  v_window_start := now() - (p_window_seconds || ' seconds')::interval;
-  v_reset_at := now() + (p_window_seconds || ' seconds')::interval;
-  
-  -- Inserir ou atualizar atomicamente
-  INSERT INTO public.rate_limits (identifier, function_name, request_count, window_start)
-  VALUES (p_identifier, p_function_name, 1, now())
-  ON CONFLICT (identifier, function_name) DO UPDATE
-  SET 
-    request_count = CASE 
-      WHEN rate_limits.window_start < v_window_start THEN 1
-      ELSE rate_limits.request_count + 1
-    END,
-    window_start = CASE 
-      WHEN rate_limits.window_start < v_window_start THEN now()
-      ELSE rate_limits.window_start
-    END
-  RETURNING request_count, window_start + (p_window_seconds || ' seconds')::interval
-  INTO v_current_count, v_reset_at;
-  
-  v_allowed := v_current_count <= p_max_requests;
-  v_remaining := GREATEST(0, p_max_requests - v_current_count);
-  
-  RETURN jsonb_build_object(
-    'allowed', v_allowed,
-    'remaining', v_remaining,
-    'reset_at', v_reset_at,
-    'current_count', v_current_count
-  );
-END;
-$$;
-```
+Modificar o Step 4 (Midias) para incluir uma nova aba "Base de Conhecimento IA" ou criar um Step intermediario.
 
-### 4. Integrar Rate Limiting nas Edge Functions
+**Opcao escolhida:** Adicionar aba no Step 4 existente.
+
+### 5. Atualizar Edge Function `chatbot-message`
 
 **Arquivo: `supabase/functions/chatbot-message/index.ts`**
 
-Adicionar apos as verificacoes iniciais:
+Adicionar busca na tabela `imovel_knowledge_base` alem da `chatbot_knowledge_base` global:
+
 ```typescript
-import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
+// Buscar base de conhecimento especifica do imovel
+const { data: imovelKnowledge } = await supabase
+  .from("imovel_knowledge_base")
+  .select("categoria, titulo, conteudo")
+  .eq("imovel_id", imovel_id)
+  .eq("ativo", true)
+  .order("prioridade", { ascending: false })
+  .limit(30);
 
-// Dentro do handler, apos o parse do JSON:
-const clientId = session_id || getClientIdentifier(req);
-const rateLimitResult = await checkRateLimit(supabase, clientId, "chatbot-message");
-
-if (!rateLimitResult.allowed) {
-  return rateLimitResponse(rateLimitResult.resetAt);
+// Formatar e adicionar ao prompt
+let imovelKnowledgeSection = "";
+if (imovelKnowledge && imovelKnowledge.length > 0) {
+  imovelKnowledgeSection = "\n\nBASE DE CONHECIMENTO DO IMOVEL:";
+  // ... formatar por categoria
 }
 ```
 
-**Arquivo: `supabase/functions/elevenlabs-tts/index.ts`**
+### 6. Pagina de Gerenciamento (Edicao de Imovel)
 
-```typescript
-import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
+**Arquivo: `src/pages/dashboard/construtora/EditarImovel.tsx`**
 
-// Adicionar verificacao no inicio do handler
-const clientId = getClientIdentifier(req);
-const rateLimitResult = await checkRateLimit(supabase, clientId, "elevenlabs-tts");
-
-if (!rateLimitResult.allowed) {
-  return rateLimitResponse(rateLimitResult.resetAt);
-}
-```
-
-**Arquivo: `supabase/functions/generate-property-copy/index.ts`**
-
-```typescript
-import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
-
-// Adicionar verificacao no inicio do handler
-const clientId = getClientIdentifier(req);
-const rateLimitResult = await checkRateLimit(supabase, clientId, "generate-property-copy");
-
-if (!rateLimitResult.allowed) {
-  return rateLimitResponse(rateLimitResult.resetAt);
-}
-```
-
-### 5. Edge Functions a Serem Atualizadas
-
-| Funcao | Limite | Janela | Identificador |
-|--------|--------|--------|---------------|
-| chatbot-message | 20 req | 60s | session_id |
-| elevenlabs-tts | 10 req | 60s | IP |
-| generate-property-copy | 5 req | 60s | IP |
-| send-lead-notification | 10 req | 60s | IP |
-| send-visit-notification | 10 req | 60s | IP |
-| send-feedback-request | 10 req | 60s | IP |
+Adicionar secao para gerenciar base de conhecimento de imoveis ja cadastrados.
 
 ## Resumo de Arquivos
 
 **Novos arquivos:**
-- `supabase/functions/_shared/rate-limiter.ts`
+- `src/components/wizard/Step4KnowledgeBase.tsx` - Componente de upload/gerenciamento
+- `supabase/functions/process-knowledge-pdf/index.ts` - Edge function para processar PDFs
 
 **Arquivos modificados:**
-- `supabase/functions/chatbot-message/index.ts`
-- `supabase/functions/elevenlabs-tts/index.ts`
-- `supabase/functions/generate-property-copy/index.ts`
-- `supabase/functions/send-lead-notification/index.ts`
-- `supabase/functions/send-visit-notification/index.ts`
-- `supabase/functions/send-feedback-request/index.ts`
+- `src/pages/dashboard/construtora/NovoImovel.tsx` - Integrar no wizard
+- `src/pages/dashboard/construtora/EditarImovel.tsx` - Adicionar secao KB
+- `src/components/wizard/Step4Media.tsx` - Adicionar aba KB
+- `supabase/functions/chatbot-message/index.ts` - Buscar KB do imovel
+- `src/types/materiais-promocionais.ts` - Adicionar tipo para KB entries
 
 **Migracao SQL:**
-- Criar tabela `rate_limits`
-- Criar funcao `check_and_increment_rate_limit`
-- Criar funcao `cleanup_old_rate_limits`
+- Criar tabela `imovel_knowledge_base`
+- Criar indice em `imovel_id`
+- Criar politicas RLS
+
+## Fluxo do Usuario
+
+1. Usuario cria novo imovel no wizard
+2. No Step 4 (Midias), clica na aba "Base de Conhecimento"
+3. Faz upload de PDFs (book digital, memorial descritivo, etc)
+4. Sistema extrai informacoes automaticamente via IA
+5. Usuario revisa, edita ou adiciona entradas manualmente
+6. Ao publicar, a base de conhecimento fica associada ao imovel
+7. Quando visitante conversa com Sofia, ela usa essa base para responder
 
 ## Beneficios
 
-1. **Protecao contra abuso**: Limita requisicoes excessivas por IP/sessao
-2. **Economia de recursos**: Reduz custos com APIs externas (ElevenLabs, Lovable AI)
-3. **Persistencia**: Contadores sobrevivem reinicializacao das funcoes
-4. **Atomicidade**: Operacoes UPSERT previnem race conditions
-5. **Resposta padronizada**: Header `Retry-After` permite clientes esperarem corretamente
+1. **IA mais precisa**: Sofia responde com informacoes especificas do imovel
+2. **Automacao**: Extracao automatica de PDFs reduz trabalho manual
+3. **Flexibilidade**: Cada imovel tem sua propria base de conhecimento
+4. **Controle**: Construtora pode editar/desativar informacoes
+5. **Escalabilidade**: Funciona independente para cada imovel
