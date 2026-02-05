@@ -87,7 +87,6 @@ const templates: {
 
 export function Step6Template({ 
   defaultValues, 
-  propertyData, 
   onComplete,
   formData,
   onTemplateChange,
