@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { 
   htmlEncode, 
   isValidEmail, 
@@ -11,6 +11,7 @@ import {
   errorResponse, 
   successResponse 
 } from "../_shared/security.ts";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -72,6 +73,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting check
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "send-visit-notification");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[send-visit-notification] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const data: VisitNotificationRequest = await req.json();
 
     // ===== INPUT VALIDATION =====
@@ -126,8 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
     const safeEndereco = htmlEncode(data.imovelEndereco || 'Endereço não informado');
     const safeObservacoes = sanitizeInput(data.observacoes, 1000);
 
-    // Criar cliente Supabase para buscar dados
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Verificar construtora (reuse supabase from rate limit check)
 
     // Verify construtora exists
     const { data: construtora, error: construtoraError } = await supabase

@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +10,8 @@ const corsHeaders = {
 };
 
 const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // Voice IDs - using a Brazilian Portuguese friendly female voice
 // Laura voice - warm, professional female voice that works well with Portuguese
@@ -19,6 +23,16 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "elevenlabs-tts");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[elevenlabs-tts] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY not configured");
     }

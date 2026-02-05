@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,6 +94,15 @@ serve(async (req) => {
 
     if (!session_id || !mensagem_usuario || !imovel_id) {
       throw new Error("Parâmetros obrigatórios ausentes");
+    }
+
+    // Rate limiting check
+    const clientId = session_id || getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "chatbot-message");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[chatbot-message] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
     }
 
     // 1. Fetch property data

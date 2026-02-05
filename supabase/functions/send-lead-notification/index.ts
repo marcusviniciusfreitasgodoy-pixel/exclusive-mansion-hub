@@ -1,5 +1,5 @@
-import { Resend } from "resend";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { 
   htmlEncode, 
   isValidEmail, 
@@ -10,8 +10,11 @@ import {
   errorResponse, 
   successResponse 
 } from "../_shared/security.ts";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 interface LeadNotificationRequest {
   leadId: string;
@@ -43,6 +46,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting check
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = await checkRateLimit(supabase, clientId, "send-lead-notification");
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[send-lead-notification] Rate limit exceeded for ${clientId}`);
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const data: LeadNotificationRequest = await req.json();
 
     // ===== INPUT VALIDATION =====
@@ -92,11 +105,6 @@ const handler = async (req: Request): Promise<Response> => {
     const safeAddress = htmlEncode(data.propertyAddress || 'Endereço não informado');
     const safeMessage = sanitizeInput(data.leadMessage, 2000);
     const safeImobiliariaNome = htmlEncode(data.imobiliariaNome);
-
-    // Create Supabase client to get construtora data
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Verify the lead exists in the database
     const { data: leadExists, error: leadError } = await supabase
