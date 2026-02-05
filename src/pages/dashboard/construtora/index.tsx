@@ -98,27 +98,35 @@ export default function ConstrutoraDashboard() {
     enabled: !!construtora?.id,
   });
 
-  const { data: accessCounts } = useQuery({
-    queryKey: ['access-counts', construtora?.id],
+  const { data: accessData } = useQuery({
+    queryKey: ['access-data', construtora?.id],
     queryFn: async () => {
-      if (!construtora?.id || !imoveis?.length) return {};
+      if (!construtora?.id || !imoveis?.length) return { counts: {}, slugs: {} };
       
       const { data, error } = await supabase
         .from('imobiliaria_imovel_access')
-        .select('imovel_id')
+        .select('imovel_id, url_slug')
         .in('imovel_id', imoveis.map(i => i.id))
         .eq('status', 'active');
 
       if (error) throw error;
       
       const counts: Record<string, number> = {};
+      const slugs: Record<string, string> = {};
       data?.forEach(access => {
         counts[access.imovel_id] = (counts[access.imovel_id] || 0) + 1;
+        // Store first slug found for each imovel
+        if (!slugs[access.imovel_id]) {
+          slugs[access.imovel_id] = access.url_slug;
+        }
       });
-      return counts;
+      return { counts, slugs };
     },
     enabled: !!imoveis?.length,
   });
+
+  const accessCounts = accessData?.counts;
+  const accessSlugs = accessData?.slugs;
 
   const { data: leadCounts } = useQuery({
     queryKey: ['lead-counts', construtora?.id],
@@ -455,11 +463,22 @@ export default function ConstrutoraDashboard() {
                 >
                   <Copy className="h-3 w-3" />
                 </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to={`/imovel/preview/${imovel.id}`} target="_blank">
+                {accessSlugs?.[imovel.id] ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/imovel/${accessSlugs[imovel.id]}`} target="_blank">
+                      <Eye className="h-3 w-3" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled
+                    title="Nenhuma imobiliária com acesso"
+                  >
                     <Eye className="h-3 w-3" />
-                  </Link>
-                </Button>
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
