@@ -1,10 +1,16 @@
 import { useState, useRef } from 'react';
-import { Upload, X, FileText, TrendingUp, DollarSign, LayoutGrid, Loader2 } from 'lucide-react';
+import { Upload, X, FileText, TrendingUp, DollarSign, LayoutGrid, Loader2, ImageIcon, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { MateriaisPromocionais, MaterialArquivo } from '@/types/materiais-promocionais';
+
+interface ExtractedImage {
+  title: string;
+  page: number;
+  isGoodQuality: boolean;
+}
 
 interface MaterialUploadItem {
   key: keyof Pick<MateriaisPromocionais, 'bookDigital' | 'estudoRentabilidade' | 'tabelaVendas' | 'plantaUnidade'>;
@@ -12,6 +18,7 @@ interface MaterialUploadItem {
   description: string;
   icon: typeof FileText;
   acceptedTypes: string;
+  extractImages?: boolean;
 }
 
 const MATERIAL_ITEMS: MaterialUploadItem[] = [
@@ -21,6 +28,7 @@ const MATERIAL_ITEMS: MaterialUploadItem[] = [
     description: 'Apresentação completa com renders, plantas, conceito e especificações',
     icon: FileText,
     acceptedTypes: '.pdf',
+    extractImages: true,
   },
   {
     key: 'estudoRentabilidade',
@@ -48,15 +56,55 @@ const MATERIAL_ITEMS: MaterialUploadItem[] = [
 interface Step4MaterialsUploadProps {
   defaultValues?: MateriaisPromocionais;
   onChange: (materiais: MateriaisPromocionais) => void;
+  onImagesExtracted?: (images: ExtractedImage[]) => void;
 }
 
-export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4MaterialsUploadProps) {
+export function Step4MaterialsUpload({ defaultValues = {}, onChange, onImagesExtracted }: Step4MaterialsUploadProps) {
   const { toast } = useToast();
   const [materiais, setMateriais] = useState<MateriaisPromocionais>(defaultValues);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState<string | null>(null);
+  const [extractedImages, setExtractedImages] = useState<Record<string, ExtractedImage[]>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleFileUpload = async (key: MaterialUploadItem['key'], file: File) => {
+  const extractImagesFromPdf = async (pdfUrl: string, materialKey: string) => {
+    setExtracting(materialKey);
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-pdf-images', {
+        body: { pdfUrl, materialKey },
+      });
+
+      if (error) {
+        console.error('Error extracting images:', error);
+        toast({
+          title: 'Aviso',
+          description: 'Não foi possível extrair imagens do PDF automaticamente.',
+          variant: 'default',
+        });
+        return;
+      }
+
+      if (data?.images && data.images.length > 0) {
+        setExtractedImages(prev => ({
+          ...prev,
+          [materialKey]: data.images,
+        }));
+        
+        onImagesExtracted?.(data.images);
+        
+        toast({
+          title: 'Imagens identificadas!',
+          description: `${data.images.length} imagens de qualidade foram encontradas no PDF.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error calling extract function:', error);
+    } finally {
+      setExtracting(null);
+    }
+  };
+
+  const handleFileUpload = async (key: MaterialUploadItem['key'], file: File, item: MaterialUploadItem) => {
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       toast({
@@ -105,6 +153,11 @@ export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4Mate
         title: 'Arquivo enviado',
         description: `${file.name} foi enviado com sucesso.`,
       });
+
+      // Auto-extract images from PDF if enabled
+      if (item.extractImages && fileExt === 'pdf') {
+        await extractImagesFromPdf(publicUrl.publicUrl, key);
+      }
     } catch (error: unknown) {
       console.error('Upload error:', error);
       toast({
@@ -122,6 +175,13 @@ export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4Mate
     delete updated[key];
     setMateriais(updated);
     onChange(updated);
+    
+    // Clear extracted images for this material
+    setExtractedImages(prev => {
+      const newState = { ...prev };
+      delete newState[key];
+      return newState;
+    });
   };
 
   const formatFileSize = (bytes?: number): string => {
@@ -145,6 +205,8 @@ export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4Mate
           const material = materiais[item.key];
           const Icon = item.icon;
           const isUploading = uploading === item.key;
+          const isExtracting = extracting === item.key;
+          const imagesFound = extractedImages[item.key];
 
           return (
             <div
@@ -156,26 +218,68 @@ export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4Mate
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <Label className="font-medium text-foreground">{item.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="font-medium text-foreground">{item.label}</Label>
+                    {item.extractImages && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        Extrai imagens
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
 
                   {material ? (
-                    <div className="mt-3 flex items-center gap-3 p-3 bg-muted rounded-lg">
-                      <FileText className="h-5 w-5 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{material.nome}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(material.tamanho_bytes)}
-                        </p>
+                    <div className="mt-3 space-y-3">
+                      <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                        <FileText className="h-5 w-5 text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{material.nome}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(material.tamanho_bytes)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemove(item.key)}
+                          className="shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemove(item.key)}
-                        className="shrink-0"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+
+                      {isExtracting && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-muted/50 rounded">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Analisando PDF e extraindo imagens...
+                        </div>
+                      )}
+
+                      {imagesFound && imagesFound.length > 0 && (
+                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-700">
+                              {imagesFound.length} imagens identificadas
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {imagesFound.map((img, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-1.5 px-2 py-1 bg-background rounded text-xs"
+                              >
+                                <ImageIcon className="h-3 w-3 text-muted-foreground" />
+                                <span>{img.title}</span>
+                                <span className="text-muted-foreground">p.{img.page}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Estas imagens serão sugeridas para uso na galeria do site.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="mt-3">
@@ -187,7 +291,7 @@ export function Step4MaterialsUpload({ defaultValues = {}, onChange }: Step4Mate
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleFileUpload(item.key, file);
+                            handleFileUpload(item.key, file, item);
                           }
                           e.target.value = '';
                         }}

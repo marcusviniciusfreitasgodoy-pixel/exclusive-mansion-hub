@@ -1,6 +1,8 @@
-import { BookOpen, Download, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { MaterialArquivo } from '@/types/materiais-promocionais';
+import { PDFViewerModal } from './PDFViewerModal';
 
 interface PropertyBookSectionProps {
   data: MaterialArquivo;
@@ -8,9 +10,7 @@ interface PropertyBookSectionProps {
 }
 
 export function PropertyBookSection({ data, propertyTitle }: PropertyBookSectionProps) {
-  const handleOpen = () => {
-    window.open(data.url, '_blank');
-  };
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -80,15 +80,23 @@ export function PropertyBookSection({ data, propertyTitle }: PropertyBookSection
                 </ul>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button onClick={handleOpen} className="gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    Abrir Book Digital
+                  <Button onClick={() => setIsViewerOpen(true)} className="gap-2">
+                    <Eye className="h-4 w-4" />
+                    Ver Book Digital
                   </Button>
                   <Button variant="outline" onClick={handleDownload} className="gap-2">
                     <Download className="h-4 w-4" />
                     Download PDF
                   </Button>
                 </div>
+
+                <PDFViewerModal
+                  isOpen={isViewerOpen}
+                  onClose={() => setIsViewerOpen(false)}
+                  url={data.url}
+                  title={`Book Digital - ${propertyTitle}`}
+                  fileName={data.nome}
+                />
               </div>
             </div>
           </div>
