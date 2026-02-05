@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -63,6 +63,26 @@ export function Step1BasicInfo({ defaultValues, onComplete }: Step1Props) {
       status: defaultValues?.status || 'ativo',
     },
   });
+
+  // Reset form when defaultValues change (for draft restore)
+  useEffect(() => {
+    if (defaultValues && Object.keys(defaultValues).length > 0) {
+      form.reset({
+        titulo: defaultValues.titulo || '',
+        endereco: defaultValues.endereco || '',
+        numero: defaultValues.numero || '',
+        complemento: defaultValues.complemento || '',
+        bairro: defaultValues.bairro || '',
+        cidade: defaultValues.cidade || 'Rio de Janeiro',
+        estado: defaultValues.estado || 'RJ',
+        cep: defaultValues.cep || '',
+        valor: defaultValues.valor || 0,
+        condominio: defaultValues.condominio || 0,
+        iptu: defaultValues.iptu || 0,
+        status: defaultValues.status || 'ativo',
+      });
+    }
+  }, [defaultValues, form]);
 
   const onSubmit = (data: Step1Data) => {
     onComplete(data);
