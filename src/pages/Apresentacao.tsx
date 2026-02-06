@@ -156,15 +156,15 @@ export default function Apresentacao() {
       {/* Pain Points */}
       <section className="py-16 md:py-20 bg-muted/50">
         <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">
             Problemas que eliminamos do seu dia a dia
           </h2>
-          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-            Se algum destes cenários parece familiar, a Godoy Prime foi feita para você.
+          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+            Se algum destes cenários parece familiar, a Godoy Prime foi feita para você. Nossa plataforma resolve cada um deles de forma integrada — sem planilhas, sem retrabalho, sem perda de informação.
           </p>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PAIN_POINTS.map((pain, i) => (
-              <div key={i} className="flex items-start gap-3 bg-card rounded-lg p-5 border shadow-sm">
+              <div key={i} className="flex items-start gap-3 bg-card rounded-lg p-5 border border-l-[3px] border-l-secondary shadow-sm hover:shadow-md transition-shadow">
                 <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 shrink-0" />
                 <span className="text-sm font-medium">{pain}</span>
               </div>
