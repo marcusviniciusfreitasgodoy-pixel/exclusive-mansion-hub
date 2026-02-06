@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import {
   Building2, Users, BarChart3, Calendar, MessageSquare, Share2,
   Shield, Zap, TrendingUp, Eye, ClipboardCheck, Star,
-  ArrowRight, Play, CheckCircle2, Phone, Mail
+  ArrowRight, Play, CheckCircle2, Phone, Mail, BookOpen
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -250,16 +250,49 @@ export default function Apresentacao() {
         </div>
       </section>
 
+      {/* Como Funciona */}
+      <section className="py-16 md:py-20 bg-muted/50">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
+            Como funciona
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Em quatro passos simples, você transforma a gestão dos seus imóveis.
+          </p>
+          <div className="grid gap-8 md:grid-cols-4">
+            {[
+              { num: '1', title: 'Cadastre seu imóvel', desc: 'Fotos, vídeos, descrição e escolha do template visual.' },
+              { num: '2', title: 'Compartilhe com parceiros', desc: 'Links white-label rastreados individualmente.' },
+              { num: '3', title: 'Acompanhe em tempo real', desc: 'Leads, visitas, NPS e Efeito UAU no dashboard.' },
+              { num: '4', title: 'Exporte e apresente', desc: 'Relatórios em PDF prontos para proprietários e clientes.' },
+            ].map((step) => (
+              <div key={step.num} className="text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold">
+                  {step.num}
+                </div>
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Demo */}
-      <section className="py-16 bg-muted/50">
+      <section className="py-16 bg-card">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Veja na prática</h2>
           <p className="text-muted-foreground mb-8">
             Explore os painéis da construtora e da imobiliária com dados fictícios — sem precisar criar conta.
           </p>
-          <Button size="lg" className="gap-2 text-base px-10" onClick={() => navigate('/demo')}>
-            <Play className="h-5 w-5" /> Acessar Demonstração Interativa
-          </Button>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button size="lg" className="gap-2 text-base px-10" onClick={() => navigate('/demo')}>
+              <Play className="h-5 w-5" /> Acessar Demonstração Interativa
+            </Button>
+            <Button size="lg" variant="outline" className="gap-2 text-base px-8" onClick={() => navigate('/manual')}>
+              <BookOpen className="h-5 w-5" /> Manual Completo
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -335,8 +368,11 @@ export default function Apresentacao() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t text-center text-sm text-muted-foreground">
+      <footer className="py-8 border-t text-center text-sm text-muted-foreground space-y-2">
         <p>© {new Date().getFullYear()} Godoy Prime Realty — Tecnologia para o mercado imobiliário de alto padrão</p>
+        <a href="/manual" className="inline-flex items-center gap-1 text-primary hover:underline">
+          <BookOpen className="h-3.5 w-3.5" /> Manual do Usuário
+        </a>
       </footer>
 
       <FloatingWhatsApp

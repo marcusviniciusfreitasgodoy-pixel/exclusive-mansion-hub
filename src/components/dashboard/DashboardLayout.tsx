@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './DashboardSidebar';
+import { GuidedTour, TOUR_CONSTRUTORA, TOUR_IMOBILIARIA } from './GuidedTour';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 export interface DashboardLayoutProps {
@@ -10,6 +12,10 @@ export interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, title, fullWidth }: DashboardLayoutProps) {
+  const { role, user } = useAuth();
+  const tourSteps = role === 'construtora' ? TOUR_CONSTRUTORA : TOUR_IMOBILIARIA;
+  const tourKey = user ? `tour-completed-${user.id}` : 'tour-completed-anon';
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -24,6 +30,7 @@ export function DashboardLayout({ children, title, fullWidth }: DashboardLayoutP
           </div>
         </main>
       </div>
+      {user && <GuidedTour steps={tourSteps} storageKey={tourKey} />}
     </SidebarProvider>
   );
 }

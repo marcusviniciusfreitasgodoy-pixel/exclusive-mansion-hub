@@ -59,6 +59,7 @@ const TemplatesShowcase = lazy(() => import("./pages/TemplatesShowcase"));
 const EmpreendimentosHome = lazy(() => import("./pages/empreendimentos/Home"));
 const EmpreendimentoDetalhe = lazy(() => import("./pages/empreendimentos/EmpreendimentoDetalhe"));
 const Apresentacao = lazy(() => import("./pages/Apresentacao"));
+const Manual = lazy(() => import("./pages/Manual"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -122,6 +123,9 @@ const App = () => (
               {/* Apresentação Comercial - Public */}
               <Route path="/apresentacao" element={
                 <LazyRoute><Apresentacao /></LazyRoute>
+              } />
+              <Route path="/manual" element={
+                <LazyRoute><Manual /></LazyRoute>
               } />
               
               {/* Templates Showcase - Public */}
