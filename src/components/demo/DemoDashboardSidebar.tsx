@@ -22,6 +22,7 @@ import {
   Link as LinkIcon,
   Users,
   ArrowLeft,
+  BookOpen,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 import type { AppRole } from '@/types/database';
@@ -89,6 +90,20 @@ export function DemoDashboardSidebar({ role }: DemoDashboardSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/manual" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Manual</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

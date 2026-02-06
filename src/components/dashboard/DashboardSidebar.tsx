@@ -33,33 +33,34 @@ import {
   ImagePlus,
   Images,
   Clock,
+  BookOpen,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
 const construtoraLinks = [
-  { title: 'Meus Imóveis', url: '/dashboard/construtora', icon: Home },
+  { title: 'Meus Imóveis', url: '/dashboard/construtora', icon: Home, tourId: 'imoveis' },
   { title: 'Novo Imóvel', url: '/dashboard/construtora/novo-imovel', icon: Plus },
   { title: 'Aprovar Mídias', url: '/dashboard/construtora/aprovar-midias', icon: ImagePlus, hasBadge: true },
-  { title: 'Pipeline CRM', url: '/dashboard/construtora/pipeline', icon: Kanban },
-  { title: 'Visitas Agendadas', url: '/dashboard/construtora/agendamentos', icon: Calendar },
+  { title: 'Pipeline CRM', url: '/dashboard/construtora/pipeline', icon: Kanban, tourId: 'pipeline' },
+  { title: 'Visitas Agendadas', url: '/dashboard/construtora/agendamentos', icon: Calendar, tourId: 'agendamentos' },
   { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
-  { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3 },
+  { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3, tourId: 'analytics' },
   { title: 'Integrações', url: '/dashboard/construtora/integracoes', icon: Link2 },
-  { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users },
+  { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users, tourId: 'imobiliarias' },
   { title: 'Configurações', url: '/dashboard/construtora/configuracoes', icon: Settings },
 ];
 
 const imobiliariaLinks = [
-  { title: 'Imóveis Disponíveis', url: '/dashboard/imobiliaria', icon: Home },
+  { title: 'Imóveis Disponíveis', url: '/dashboard/imobiliaria', icon: Home, tourId: 'imoveis' },
   { title: 'Minhas Mídias', url: '/dashboard/imobiliaria/minhas-midias', icon: Images },
   { title: 'Pipeline CRM', url: '/dashboard/imobiliaria/pipeline', icon: Kanban },
-  { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar },
+  { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar, tourId: 'agendamentos' },
   { title: 'Configurar Agenda', url: '/dashboard/imobiliaria/configurar-agenda', icon: Clock },
   { title: 'Feedbacks', url: '/dashboard/imobiliaria/feedbacks', icon: FileText },
-  { title: 'Meus Links', url: '/dashboard/imobiliaria/meus-links', icon: LinkIcon },
-  { title: 'Meus Leads', url: '/dashboard/imobiliaria/leads', icon: MessageSquare },
-  { title: 'Analytics', url: '/dashboard/imobiliaria/analytics', icon: BarChart3 },
+  { title: 'Meus Links', url: '/dashboard/imobiliaria/meus-links', icon: LinkIcon, tourId: 'meus-links' },
+  { title: 'Meus Leads', url: '/dashboard/imobiliaria/leads', icon: MessageSquare, tourId: 'leads' },
+  { title: 'Analytics', url: '/dashboard/imobiliaria/analytics', icon: BarChart3, tourId: 'analytics' },
   { title: 'Integrações', url: '/dashboard/imobiliaria/integracoes', icon: Link2 },
   { title: 'Configurações', url: '/dashboard/imobiliaria/configuracoes', icon: Settings },
 ];
@@ -123,7 +124,7 @@ export function DashboardSidebar() {
               {links.map((link) => (
                 <SidebarMenuItem key={link.url}>
                   <SidebarMenuButton asChild isActive={isActive(link.url)}>
-                    <Link to={link.url} className="flex items-center gap-2">
+                    <Link to={link.url} className="flex items-center gap-2" {...('tourId' in link && link.tourId ? { 'data-tour': link.tourId } : {})}>
                       <link.icon className="h-4 w-4" />
                       <span className="flex-1">{link.title}</span>
                       {'hasBadge' in link && link.hasBadge && pendingMediaCount > 0 && (
@@ -135,6 +136,21 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild data-tour="manual">
+                  <a href="/manual" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Manual</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

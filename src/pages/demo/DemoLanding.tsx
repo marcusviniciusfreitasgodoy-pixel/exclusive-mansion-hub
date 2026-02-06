@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { Building2, Home, ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Building2, Home, ArrowRight, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo-principal.png';
@@ -73,9 +73,14 @@ export default function DemoLanding() {
         ))}
       </div>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Todas as ações de criação e exclusão estão desativadas no modo demonstração.
-      </p>
+      <div className="mt-8 flex flex-col items-center gap-3">
+        <p className="text-xs text-muted-foreground">
+          Todas as ações de criação e exclusão estão desativadas no modo demonstração.
+        </p>
+        <Link to="/manual" target="_blank" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+          <BookOpen className="h-4 w-4" /> Consultar Manual Completo
+        </Link>
+      </div>
     </div>
   );
 }
