@@ -1,14 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useCallback, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts';
-import { CheckCircle, Activity, Star, Clock } from 'lucide-react';
+import { CheckCircle, Activity, Star, Clock, Download, Loader2 } from 'lucide-react';
 import { KPICard } from './KPICard';
 import { TrendLineChart } from './TrendLineChart';
+import { toast } from 'sonner';
 
 interface Agendamento {
   id: string;
@@ -73,6 +75,77 @@ const OBJECAO_LABELS: Record<string, string> = {
 };
 
 export function VisitFeedbackAnalytics({ agendamentos, feedbacks, isLoading }: VisitFeedbackAnalyticsProps) {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = useCallback(async () => {
+    if (!reportRef.current) return;
+    setIsExporting(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      // Title
+      pdf.setFontSize(18);
+      pdf.setTextColor(30, 58, 95);
+      pdf.text('Relatório de Visitas e Satisfação', 10, 15);
+      pdf.setFontSize(10);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 10, 22);
+
+      const startY = 28;
+      let currentY = startY;
+      const pageHeight = 280;
+
+      // Split canvas into pages if needed
+      if (imgHeight <= pageHeight - startY) {
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, currentY, imgWidth, imgHeight);
+      } else {
+        const totalPages = Math.ceil(imgHeight / (pageHeight - startY));
+        for (let page = 0; page < totalPages; page++) {
+          if (page > 0) {
+            pdf.addPage();
+            currentY = 10;
+          }
+          const sourceY = page * ((pageHeight - startY) / imgWidth * canvas.width);
+          const sliceHeight = Math.min(
+            (pageHeight - (page === 0 ? startY : 10)) / imgWidth * canvas.width,
+            canvas.height - sourceY
+          );
+
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = sliceHeight;
+          const ctx = sliceCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+            const sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
+            pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, currentY, imgWidth, sliceImgHeight);
+          }
+        }
+      }
+
+      pdf.save(`relatorio-visitas-satisfacao-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success('PDF exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
   const metrics = useMemo(() => {
     const total = agendamentos.length;
     const confirmados = agendamentos.filter(a => ['confirmado', 'realizado'].includes(a.status)).length;
@@ -228,7 +301,23 @@ export function VisitFeedbackAnalytics({ agendamentos, feedbacks, isLoading }: V
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Visitas e Satisfação</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Visitas e Satisfação</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportPDF}
+          disabled={isExporting}
+        >
+          {isExporting ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Gerando PDF...</>
+          ) : (
+            <><Download className="mr-2 h-4 w-4" />Exportar PDF</>
+          )}
+        </Button>
+      </div>
+
+      <div ref={reportRef}>
 
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -390,6 +479,7 @@ export function VisitFeedbackAnalytics({ agendamentos, feedbacks, isLoading }: V
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 }
