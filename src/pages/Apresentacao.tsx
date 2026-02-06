@@ -127,10 +127,10 @@ export default function Apresentacao() {
         <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
           <img src={logoPrincipal} alt="Godoy Prime" className="h-14 mx-auto mb-8 brightness-0 invert" />
           <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground leading-tight max-w-4xl mx-auto">
-            A plataforma que conecta construtoras e imobiliárias em um ecossistema digital inteligente
+            Construtoras e imobiliárias. Conectadas. Transparentes. Lucrativas.
           </h1>
           <p className="mt-6 text-lg md:text-xl text-primary-foreground/80 max-w-3xl mx-auto">
-            Reduza o tempo de resposta a leads, tenha visibilidade total sobre seus parceiros e tome decisões baseadas em dados reais — tudo em um único ambiente.
+            Cadastre imóveis uma vez. Distribua para parceiros com sua marca. Acompanhe resultados em tempo real. Simples assim.
           </p>
           <div className="mt-10 flex flex-wrap gap-4 justify-center">
             <Button
