@@ -47,6 +47,11 @@ const MinhasMidias = lazy(() => import("./pages/dashboard/imobiliaria/MinhasMidi
 const MeusLinks = lazy(() => import("./pages/dashboard/imobiliaria/MeusLinks"));
 const ConfigurarAgenda = lazy(() => import("./pages/dashboard/imobiliaria/ConfigurarAgenda"));
 
+// Lazy load demo pages
+const DemoLanding = lazy(() => import("./pages/demo/DemoLanding"));
+const DemoConstrutora = lazy(() => import("./pages/demo/DemoConstrutora"));
+const DemoImobiliaria = lazy(() => import("./pages/demo/DemoImobiliaria"));
+
 // Lazy load public pages
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
 const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClientePublico"));
@@ -93,6 +98,17 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Login />} />
               
+              {/* Demo Routes */}
+              <Route path="/demo" element={
+                <LazyRoute><DemoLanding /></LazyRoute>
+              } />
+              <Route path="/demo/construtora/*" element={
+                <LazyRoute><DemoConstrutora /></LazyRoute>
+              } />
+              <Route path="/demo/imobiliaria/*" element={
+                <LazyRoute><DemoImobiliaria /></LazyRoute>
+              } />
+
               {/* Empreendimentos Routes */}
               <Route path="/empreendimentos" element={
                 <LazyRoute><EmpreendimentosHome /></LazyRoute>
