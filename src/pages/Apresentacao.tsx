@@ -259,7 +259,7 @@ export default function Apresentacao() {
 
       {/* Footer */}
       <footer className="py-8 border-t text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Godoy Prime — Tecnologia para o mercado imobiliário de alto padrão</p>
+        <p>© {new Date().getFullYear()} Godoy Prime Realty — Tecnologia para o mercado imobiliário de alto padrão</p>
       </footer>
     </div>
   );

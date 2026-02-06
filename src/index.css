@@ -17,43 +17,43 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
 
-    /* Navy blue from logo */
-    --primary: 215 55% 20%;
+    /* Navy blue from logo — #0C2340 */
+    --primary: 213 69% 15%;
     --primary-foreground: 0 0% 100%;
 
-    /* Gold from logo */
-    --secondary: 43 48% 58%;
-    --secondary-foreground: 215 55% 20%;
+    /* Gold from logo — #D4AF37 */
+    --secondary: 46 66% 52%;
+    --secondary-foreground: 213 69% 15%;
 
     --muted: 210 20% 96%;
     --muted-foreground: 215 15% 45%;
 
-    --accent: 43 48% 58%;
-    --accent-foreground: 215 55% 20%;
+    --accent: 46 66% 52%;
+    --accent-foreground: 213 69% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 215 20% 90%;
     --input: 215 20% 90%;
-    --ring: 43 48% 58%;
+    --ring: 46 66% 52%;
 
     --radius: 0.25rem;
     
-    /* Custom luxury colors */
-    --luxury-navy: 215 55% 20%;
-    --luxury-gold: 43 48% 58%;
-    --luxury-gold-light: 43 60% 70%;
+    /* Custom luxury colors — brand manual */
+    --luxury-navy: 213 69% 15%;
+    --luxury-gold: 46 66% 52%;
+    --luxury-gold-light: 46 70% 65%;
     --luxury-cream: 40 20% 97%;
-    --luxury-charcoal: 215 25% 15%;
+    --luxury-charcoal: 213 69% 15%;
     
     /* Gradients */
-    --gradient-luxury: linear-gradient(135deg, hsl(215 55% 20%) 0%, hsl(215 45% 30%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(43 48% 58%) 0%, hsl(43 60% 70%) 100%);
+    --gradient-luxury: linear-gradient(135deg, hsl(213 69% 15%) 0%, hsl(213 55% 22%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(46 66% 52%) 0%, hsl(46 70% 65%) 100%);
     
     /* Shadows */
-    --shadow-elegant: 0 20px 50px -12px hsl(215 55% 20% / 0.15);
-    --shadow-gold: 0 10px 30px -10px hsl(43 48% 58% / 0.3);
+    --shadow-elegant: 0 20px 50px -12px hsl(213 69% 15% / 0.15);
+    --shadow-gold: 0 10px 30px -10px hsl(46 66% 52% / 0.3);
     
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -91,33 +91,33 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 215 55% 8%;
+    --background: 213 69% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 215 45% 12%;
+    --card: 213 55% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 215 45% 12%;
+    --popover: 213 55% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 43 48% 58%;
-    --primary-foreground: 215 55% 20%;
+    --primary: 46 66% 52%;
+    --primary-foreground: 213 69% 15%;
 
-    --secondary: 215 40% 18%;
+    --secondary: 213 50% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 215 40% 18%;
-    --muted-foreground: 215 15% 65%;
+    --muted: 213 50% 18%;
+    --muted-foreground: 213 15% 65%;
 
-    --accent: 43 48% 58%;
-    --accent-foreground: 215 55% 20%;
+    --accent: 46 66% 52%;
+    --accent-foreground: 213 69% 15%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 215 30% 20%;
-    --input: 215 30% 20%;
-    --ring: 43 48% 58%;
+    --border: 213 30% 20%;
+    --input: 213 30% 20%;
+    --ring: 46 66% 52%;
   }
 }
 
@@ -134,9 +134,9 @@ All colors MUST be HSL.
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.02em;
   }
 }
 
