@@ -53,6 +53,7 @@ const PAIN_POINTS = [
   'Materiais de marketing despadronizados e desatualizados',
   'Visitas sem registro, feedback perdido em anotações de papel',
   'Decisões comerciais tomadas sem dados concretos',
+  'Edite este texto com sua informação',
 ];
 
 export default function Apresentacao() {
