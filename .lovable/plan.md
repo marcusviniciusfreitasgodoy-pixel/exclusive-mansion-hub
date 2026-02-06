@@ -1,80 +1,70 @@
 
-# Painel Resumo de Agendamentos e Feedbacks com Analytics Detalhado
+# Implementar Efeito UAU Completo
 
-## Objetivo
-Adicionar metricas de agendamentos e feedbacks (taxa de confirmacao, NPS medio, tempo medio de resposta) nos dashboards de Analytics existentes, tanto da Construtora quanto da Imobiliaria. Criar tambem graficos detalhados de satisfacao e tendencias de feedback.
+## Resumo
+Adicionar ao sistema de feedback pos-visita uma secao "Efeito UAU" que captura quais aspectos do imovel causaram maior impressao no visitante. Inclui coleta no formulario, armazenamento no banco e visualizacao analitica nos dashboards de Construtora e Imobiliaria.
 
 ## O que sera feito
 
-### 1. Componente reutilizavel: VisitFeedbackAnalytics
-Criar um componente compartilhado que exibe as metricas de agendamentos e feedbacks, recebendo os dados por props. Sera usado tanto pela Construtora quanto pela Imobiliaria.
+### 1. Banco de Dados - Nova migracao
+Adicionar duas colunas na tabela `feedbacks_visitas`:
+- `efeito_uau` do tipo `text[]` (array de strings) - categorias selecionadas
+- `efeito_uau_detalhe` do tipo `text` - comentario livre
 
-**Metricas KPI:**
-- Taxa de confirmacao de visitas (confirmados / total agendados)
-- Taxa de realizacao (realizadas / confirmadas)
-- NPS medio dos feedbacks completos
-- Tempo medio de resposta do feedback (entre criacao e feedback_cliente_em)
+### 2. Formulario do Cliente - Coleta
+No arquivo `src/pages/feedback/FeedbackClientePublico.tsx`, adicionar uma nova secao (Card) entre as avaliacoes por categoria e a secao de opiniao textual:
 
-**Graficos:**
-- Evolucao do NPS ao longo do tempo (linha)
-- Distribuicao das avaliacoes por categoria (radar ou barras: localizacao, acabamento, layout, custo-beneficio, atendimento)
-- Tendencia de agendamentos por status (confirmado, cancelado, realizado)
-- Distribuicao de interesse de compra (pie chart, reutilizando pattern existente)
-- Principais objecoes (bar chart horizontal)
+- Titulo: "O que mais te impressionou? (Efeito UAU)"
+- 10 categorias como botoes toggle (selecao multipla): Vista, Acabamento, Espaco, Iluminacao, Varanda/Area externa, Cozinha, Banheiros, Localizacao, Condominio, Seguranca
+- Campo textarea opcional para detalhar o que mais impressionou
+- Atualizar o schema zod com `efeito_uau` (array string opcional) e `efeito_uau_detalhe` (string opcional)
+- Salvar os dados no submit junto com os demais campos
 
-### 2. Construtora - Analytics (adicionar secao)
-No arquivo `src/pages/dashboard/construtora/Analytics.tsx`, adicionar uma nova secao "Visitas e Satisfacao" apos os graficos existentes, com:
-- Query para buscar agendamentos e feedbacks filtrados por periodo e construtora_id
-- KPIs de agendamento (taxa confirmacao, realizacao)
-- KPIs de feedback (NPS medio, tempo medio de resposta)
-- Graficos de tendencia de NPS, avaliacoes por categoria, objecoes
-- Isso complementa o NPS medio que ja existe nos KPIs principais
+### 3. Analytics - Grafico de Efeito UAU
+No componente `src/components/analytics/VisitFeedbackAnalytics.tsx`:
 
-### 3. Imobiliaria - Analytics (adicionar secao)
-No arquivo `src/pages/dashboard/imobiliaria/Analytics.tsx`, adicionar a mesma secao "Visitas e Satisfacao" com:
-- Query filtrada por imobiliaria_id
-- Mesmos KPIs e graficos, adaptados ao contexto da imobiliaria
+- Adicionar `efeito_uau` na interface `Feedback`
+- Criar um `useMemo` que conta a frequencia de cada categoria UAU em todos os feedbacks
+- Renderizar como BarChart horizontal ranqueado por contagem (mesmo estilo do grafico de objecoes)
+- Posicionar como um novo card na terceira linha de graficos, ao lado dos graficos existentes
+
+### 4. Queries de Analytics - Incluir efeito_uau
+Nos arquivos de Analytics da Construtora e Imobiliaria, adicionar `efeito_uau` na lista de campos selecionados nas queries de feedbacks:
+- `src/pages/dashboard/construtora/Analytics.tsx` (VisitFeedbackSection)
+- `src/pages/dashboard/imobiliaria/Analytics.tsx` (ImobVisitFeedbackSection)
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos a criar
+### Migracao SQL
+```sql
+ALTER TABLE public.feedbacks_visitas
+  ADD COLUMN efeito_uau text[] DEFAULT NULL,
+  ADD COLUMN efeito_uau_detalhe text DEFAULT NULL;
+```
 
-1. **`src/components/analytics/VisitFeedbackAnalytics.tsx`**
-   - Componente que recebe como props: `agendamentos`, `feedbacks`, `period` e `isLoading`
-   - Renderiza:
-     - Grid de 4 KPICards (taxa confirmacao, taxa realizacao, NPS medio, tempo medio resposta)
-     - TrendLineChart com evolucao de NPS ao longo do tempo
-     - BarChart com avaliacoes medias por categoria (5 categorias de estrelas)
-     - PieChart com distribuicao de interesse
-     - BarChart horizontal com objecoes
-   - Reutiliza os componentes existentes: KPICard, TrendLineChart do analytics/index
+### Categorias UAU (array constante)
+```typescript
+const EFEITO_UAU_OPTIONS = [
+  { value: "vista", label: "Vista" },
+  { value: "acabamento", label: "Acabamento" },
+  { value: "espaco", label: "Espaço" },
+  { value: "iluminacao", label: "Iluminação" },
+  { value: "varanda", label: "Varanda / Área externa" },
+  { value: "cozinha", label: "Cozinha" },
+  { value: "banheiros", label: "Banheiros" },
+  { value: "localizacao", label: "Localização" },
+  { value: "condominio", label: "Condomínio" },
+  { value: "seguranca", label: "Segurança" },
+];
+```
 
 ### Arquivos a modificar
+1. **`src/pages/feedback/FeedbackClientePublico.tsx`** - Adicionar secao UAU no formulario, schema zod e submit
+2. **`src/components/analytics/VisitFeedbackAnalytics.tsx`** - Adicionar grafico de Efeito UAU e atualizar interface Feedback
+3. **`src/pages/dashboard/construtora/Analytics.tsx`** - Incluir `efeito_uau` na query de feedbacks
+4. **`src/pages/dashboard/imobiliaria/Analytics.tsx`** - Incluir `efeito_uau` na query de feedbacks
 
-2. **`src/components/analytics/index.ts`**
-   - Exportar o novo componente VisitFeedbackAnalytics
-
-3. **`src/pages/dashboard/construtora/Analytics.tsx`**
-   - Adicionar query para buscar agendamentos (`agendamentos_visitas` onde `construtora_id = construtora.id` e no periodo)
-   - Adicionar query para buscar feedbacks completos (`feedbacks_visitas` onde `construtora_id = construtora.id` e no periodo)
-   - Renderizar `VisitFeedbackAnalytics` com os dados obtidos, apos a secao de PropertyImobiliariaBreakdown
-
-4. **`src/pages/dashboard/imobiliaria/Analytics.tsx`**
-   - Adicionar query para buscar agendamentos (`agendamentos_visitas` onde `imobiliaria_id = imobiliaria.id` e no periodo)
-   - Adicionar query para buscar feedbacks completos (`feedbacks_visitas` onde `imobiliaria_id = imobiliaria.id` e no periodo)
-   - Renderizar `VisitFeedbackAnalytics` com os dados obtidos, apos a secao de Performance Table
-
-### Dados consultados (sem necessidade de migracoes SQL)
-Todas as colunas necessarias ja existem:
-- `agendamentos_visitas`: status, created_at, data_confirmada, realizado_em
-- `feedbacks_visitas`: nps_cliente, avaliacao_*, interesse_compra, objecoes, feedback_cliente_em, created_at, status
-
-### Calculo das metricas
-- **Taxa de confirmacao**: `count(status in ['confirmado','realizado']) / count(total)` x 100
-- **Taxa de realizacao**: `count(status = 'realizado') / count(status = 'confirmado' ou 'realizado')` x 100
-- **NPS medio**: `sum(nps_cliente) / count(feedbacks completos)`
-- **Tempo medio de resposta**: media de `feedback_cliente_em - created_at` em horas, para feedbacks completos
-- **Evolucao NPS**: NPS medio agrupado por dia/semana
-- **Avaliacoes por categoria**: media de cada campo avaliacao_* nos feedbacks completos
+### Nenhum arquivo novo necessario
+Toda a implementacao se encaixa nos componentes e estruturas existentes.
