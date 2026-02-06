@@ -1,110 +1,80 @@
 
+# Painel Resumo de Agendamentos e Feedbacks com Analytics Detalhado
 
-# Ajustes no Agendamento de Visitas e Feedback
+## Objetivo
+Adicionar metricas de agendamentos e feedbacks (taxa de confirmacao, NPS medio, tempo medio de resposta) nos dashboards de Analytics existentes, tanto da Construtora quanto da Imobiliaria. Criar tambem graficos detalhados de satisfacao e tendencias de feedback.
 
-## Resumo das Alteracoes
+## O que sera feito
 
-### 1. Agendamento - Permitir Domingos
-Remover o bloqueio de domingos no calendario do modal de agendamento.
+### 1. Componente reutilizavel: VisitFeedbackAnalytics
+Criar um componente compartilhado que exibe as metricas de agendamentos e feedbacks, recebendo os dados por props. Sera usado tanto pela Construtora quanto pela Imobiliaria.
 
-### 2. Agendamento - Intervalos de 1h30
-Alterar os horarios disponiveis de intervalos de 30 minutos para intervalos de 1 hora e 30 minutos:
-- Horarios: 09:00, 10:30, 12:00, 13:30, 15:00, 16:30, 18:00
+**Metricas KPI:**
+- Taxa de confirmacao de visitas (confirmados / total agendados)
+- Taxa de realizacao (realizadas / confirmadas)
+- NPS medio dos feedbacks completos
+- Tempo medio de resposta do feedback (entre criacao e feedback_cliente_em)
 
-### 3. Agendamento - Notificacoes WhatsApp
-Atualmente, ao agendar uma visita, o sistema envia e-mails para cliente, imobiliaria e construtora. A edge function `send-visit-notification` ja gera links wa.me nos e-mails, mas nao envia mensagens diretas pelo WhatsApp.
+**Graficos:**
+- Evolucao do NPS ao longo do tempo (linha)
+- Distribuicao das avaliacoes por categoria (radar ou barras: localizacao, acabamento, layout, custo-beneficio, atendimento)
+- Tendencia de agendamentos por status (confirmado, cancelado, realizado)
+- Distribuicao de interesse de compra (pie chart, reutilizando pattern existente)
+- Principais objecoes (bar chart horizontal)
 
-Adicionar envio de notificacao WhatsApp (via link wa.me ou API oficial, conforme configuracao da imobiliaria) para todos os envolvidos ao criar o agendamento:
-- Cliente: mensagem confirmando a visita
-- Imobiliaria: mensagem notificando nova solicitacao
-- Construtora: mensagem informativa
+### 2. Construtora - Analytics (adicionar secao)
+No arquivo `src/pages/dashboard/construtora/Analytics.tsx`, adicionar uma nova secao "Visitas e Satisfacao" apos os graficos existentes, com:
+- Query para buscar agendamentos e feedbacks filtrados por periodo e construtora_id
+- KPIs de agendamento (taxa confirmacao, realizacao)
+- KPIs de feedback (NPS medio, tempo medio de resposta)
+- Graficos de tendencia de NPS, avaliacoes por categoria, objecoes
+- Isso complementa o NPS medio que ja existe nos KPIs principais
 
-Implementacao: Usar o hook `useWhatsApp` existente no frontend apos o agendamento ser criado, ou adicionar logica na edge function `send-visit-notification` para gerar e registrar as mensagens WhatsApp.
-
-### 4. Feedback Cliente - Novas Perguntas
-Alterar o formulario do cliente (`FeedbackClientePublico.tsx`) para incluir:
-
-**a) Prazo de compra** (novo campo no formulario do cliente, atualmente so existe no formulario do corretor):
-- Opcoes: 0-3 meses / 3-6 meses / 6-12 meses / +12 meses / Indefinido
-
-**b) Interesse em fazer proposta** (reformular o campo "interesse_compra" existente):
-- Pergunta: "Tem interesse em fazer uma proposta?"
-- Se resposta for negativa ("pouco_interessado" ou "sem_interesse"), pedir gentilmente que justifique com as opcoes de objecoes ja existentes (preco, localizacao, tamanho, etc.)
-- Isso ja existe parcialmente - ajustar o texto para ser mais direto e gentil
-
-**c) Orcamento disponivel e forma de pagamento** (novos campos no formulario do cliente):
-- Campo numerico para orcamento
-- Campo texto para forma de pagamento preferida (financiamento, a vista, consorcio, etc.)
-
-**d) Comentarios livres e proximos passos** (ajustar campos existentes):
-- Renomear/reorganizar "sugestoes" para "Comentarios livres"
-- Adicionar campo "Proximos passos" para o cliente indicar o que deseja como proximo passo
-
-### 5. Feedback - Disparo e Follow-up
-
-**Momento atual do disparo:**
-O feedback e solicitado quando a imobiliaria marca a visita como "realizada" no painel de agendamentos. Nesse momento:
-1. Status do agendamento muda para "realizado"
-2. Um registro de feedback e criado com status "aguardando_cliente"
-3. Um e-mail e enviado ao cliente com link para avaliar
-
-**O corretor da seu feedback** somente apos o cliente responder (status muda para "aguardando_corretor"). O corretor ve a notificacao no dashboard de feedbacks e completa com dados de qualificacao.
-
-**Follow-up automatico em 24h (NOVO):**
-Atualmente NAO existe follow-up se o cliente ou corretor nao responder. Implementar:
-- Criar edge function `send-feedback-followup` que verifica feedbacks com status "aguardando_cliente" ou "aguardando_corretor" criados ha mais de 24 horas sem resposta
-- Enviar e-mail de lembrete para quem nao respondeu
-- Enviar WhatsApp de lembrete (via wa.me link)
-- Agendar via pg_cron a cada 2 horas
-- Marcar flag `followup_enviado_cliente` / `followup_enviado_corretor` para nao repetir
-
-### 6. Notificacoes WhatsApp no Feedback
-Alem do e-mail, enviar WhatsApp quando:
-- O feedback e solicitado ao cliente (apos visita "realizada")
-- O follow-up de 24h e disparado
+### 3. Imobiliaria - Analytics (adicionar secao)
+No arquivo `src/pages/dashboard/imobiliaria/Analytics.tsx`, adicionar a mesma secao "Visitas e Satisfacao" com:
+- Query filtrada por imobiliaria_id
+- Mesmos KPIs e graficos, adaptados ao contexto da imobiliaria
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos a modificar
-
-1. **`src/components/property/AgendarVisitaModal.tsx`**
-   - Remover bloqueio de domingos (linha 134)
-   - Alterar array `HORARIOS_DISPONIVEIS` para intervalos de 1h30
-   - Apos submit bem-sucedido, enviar WhatsApp para o cliente via `useWhatsApp`
-
-2. **`src/pages/feedback/FeedbackClientePublico.tsx`**
-   - Adicionar campos: prazo_compra, orcamento_disponivel, forma_pagamento
-   - Reformular secao de interesse com texto mais gentil
-   - Reorganizar campos textuais (comentarios livres + proximos passos)
-   - Atualizar schema zod com novos campos
-   - Atualizar o submit para salvar os novos campos
-
-3. **`supabase/functions/send-visit-notification/index.ts`**
-   - Adicionar envio de WhatsApp (registrar na tabela whatsapp_messages) para cliente, imobiliaria e construtora
-
-4. **`supabase/functions/send-feedback-request/index.ts`**
-   - Adicionar envio de WhatsApp para o cliente junto com o e-mail
-
 ### Arquivos a criar
 
-5. **`supabase/functions/send-feedback-followup/index.ts`**
-   - Nova edge function que busca feedbacks pendentes ha mais de 24h
-   - Envia e-mail + WhatsApp de lembrete
-   - Marca flags de followup enviado
+1. **`src/components/analytics/VisitFeedbackAnalytics.tsx`**
+   - Componente que recebe como props: `agendamentos`, `feedbacks`, `period` e `isLoading`
+   - Renderiza:
+     - Grid de 4 KPICards (taxa confirmacao, taxa realizacao, NPS medio, tempo medio resposta)
+     - TrendLineChart com evolucao de NPS ao longo do tempo
+     - BarChart com avaliacoes medias por categoria (5 categorias de estrelas)
+     - PieChart com distribuicao de interesse
+     - BarChart horizontal com objecoes
+   - Reutiliza os componentes existentes: KPICard, TrendLineChart do analytics/index
 
-### Migracao SQL
+### Arquivos a modificar
 
-6. Adicionar colunas na tabela `feedbacks_visitas`:
-   - `followup_enviado_cliente` (boolean, default false)
-   - `followup_enviado_corretor` (boolean, default false)
-   - `prazo_compra_cliente` (text, nullable) - para separar do campo do corretor
-   - `orcamento_cliente` (numeric, nullable)
-   - `forma_pagamento_cliente` (text, nullable)
-   - `proximos_passos_cliente` (text, nullable)
+2. **`src/components/analytics/index.ts`**
+   - Exportar o novo componente VisitFeedbackAnalytics
 
-7. Configurar cron job para `send-feedback-followup` (a cada 2 horas)
+3. **`src/pages/dashboard/construtora/Analytics.tsx`**
+   - Adicionar query para buscar agendamentos (`agendamentos_visitas` onde `construtora_id = construtora.id` e no periodo)
+   - Adicionar query para buscar feedbacks completos (`feedbacks_visitas` onde `construtora_id = construtora.id` e no periodo)
+   - Renderizar `VisitFeedbackAnalytics` com os dados obtidos, apos a secao de PropertyImobiliariaBreakdown
 
-8. Registrar a nova funcao em `supabase/config.toml`
+4. **`src/pages/dashboard/imobiliaria/Analytics.tsx`**
+   - Adicionar query para buscar agendamentos (`agendamentos_visitas` onde `imobiliaria_id = imobiliaria.id` e no periodo)
+   - Adicionar query para buscar feedbacks completos (`feedbacks_visitas` onde `imobiliaria_id = imobiliaria.id` e no periodo)
+   - Renderizar `VisitFeedbackAnalytics` com os dados obtidos, apos a secao de Performance Table
 
+### Dados consultados (sem necessidade de migracoes SQL)
+Todas as colunas necessarias ja existem:
+- `agendamentos_visitas`: status, created_at, data_confirmada, realizado_em
+- `feedbacks_visitas`: nps_cliente, avaliacao_*, interesse_compra, objecoes, feedback_cliente_em, created_at, status
+
+### Calculo das metricas
+- **Taxa de confirmacao**: `count(status in ['confirmado','realizado']) / count(total)` x 100
+- **Taxa de realizacao**: `count(status = 'realizado') / count(status = 'confirmado' ou 'realizado')` x 100
+- **NPS medio**: `sum(nps_cliente) / count(feedbacks completos)`
+- **Tempo medio de resposta**: media de `feedback_cliente_em - created_at` em horas, para feedbacks completos
+- **Evolucao NPS**: NPS medio agrupado por dia/semana
+- **Avaliacoes por categoria**: media de cada campo avaliacao_* nos feedbacks completos
