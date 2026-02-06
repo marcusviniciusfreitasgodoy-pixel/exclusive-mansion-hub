@@ -125,7 +125,9 @@ const App = () => (
                 <LazyRoute><Apresentacao /></LazyRoute>
               } />
               <Route path="/manual" element={
-                <LazyRoute><Manual /></LazyRoute>
+                <ProtectedRoute allowedRoles={['construtora', 'imobiliaria']}>
+                  <LazyRoute><Manual /></LazyRoute>
+                </ProtectedRoute>
               } />
               
               {/* Templates Showcase - Public */}
