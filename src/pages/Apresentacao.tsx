@@ -186,21 +186,21 @@ export default function Apresentacao() {
             <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-primary" /> Construtora</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-secondary" /> Imobiliária</span>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {PLATFORM_FEATURES.map((f, i) => (
-              <Card key={i} className="group hover:shadow-lg transition-shadow border">
-                <CardContent className="p-6">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
+              <Card key={i} className="group hover:shadow-xl transition-all duration-300 border border-l-[3px] border-l-secondary">
+                <CardContent className="p-4 md:p-6 flex flex-col h-full">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors shrink-0">
                     <f.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{f.desc}</p>
-                  <div className="flex gap-2">
+                  <h3 className="font-semibold text-base md:text-lg mb-2">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 flex-1">{f.desc}</p>
+                  <div className="flex flex-wrap gap-2 mt-auto">
                     {f.audience.includes('construtora') && (
-                      <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-xs font-semibold">Construtora</span>
+                      <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-[11px] md:text-xs font-semibold">Construtora</span>
                     )}
                     {f.audience.includes('imobiliaria') && (
-                      <span className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold">Imobiliária</span>
+                      <span className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-[11px] md:text-xs font-semibold">Imobiliária</span>
                     )}
                   </div>
                 </CardContent>
