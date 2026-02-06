@@ -101,7 +101,7 @@ export default function Apresentacao() {
             <Button
               size="lg"
               variant="outline"
-              className="gap-2 text-base px-8 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+              className="gap-2 text-base px-8 border-secondary text-secondary bg-transparent hover:bg-secondary hover:text-secondary-foreground"
               onClick={() => document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <Calendar className="h-5 w-5" /> Agendar Apresentação
