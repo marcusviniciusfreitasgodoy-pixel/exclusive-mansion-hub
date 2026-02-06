@@ -28,7 +28,7 @@ const FEATURES = [
   {
     icon: Users,
     title: 'CRM & Pipeline Visual',
-    desc: 'Kanban de 8 estágios com drag-and-drop, scoring automático e timeline de atividades.',
+    desc: 'Painel visual com 8 etapas de venda, pontuação automática de leads e histórico completo de interações.',
   },
   {
     icon: Calendar,
