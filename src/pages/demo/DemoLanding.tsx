@@ -13,15 +13,15 @@ export default function DemoLanding() {
       title: 'Explorar como Construtora',
       description: 'Gerencie imóveis, acompanhe leads, veja analytics e controle imobiliárias parceiras.',
       icon: Building2,
-      features: ['Portfólio de imóveis', 'Pipeline de vendas', 'Analytics avançado', 'Gestão de parceiros'],
+      features: ['Portfólio de imóveis', 'Pipeline de vendas', 'Analytics avançado', 'Gestão de parceiros', 'Efeito UAU e satisfação', 'Relatórios em PDF'],
       path: '/demo/construtora',
     },
     {
       role: 'imobiliaria',
       title: 'Explorar como Imobiliária',
-      description: 'Divulgue imóveis com sua marca, capture leads e acompanhe sua performance.',
+      description: 'Divulgue imóveis com sua marca, capture leads, acompanhe satisfação dos visitantes e exporte relatórios de performance.',
       icon: Home,
-      features: ['Links personalizados', 'Gestão de leads', 'Agendamento de visitas', 'Relatórios'],
+      features: ['Links personalizados', 'Gestão de leads', 'Analytics de satisfação', 'Feedback pós-visita', 'Relatórios em PDF', 'Agendamento de visitas'],
       path: '/demo/imobiliaria',
     },
   ];

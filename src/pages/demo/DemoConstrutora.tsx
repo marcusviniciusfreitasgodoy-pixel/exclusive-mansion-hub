@@ -8,6 +8,7 @@ import { DemoBanner } from '@/components/demo/DemoBanner';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MessageSquare, Eye, TrendingUp } from 'lucide-react';
+import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
 
 function DemoConstrutoraDashboardContent() {
   const formatCurrency = (value: number | null) => {
@@ -108,6 +109,28 @@ function DemoAnalyticsContent() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card><CardHeader className="pb-2"><h3 className="text-sm font-semibold">Funil de Conversão</h3></CardHeader><CardContent><div className="space-y-3">{DEMO_ANALYTICS.funil.map((f, i) => (<div key={f.etapa} className="flex items-center gap-3"><span className="w-28 text-sm text-muted-foreground">{f.etapa}</span><div className="flex-1 h-6 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary/80 rounded-full" style={{ width: `${(f.valor / DEMO_ANALYTICS.funil[0].valor) * 100}%` }} /></div><span className="w-12 text-right text-sm font-medium">{f.valor}</span></div>))}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><h3 className="text-sm font-semibold">Origem dos Leads</h3></CardHeader><CardContent><div className="space-y-3">{DEMO_ANALYTICS.origemLeads.map(o => (<div key={o.origem} className="flex items-center justify-between"><span className="text-sm">{o.origem}</span><div className="flex items-center gap-2"><div className="h-2 rounded-full bg-secondary" style={{ width: `${(o.quantidade / DEMO_ANALYTICS.totalLeads) * 100}px` }} /><span className="text-sm font-medium">{o.quantidade}</span></div></div>))}</div></CardContent></Card>
+      </div>
+
+      {/* Visitas e Satisfação */}
+      <div className="mt-8">
+        <VisitFeedbackAnalytics
+          agendamentos={DEMO_AGENDAMENTOS.map(a => ({ id: a.id, status: a.status, created_at: a.created_at }))}
+          feedbacks={DEMO_FEEDBACKS.map(f => ({
+            id: f.id,
+            nps_cliente: f.nps_cliente,
+            avaliacao_localizacao: f.avaliacao_localizacao,
+            avaliacao_acabamento: f.avaliacao_acabamento,
+            avaliacao_layout: f.avaliacao_layout,
+            avaliacao_custo_beneficio: f.avaliacao_custo_beneficio,
+            avaliacao_atendimento: f.avaliacao_atendimento,
+            interesse_compra: f.interesse_compra,
+            objecoes: f.objecoes ?? [],
+            efeito_uau: f.efeito_uau ?? [],
+            created_at: f.created_at,
+            feedback_cliente_em: f.feedback_cliente_em ?? null,
+            status: f.status,
+          }))}
+        />
       </div>
     </div>
   );
