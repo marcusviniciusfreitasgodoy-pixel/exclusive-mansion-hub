@@ -1,95 +1,126 @@
 
-
-# Incluir Funcionalidades Novas no Demo e Destacar Beneficios para Imobiliarias
+# Manual, Onboarding e Tour Guiado
 
 ## Resumo
-Atualizar o modo demo e a pagina de apresentacao para (1) exibir as novas funcionalidades de analytics (Efeito UAU, graficos de satisfacao, exportacao PDF) em ambos os dashboards demo e (2) destacar explicitamente os beneficios para imobiliarias na pagina de apresentacao e na landing do demo.
+Criar (1) uma pagina publica de Manual com guias completos para Construtoras e Imobiliarias, (2) um tour guiado interativo que aparece no primeiro acesso ao dashboard real apos o cadastro, (3) uma secao "Como Funciona" na pagina de Apresentacao, e (4) links para o manual nos sidebars.
 
-## O que sera feito
+---
 
-### 1. Enriquecer dados mockados (`src/data/demo-data.ts`)
-Adicionar aos registros de `DEMO_FEEDBACKS` os campos necessarios para o componente `VisitFeedbackAnalytics`:
-- `efeito_uau`: arrays de categorias UAU por feedback (ex: `['vista', 'acabamento', 'varanda']`)
-- `objecoes`: arrays de objecoes (ex: `['preco']`)
-- `feedback_cliente_em`: timestamps ISO para calculo de tempo de resposta
-- Padronizar `interesse_compra` para valores aceitos pelo componente (`muito_interessado`, `interessado`, `pouco_interessado`, `sem_interesse`, `indeciso`)
+## 1. Pagina de Manual (`/manual`)
 
-### 2. Adicionar VisitFeedbackAnalytics ao demo Construtora (`src/pages/demo/DemoConstrutora.tsx`)
-- Importar `VisitFeedbackAnalytics` de `@/components/analytics/VisitFeedbackAnalytics`
-- Na funcao `DemoAnalyticsContent`, apos os graficos existentes, mapear `DEMO_FEEDBACKS` e `DEMO_AGENDAMENTOS` para as interfaces esperadas e renderizar o componente
-- Incluindo botao de exportacao PDF funcional
+**Novo arquivo:** `src/pages/Manual.tsx`
 
-### 3. Adicionar VisitFeedbackAnalytics ao demo Imobiliaria (`src/pages/demo/DemoImobiliaria.tsx`)
-- Importar `VisitFeedbackAnalytics`
-- Na funcao `DemoAnalyticsImob`, apos os KPIs existentes, filtrar feedbacks e agendamentos pela imobiliaria demo e renderizar o componente
+Pagina publica com duas abas (Tabs) — "Construtora" e "Imobiliaria". Cada aba usa Accordion para organizar topicos:
 
-### 4. Atualizar landing do demo (`src/pages/demo/DemoLanding.tsx`)
-Adicionar funcionalidades novas na lista de features de cada perfil:
-- **Construtora**: adicionar "Efeito UAU e satisfacao" e "Relatorios em PDF"
-- **Imobiliaria**: adicionar "Analytics de satisfacao", "Relatorios em PDF" e "Feedback pos-visita"
+**Aba Construtora:**
+- Cadastro e Configuracao Inicial
+- Cadastrar um Imovel (wizard passo a passo)
+- Escolher Template Visual
+- Conceder Acesso a Imobiliarias
+- Pipeline de Vendas (8 etapas)
+- Analytics Consolidado
+- Efeito UAU e Satisfacao
+- Exportar Relatorios em PDF
+- Gerenciar Imobiliarias Parceiras
+- Base de Conhecimento e Chatbot IA
 
-Atualizar a descricao da imobiliaria para destacar melhor os beneficios:
-- "Divulgue imoveis com sua marca, capture leads, acompanhe satisfacao dos visitantes e exporte relatorios de performance."
+**Aba Imobiliaria:**
+- Cadastro e Configuracao
+- Meus Links — Divulgacao Personalizada
+- Gestao de Leads
+- Pipeline de Vendas
+- Agendamento de Visitas
+- Feedback Pos-Visita
+- Analytics de Satisfacao
+- Exportar Relatorios em PDF
+- Configurar Formularios Personalizados
+- Enviar Midias para Aprovacao
 
-### 5. Atualizar pagina de apresentacao (`src/pages/Apresentacao.tsx`)
-Adicionar uma nova secao "Para cada perfil" entre Features e Benefits strip, com dois blocos lado a lado:
+---
 
-**Para Construtoras:**
-- Visao consolidada de todos os imoveis e parceiros
-- Pipeline visual com 8 etapas de venda
-- Analytics com Efeito UAU e NPS
-- Relatorios em PDF para proprietarios
+## 2. Tour Guiado nos Dashboards Reais (primeiro acesso)
 
-**Para Imobiliarias:**
-- Links personalizados com sua marca
-- Metricas individuais de cada imovel
-- Feedback pos-visita com graficos de satisfacao
-- Exportacao de relatorios para seus clientes
-- Gestao autonoma de leads e agendamentos
+**Novo arquivo:** `src/components/dashboard/GuidedTour.tsx`
 
-Tambem adicionar a feature "Efeito UAU" na lista FEATURES existente:
-```typescript
-{
-  icon: Star,
-  title: 'Efeito UAU',
-  desc: 'Identifique quais aspectos do imovel mais impressionam os visitantes e use esses dados para direcionar campanhas.',
+Componente leve com overlay + tooltip posicionado sobre elementos do sidebar. Persiste no `localStorage` para exibir apenas uma vez. Inclui botoes Proximo/Anterior/Pular e indicador de progresso.
+
+```text
+interface TourStep {
+  targetSelector: string;  // CSS selector do elemento alvo
+  title: string;
+  description: string;
+  position: 'top' | 'bottom' | 'left' | 'right';
 }
+```
+
+**Tour Construtora (6 passos):**
+1. "Seus imoveis cadastrados aparecem aqui."
+2. "O Pipeline CRM organiza seus leads em 8 etapas visuais."
+3. "Em Analytics, veja funil de conversao, Efeito UAU e exporte PDF."
+4. "Gerencie visitas agendadas e confirmacoes."
+5. "Veja a performance de cada imobiliaria parceira."
+6. "Acesse o Manual completo pelo menu a qualquer momento."
+
+**Tour Imobiliaria (5 passos):**
+1. "Veja os imoveis disponiveis para divulgacao com sua marca."
+2. "Em Meus Links, copie links personalizados e acompanhe metricas."
+3. "Gerencie seus leads com filtros e contato rapido."
+4. "Em Analytics, veja NPS, Efeito UAU e exporte PDF."
+5. "Acompanhe visitas agendadas pelos seus clientes."
+
+**Integracao:** O componente sera adicionado dentro do `DashboardLayout.tsx`, usando o `role` do `useAuth()` para determinar qual tour exibir. A chave do localStorage sera `tour-completed-{userId}` para garantir que cada usuario veja o tour apenas uma vez.
+
+---
+
+## 3. Secao "Como Funciona" na Apresentacao
+
+**Arquivo modificado:** `src/pages/Apresentacao.tsx`
+
+Nova secao entre "Funcionalidades" e "Para cada perfil" com 4 passos visuais numerados:
+1. Cadastre seu imovel — Fotos, videos e template visual
+2. Compartilhe com parceiros — Links white-label rastreados
+3. Acompanhe em tempo real — Leads, NPS e Efeito UAU
+4. Exporte e apresente — Relatorios em PDF prontos
+
+Tambem adicionar link para o Manual na secao "Veja na pratica" e no footer.
+
+---
+
+## 4. Link "Manual" nos Sidebars
+
+**Arquivos modificados:**
+- `src/components/dashboard/DashboardSidebar.tsx` — Adicionar item "Manual" (icone BookOpen) em ambos os perfis, abrindo `/manual` em nova aba
+- `src/components/demo/DemoDashboardSidebar.tsx` — Idem para o sidebar do demo
+- `src/pages/demo/DemoLanding.tsx` — Adicionar link para o manual e mencao ao tour guiado
+
+---
+
+## 5. Rota no App.tsx
+
+**Arquivo modificado:** `src/App.tsx`
+
+Adicionar rota lazy para `/manual`:
+```typescript
+const Manual = lazy(() => import("./pages/Manual"));
+// ...
+<Route path="/manual" element={<LazyRoute><Manual /></LazyRoute>} />
 ```
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos a modificar
-1. **`src/data/demo-data.ts`** - Enriquecer DEMO_FEEDBACKS com efeito_uau, objecoes, feedback_cliente_em e corrigir interesse_compra
-2. **`src/pages/demo/DemoConstrutora.tsx`** - Importar e renderizar VisitFeedbackAnalytics no DemoAnalyticsContent
-3. **`src/pages/demo/DemoImobiliaria.tsx`** - Importar e renderizar VisitFeedbackAnalytics no DemoAnalyticsImob
-4. **`src/pages/demo/DemoLanding.tsx`** - Expandir features listadas para ambos os perfis
-5. **`src/pages/Apresentacao.tsx`** - Adicionar secao de beneficios por perfil e feature Efeito UAU
+### Arquivos novos
+1. `src/pages/Manual.tsx` — Tabs + Accordion, icones Lucide, responsivo
+2. `src/components/dashboard/GuidedTour.tsx` — Overlay, tooltip, localStorage, progresso
 
-### Mapeamento de dados para o componente
+### Arquivos modificados
+1. `src/App.tsx` — Rota /manual
+2. `src/components/dashboard/DashboardLayout.tsx` — Integrar GuidedTour com role do useAuth
+3. `src/components/dashboard/DashboardSidebar.tsx` — Item "Manual" (BookOpen)
+4. `src/components/demo/DemoDashboardSidebar.tsx` — Item "Manual" (BookOpen)
+5. `src/pages/demo/DemoLanding.tsx` — Link para manual
+6. `src/pages/Apresentacao.tsx` — Secao "Como Funciona" e link para manual
 
-O `VisitFeedbackAnalytics` espera:
-```typescript
-interface Feedback {
-  id: string;
-  nps_cliente: number | null;
-  avaliacao_localizacao: number | null;
-  avaliacao_acabamento: number | null;
-  avaliacao_layout: number | null;
-  avaliacao_custo_beneficio: number | null;
-  avaliacao_atendimento: number | null;
-  interesse_compra: string | null;
-  objecoes: any;
-  efeito_uau: string[] | null;
-  created_at: string | null;
-  feedback_cliente_em: string | null;
-  status: string;
-}
-```
-
-Os DEMO_FEEDBACKS existentes ja possuem a maioria dos campos; basta adicionar `efeito_uau`, `objecoes`, `feedback_cliente_em` e ajustar `interesse_compra` para os valores corretos.
-
-### Nenhum arquivo novo necessario
-Toda a implementacao se encaixa nos componentes e estruturas existentes.
-
+### Nenhuma dependencia nova necessaria
+Tudo construido com Tabs, Accordion, Tooltip e Tailwind ja disponiveis.
