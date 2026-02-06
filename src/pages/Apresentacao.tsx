@@ -11,6 +11,7 @@ import {
   ArrowRight, Play, CheckCircle2, Phone, Mail
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
+import authBackground from '@/assets/auth-background.jpg';
 import { supabase } from '@/integrations/supabase/client';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 
@@ -118,10 +119,10 @@ export default function Apresentacao() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
-      <section className="relative overflow-hidden" style={{ background: 'var(--gradient-luxury)' }}>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-secondary/30 blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-secondary/20 blur-3xl" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={authBackground} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-primary/85" />
         </div>
 
         <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
