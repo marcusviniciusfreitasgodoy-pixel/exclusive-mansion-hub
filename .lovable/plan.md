@@ -1,70 +1,95 @@
 
-# Implementar Efeito UAU Completo
+
+# Incluir Funcionalidades Novas no Demo e Destacar Beneficios para Imobiliarias
 
 ## Resumo
-Adicionar ao sistema de feedback pos-visita uma secao "Efeito UAU" que captura quais aspectos do imovel causaram maior impressao no visitante. Inclui coleta no formulario, armazenamento no banco e visualizacao analitica nos dashboards de Construtora e Imobiliaria.
+Atualizar o modo demo e a pagina de apresentacao para (1) exibir as novas funcionalidades de analytics (Efeito UAU, graficos de satisfacao, exportacao PDF) em ambos os dashboards demo e (2) destacar explicitamente os beneficios para imobiliarias na pagina de apresentacao e na landing do demo.
 
 ## O que sera feito
 
-### 1. Banco de Dados - Nova migracao
-Adicionar duas colunas na tabela `feedbacks_visitas`:
-- `efeito_uau` do tipo `text[]` (array de strings) - categorias selecionadas
-- `efeito_uau_detalhe` do tipo `text` - comentario livre
+### 1. Enriquecer dados mockados (`src/data/demo-data.ts`)
+Adicionar aos registros de `DEMO_FEEDBACKS` os campos necessarios para o componente `VisitFeedbackAnalytics`:
+- `efeito_uau`: arrays de categorias UAU por feedback (ex: `['vista', 'acabamento', 'varanda']`)
+- `objecoes`: arrays de objecoes (ex: `['preco']`)
+- `feedback_cliente_em`: timestamps ISO para calculo de tempo de resposta
+- Padronizar `interesse_compra` para valores aceitos pelo componente (`muito_interessado`, `interessado`, `pouco_interessado`, `sem_interesse`, `indeciso`)
 
-### 2. Formulario do Cliente - Coleta
-No arquivo `src/pages/feedback/FeedbackClientePublico.tsx`, adicionar uma nova secao (Card) entre as avaliacoes por categoria e a secao de opiniao textual:
+### 2. Adicionar VisitFeedbackAnalytics ao demo Construtora (`src/pages/demo/DemoConstrutora.tsx`)
+- Importar `VisitFeedbackAnalytics` de `@/components/analytics/VisitFeedbackAnalytics`
+- Na funcao `DemoAnalyticsContent`, apos os graficos existentes, mapear `DEMO_FEEDBACKS` e `DEMO_AGENDAMENTOS` para as interfaces esperadas e renderizar o componente
+- Incluindo botao de exportacao PDF funcional
 
-- Titulo: "O que mais te impressionou? (Efeito UAU)"
-- 10 categorias como botoes toggle (selecao multipla): Vista, Acabamento, Espaco, Iluminacao, Varanda/Area externa, Cozinha, Banheiros, Localizacao, Condominio, Seguranca
-- Campo textarea opcional para detalhar o que mais impressionou
-- Atualizar o schema zod com `efeito_uau` (array string opcional) e `efeito_uau_detalhe` (string opcional)
-- Salvar os dados no submit junto com os demais campos
+### 3. Adicionar VisitFeedbackAnalytics ao demo Imobiliaria (`src/pages/demo/DemoImobiliaria.tsx`)
+- Importar `VisitFeedbackAnalytics`
+- Na funcao `DemoAnalyticsImob`, apos os KPIs existentes, filtrar feedbacks e agendamentos pela imobiliaria demo e renderizar o componente
 
-### 3. Analytics - Grafico de Efeito UAU
-No componente `src/components/analytics/VisitFeedbackAnalytics.tsx`:
+### 4. Atualizar landing do demo (`src/pages/demo/DemoLanding.tsx`)
+Adicionar funcionalidades novas na lista de features de cada perfil:
+- **Construtora**: adicionar "Efeito UAU e satisfacao" e "Relatorios em PDF"
+- **Imobiliaria**: adicionar "Analytics de satisfacao", "Relatorios em PDF" e "Feedback pos-visita"
 
-- Adicionar `efeito_uau` na interface `Feedback`
-- Criar um `useMemo` que conta a frequencia de cada categoria UAU em todos os feedbacks
-- Renderizar como BarChart horizontal ranqueado por contagem (mesmo estilo do grafico de objecoes)
-- Posicionar como um novo card na terceira linha de graficos, ao lado dos graficos existentes
+Atualizar a descricao da imobiliaria para destacar melhor os beneficios:
+- "Divulgue imoveis com sua marca, capture leads, acompanhe satisfacao dos visitantes e exporte relatorios de performance."
 
-### 4. Queries de Analytics - Incluir efeito_uau
-Nos arquivos de Analytics da Construtora e Imobiliaria, adicionar `efeito_uau` na lista de campos selecionados nas queries de feedbacks:
-- `src/pages/dashboard/construtora/Analytics.tsx` (VisitFeedbackSection)
-- `src/pages/dashboard/imobiliaria/Analytics.tsx` (ImobVisitFeedbackSection)
+### 5. Atualizar pagina de apresentacao (`src/pages/Apresentacao.tsx`)
+Adicionar uma nova secao "Para cada perfil" entre Features e Benefits strip, com dois blocos lado a lado:
+
+**Para Construtoras:**
+- Visao consolidada de todos os imoveis e parceiros
+- Pipeline visual com 8 etapas de venda
+- Analytics com Efeito UAU e NPS
+- Relatorios em PDF para proprietarios
+
+**Para Imobiliarias:**
+- Links personalizados com sua marca
+- Metricas individuais de cada imovel
+- Feedback pos-visita com graficos de satisfacao
+- Exportacao de relatorios para seus clientes
+- Gestao autonoma de leads e agendamentos
+
+Tambem adicionar a feature "Efeito UAU" na lista FEATURES existente:
+```typescript
+{
+  icon: Star,
+  title: 'Efeito UAU',
+  desc: 'Identifique quais aspectos do imovel mais impressionam os visitantes e use esses dados para direcionar campanhas.',
+}
+```
 
 ---
 
 ## Detalhes Tecnicos
 
-### Migracao SQL
-```sql
-ALTER TABLE public.feedbacks_visitas
-  ADD COLUMN efeito_uau text[] DEFAULT NULL,
-  ADD COLUMN efeito_uau_detalhe text DEFAULT NULL;
-```
-
-### Categorias UAU (array constante)
-```typescript
-const EFEITO_UAU_OPTIONS = [
-  { value: "vista", label: "Vista" },
-  { value: "acabamento", label: "Acabamento" },
-  { value: "espaco", label: "Espaço" },
-  { value: "iluminacao", label: "Iluminação" },
-  { value: "varanda", label: "Varanda / Área externa" },
-  { value: "cozinha", label: "Cozinha" },
-  { value: "banheiros", label: "Banheiros" },
-  { value: "localizacao", label: "Localização" },
-  { value: "condominio", label: "Condomínio" },
-  { value: "seguranca", label: "Segurança" },
-];
-```
-
 ### Arquivos a modificar
-1. **`src/pages/feedback/FeedbackClientePublico.tsx`** - Adicionar secao UAU no formulario, schema zod e submit
-2. **`src/components/analytics/VisitFeedbackAnalytics.tsx`** - Adicionar grafico de Efeito UAU e atualizar interface Feedback
-3. **`src/pages/dashboard/construtora/Analytics.tsx`** - Incluir `efeito_uau` na query de feedbacks
-4. **`src/pages/dashboard/imobiliaria/Analytics.tsx`** - Incluir `efeito_uau` na query de feedbacks
+1. **`src/data/demo-data.ts`** - Enriquecer DEMO_FEEDBACKS com efeito_uau, objecoes, feedback_cliente_em e corrigir interesse_compra
+2. **`src/pages/demo/DemoConstrutora.tsx`** - Importar e renderizar VisitFeedbackAnalytics no DemoAnalyticsContent
+3. **`src/pages/demo/DemoImobiliaria.tsx`** - Importar e renderizar VisitFeedbackAnalytics no DemoAnalyticsImob
+4. **`src/pages/demo/DemoLanding.tsx`** - Expandir features listadas para ambos os perfis
+5. **`src/pages/Apresentacao.tsx`** - Adicionar secao de beneficios por perfil e feature Efeito UAU
+
+### Mapeamento de dados para o componente
+
+O `VisitFeedbackAnalytics` espera:
+```typescript
+interface Feedback {
+  id: string;
+  nps_cliente: number | null;
+  avaliacao_localizacao: number | null;
+  avaliacao_acabamento: number | null;
+  avaliacao_layout: number | null;
+  avaliacao_custo_beneficio: number | null;
+  avaliacao_atendimento: number | null;
+  interesse_compra: string | null;
+  objecoes: any;
+  efeito_uau: string[] | null;
+  created_at: string | null;
+  feedback_cliente_em: string | null;
+  status: string;
+}
+```
+
+Os DEMO_FEEDBACKS existentes ja possuem a maioria dos campos; basta adicionar `efeito_uau`, `objecoes`, `feedback_cliente_em` e ajustar `interesse_compra` para os valores corretos.
 
 ### Nenhum arquivo novo necessario
 Toda a implementacao se encaixa nos componentes e estruturas existentes.
+
