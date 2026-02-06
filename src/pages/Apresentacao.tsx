@@ -38,7 +38,7 @@ const FEATURES = [
   {
     icon: ClipboardCheck,
     title: 'Feedback Digital de Visitas',
-    desc: 'Formulários com NPS, assinatura digital e geração automática de PDF com validade jurídica.',
+    desc: 'Formulários com NPS, assinatura digital e geração automática de PDF com validade jurídica, logo após a visita.',
   },
   {
     icon: MessageSquare,
