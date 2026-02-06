@@ -26,10 +26,24 @@ interface Feedback {
   avaliacao_atendimento: number | null;
   interesse_compra: string | null;
   objecoes: any;
+  efeito_uau: string[] | null;
   created_at: string | null;
   feedback_cliente_em: string | null;
   status: string;
 }
+
+const EFEITO_UAU_LABELS: Record<string, string> = {
+  vista: 'Vista',
+  acabamento: 'Acabamento',
+  espaco: 'Espaço',
+  iluminacao: 'Iluminação',
+  varanda: 'Varanda / Área externa',
+  cozinha: 'Cozinha',
+  banheiros: 'Banheiros',
+  localizacao: 'Localização',
+  condominio: 'Condomínio',
+  seguranca: 'Segurança',
+};
 
 interface VisitFeedbackAnalyticsProps {
   agendamentos: Agendamento[];
@@ -153,6 +167,22 @@ export function VisitFeedbackAnalytics({ agendamentos, feedbacks, isLoading }: V
       .map(([key, value]) => ({ name: OBJECAO_LABELS[key] || key, total: value }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
+  }, [feedbacks]);
+
+  // Efeito UAU ranking
+  const efeitoUauData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    feedbacks.forEach(f => {
+      if (f.efeito_uau && Array.isArray(f.efeito_uau)) {
+        f.efeito_uau.forEach(item => {
+          counts[item] = (counts[item] || 0) + 1;
+        });
+      }
+    });
+    return Object.entries(counts)
+      .map(([key, value]) => ({ name: EFEITO_UAU_LABELS[key] || key, total: value }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
   }, [feedbacks]);
 
   const formatTempo = (hours: number | null) => {
@@ -335,6 +365,31 @@ export function VisitFeedbackAnalytics({ agendamentos, feedbacks, isLoading }: V
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts Row 3 - Efeito UAU */}
+      {efeitoUauData.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>✨ Efeito UAU — Top Impressões</CardTitle>
+              <CardDescription>Aspectos que mais impressionaram os visitantes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={efeitoUauData} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={140} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="total" name="Menções" fill="#2d5a87" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

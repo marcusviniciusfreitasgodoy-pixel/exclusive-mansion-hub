@@ -54,6 +54,19 @@ const FORMA_PAGAMENTO_OPTIONS = [
   { value: "outro", label: "Outro" },
 ] as const;
 
+const EFEITO_UAU_OPTIONS = [
+  { value: "vista", label: "🌅 Vista" },
+  { value: "acabamento", label: "✨ Acabamento" },
+  { value: "espaco", label: "📐 Espaço" },
+  { value: "iluminacao", label: "💡 Iluminação" },
+  { value: "varanda", label: "🌿 Varanda / Área externa" },
+  { value: "cozinha", label: "🍳 Cozinha" },
+  { value: "banheiros", label: "🚿 Banheiros" },
+  { value: "localizacao", label: "📍 Localização" },
+  { value: "condominio", label: "🏢 Condomínio" },
+  { value: "seguranca", label: "🔒 Segurança" },
+] as const;
+
 const formSchema = z.object({
   nps_cliente: z.number().min(0).max(10, "Selecione uma nota"),
   avaliacao_localizacao: z.number().min(1).max(5),
@@ -68,6 +81,8 @@ const formSchema = z.object({
   }),
   objecoes: z.array(z.string()).optional(),
   objecoes_detalhes: z.string().optional(),
+  efeito_uau: z.array(z.string()).optional(),
+  efeito_uau_detalhe: z.string().optional(),
   prazo_compra_cliente: z.string({ required_error: "Selecione o prazo estimado" }),
   orcamento_cliente: z.string().optional(),
   forma_pagamento_cliente: z.string().optional(),
@@ -123,6 +138,8 @@ export default function FeedbackClientePublico() {
       pontos_positivos: "",
       pontos_negativos: "",
       objecoes: [],
+      efeito_uau: [],
+      efeito_uau_detalhe: "",
       prazo_compra_cliente: "",
       orcamento_cliente: "",
       forma_pagamento_cliente: "",
@@ -172,6 +189,8 @@ export default function FeedbackClientePublico() {
           interesse_compra: data.interesse_compra,
           objecoes: data.objecoes || [],
           objecoes_detalhes: data.objecoes_detalhes || null,
+          efeito_uau: data.efeito_uau?.length ? data.efeito_uau : null,
+          efeito_uau_detalhe: data.efeito_uau_detalhe || null,
           prazo_compra_cliente: data.prazo_compra_cliente || null,
           orcamento_cliente: data.orcamento_cliente ? parseFloat(data.orcamento_cliente) : null,
           forma_pagamento_cliente: data.forma_pagamento_cliente || null,
@@ -433,6 +452,66 @@ export default function FeedbackClientePublico() {
                         value={field.value}
                         onChange={field.onChange}
                       />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Efeito UAU */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">✨ O que mais te impressionou? (Efeito UAU)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="efeito_uau"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Selecione os aspectos que mais te surpreenderam</FormLabel>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {EFEITO_UAU_OPTIONS.map((opcao) => (
+                          <button
+                            key={opcao.value}
+                            type="button"
+                            onClick={() => {
+                              const current = field.value || [];
+                              if (current.includes(opcao.value)) {
+                                field.onChange(current.filter((v) => v !== opcao.value));
+                              } else {
+                                field.onChange([...current, opcao.value]);
+                              }
+                            }}
+                            className={cn(
+                              "p-3 rounded-lg border-2 text-sm text-center transition-all",
+                              (field.value || []).includes(opcao.value)
+                                ? "border-primary bg-primary/5 font-medium"
+                                : "border-muted hover:border-muted-foreground/30"
+                            )}
+                          >
+                            {opcao.label}
+                          </button>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="efeito_uau_detalhe"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quer detalhar o que mais te impressionou? (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Conte com suas palavras o que causou maior impacto..."
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -50,7 +50,7 @@ function VisitFeedbackSection({ construtoraId, startDate }: { construtoraId: str
     queryFn: async () => {
       const { data } = await supabase
         .from('feedbacks_visitas')
-        .select('id, nps_cliente, avaliacao_localizacao, avaliacao_acabamento, avaliacao_layout, avaliacao_custo_beneficio, avaliacao_atendimento, interesse_compra, objecoes, created_at, feedback_cliente_em, status')
+        .select('id, nps_cliente, avaliacao_localizacao, avaliacao_acabamento, avaliacao_layout, avaliacao_custo_beneficio, avaliacao_atendimento, interesse_compra, objecoes, efeito_uau, created_at, feedback_cliente_em, status')
         .eq('construtora_id', construtoraId)
         .gte('created_at', startDate.toISOString());
       return data || [];

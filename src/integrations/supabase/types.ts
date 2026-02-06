@@ -673,6 +673,8 @@ export type Database = {
           data_visita: string
           documento_hash: string | null
           duracao_minutos: number | null
+          efeito_uau: string[] | null
+          efeito_uau_detalhe: string | null
           feedback_cliente_em: string | null
           feedback_corretor_em: string | null
           followup_enviado_cliente: boolean
@@ -743,6 +745,8 @@ export type Database = {
           data_visita: string
           documento_hash?: string | null
           duracao_minutos?: number | null
+          efeito_uau?: string[] | null
+          efeito_uau_detalhe?: string | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
           followup_enviado_cliente?: boolean
@@ -813,6 +817,8 @@ export type Database = {
           data_visita?: string
           documento_hash?: string | null
           duracao_minutos?: number | null
+          efeito_uau?: string[] | null
+          efeito_uau_detalhe?: string | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
           followup_enviado_cliente?: boolean
