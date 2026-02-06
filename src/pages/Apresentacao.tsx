@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import {
   Building2, Users, BarChart3, Calendar, MessageSquare, Share2,
   Shield, Zap, TrendingUp, Eye, ClipboardCheck, Star,
-  ArrowRight, Play, CheckCircle2, Phone, Mail, BookOpen
+  ArrowRight, Play, CheckCircle2, Phone, Mail
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -267,9 +267,6 @@ export default function Apresentacao() {
             <Button size="lg" className="gap-2 text-base px-10" onClick={() => navigate('/demo')}>
               <Play className="h-5 w-5" /> Acessar Demonstração Interativa
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 text-base px-8" onClick={() => navigate('/manual')}>
-              <BookOpen className="h-5 w-5" /> Manual Completo
-            </Button>
           </div>
         </div>
       </section>
@@ -346,11 +343,8 @@ export default function Apresentacao() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t text-center text-sm text-muted-foreground space-y-2">
+      <footer className="py-8 border-t text-center text-sm text-muted-foreground">
         <p>© {new Date().getFullYear()} Godoy Prime Realty — Tecnologia para o mercado imobiliário de alto padrão</p>
-        <a href="/manual" className="inline-flex items-center gap-1 text-primary hover:underline">
-          <BookOpen className="h-3.5 w-3.5" /> Manual do Usuário
-        </a>
       </footer>
 
       <FloatingWhatsApp
