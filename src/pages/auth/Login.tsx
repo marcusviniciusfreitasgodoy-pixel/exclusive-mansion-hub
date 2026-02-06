@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,31 +9,38 @@ import { Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 import logo from '@/assets/logo-principal.png';
 import authBackground from '@/assets/auth-background.jpg';
+
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres')
 });
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const {
-    signIn,
-    role
-  } = useAuth();
+  const loginSuccessRef = useRef(false);
+  const { signIn, user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
+  // Redirect authenticated users when role is loaded
+  useEffect(() => {
+    if (!loading && user && role) {
+      if (role === 'construtora') {
+        navigate('/dashboard/construtora', { replace: true });
+      } else if (role === 'imobiliaria') {
+        navigate('/dashboard/imobiliaria', { replace: true });
+      }
+    }
+  }, [user, role, loading, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const validation = loginSchema.safeParse({
-        email,
-        password
-      });
+      const validation = loginSchema.safeParse({ email, password });
       if (!validation.success) {
         toast({
           title: 'Erro de validação',
@@ -43,9 +50,8 @@ export default function Login() {
         setIsLoading(false);
         return;
       }
-      const {
-        error
-      } = await signIn(email, password);
+
+      const { error } = await signIn(email, password);
       if (error) {
         let message = 'Erro ao fazer login';
         if (error.message.includes('Invalid login credentials')) {
@@ -59,20 +65,12 @@ export default function Login() {
           variant: 'destructive'
         });
       } else {
+        loginSuccessRef.current = true;
         toast({
           title: 'Sucesso',
           description: 'Login realizado com sucesso!'
         });
-        // Redirect will happen via AuthContext after role is loaded
-        setTimeout(() => {
-          if (role === 'construtora') {
-            navigate('/dashboard/construtora');
-          } else if (role === 'imobiliaria') {
-            navigate('/dashboard/imobiliaria');
-          } else {
-            navigate('/');
-          }
-        }, 500);
+        // Redirect is handled by the useEffect above when role loads
       }
     } catch (err) {
       toast({
@@ -84,12 +82,23 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-  return <div className="flex min-h-screen flex-col items-center justify-center px-4 relative" style={{
-    backgroundImage: `url(${authBackground})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat'
-  }}>
+
+  // If already authenticated and loading role, show spinner
+  if (user && !role && (loading || loginSuccessRef.current)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 relative" style={{
+      backgroundImage: `url(${authBackground})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       <div className="absolute inset-0 bg-black/40" />
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center">
@@ -154,5 +163,6 @@ export default function Login() {
           </Link>
         </p>
       </div>
-    </div>;
+    </div>
+  );
 }
