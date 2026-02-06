@@ -58,6 +58,7 @@ const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClien
 const TemplatesShowcase = lazy(() => import("./pages/TemplatesShowcase"));
 const EmpreendimentosHome = lazy(() => import("./pages/empreendimentos/Home"));
 const EmpreendimentoDetalhe = lazy(() => import("./pages/empreendimentos/EmpreendimentoDetalhe"));
+const Apresentacao = lazy(() => import("./pages/Apresentacao"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -115,6 +116,12 @@ const App = () => (
               } />
               <Route path="/empreendimento/:slug" element={
                 <LazyRoute><EmpreendimentoDetalhe /></LazyRoute>
+              } />
+
+
+              {/* Apresentação Comercial - Public */}
+              <Route path="/apresentacao" element={
+                <LazyRoute><Apresentacao /></LazyRoute>
               } />
               
               {/* Templates Showcase - Public */}
