@@ -160,7 +160,7 @@ export default function Apresentacao() {
             Problemas que eliminamos<br />do seu dia a dia
           </h2>
           <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-            Se algum destes cenários parece familiar, a Godoy Prime foi feita para você. Nossa plataforma resolve cada um deles de forma integrada — sem planilhas, sem retrabalho, sem perda de informação.
+            Se algum destes cenários parece familiar, essa ferramenta foi feita para você. Nossa plataforma resolve cada um deles de forma integrada — sem planilhas, sem retrabalho, sem perda de informação.
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PAIN_POINTS.map((pain, i) => (
