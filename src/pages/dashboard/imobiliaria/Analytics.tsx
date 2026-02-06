@@ -19,12 +19,50 @@ import {
   InsightsCard,
   PerformanceTable,
   TrendLineChart,
+  VisitFeedbackAnalytics,
   type Insight,
 } from '@/components/analytics';
 
 type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
 const DAYS_MAP = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+function ImobVisitFeedbackSection({ imobiliariaId, startDate }: { imobiliariaId: string; startDate: Date }) {
+  const { data: agendamentos, isLoading: loadingAg } = useQuery({
+    queryKey: ['imob-vf-agendamentos', imobiliariaId, startDate.toISOString()],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('agendamentos_visitas')
+        .select('id, status, created_at')
+        .eq('imobiliaria_id', imobiliariaId)
+        .gte('created_at', startDate.toISOString());
+      return data || [];
+    },
+  });
+
+  const { data: feedbacks, isLoading: loadingFb } = useQuery({
+    queryKey: ['imob-vf-feedbacks', imobiliariaId, startDate.toISOString()],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('feedbacks_visitas')
+        .select('id, nps_cliente, avaliacao_localizacao, avaliacao_acabamento, avaliacao_layout, avaliacao_custo_beneficio, avaliacao_atendimento, interesse_compra, objecoes, created_at, feedback_cliente_em, status')
+        .eq('imobiliaria_id', imobiliariaId)
+        .gte('created_at', startDate.toISOString());
+      return data || [];
+    },
+  });
+
+  return (
+    <div className="mb-6">
+      <VisitFeedbackAnalytics
+        agendamentos={agendamentos || []}
+        feedbacks={feedbacks || []}
+        isLoading={loadingAg || loadingFb}
+      />
+    </div>
+  );
+}
+
 
 export default function AnalyticsImobiliariaPage() {
   const { imobiliaria } = useAuth();
@@ -481,6 +519,11 @@ export default function AnalyticsImobiliariaPage() {
           showVisitas
         />
       </div>
+
+      {/* Visit & Feedback Analytics */}
+      {imobiliaria?.id && (
+        <ImobVisitFeedbackSection imobiliariaId={imobiliaria.id} startDate={startDate} />
+      )}
 
       {/* Insights */}
       {insights.length > 0 && (

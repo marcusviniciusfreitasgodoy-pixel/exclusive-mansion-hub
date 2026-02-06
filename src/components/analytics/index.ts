@@ -7,3 +7,4 @@ export { PerformanceTable } from './PerformanceTable';
 export { TrendLineChart } from './TrendLineChart';
 export { PropertyImobiliariaBreakdown } from './PropertyImobiliariaBreakdown';
 export { ImobiliariaEvolutionChart } from './ImobiliariaEvolutionChart';
+export { VisitFeedbackAnalytics } from './VisitFeedbackAnalytics';
