@@ -194,7 +194,8 @@ export default function Apresentacao() {
                     'Visão consolidada de todos os imóveis e parceiros',
                     'Pipeline visual com 8 etapas de venda',
                     'Analytics com Efeito UAU e NPS',
-                    'Relatórios em PDF para proprietários',
+                    'Métricas individuais de cada imóvel',
+                    'Feedback pós-visita com gráficos de satisfação',
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
@@ -219,6 +220,9 @@ export default function Apresentacao() {
                     'Feedback pós-visita com gráficos de satisfação',
                     'Exportação de relatórios para seus clientes',
                     'Gestão autônoma de leads e agendamentos',
+                    'Agendamento definido pelo cliente e com identificação CNH (Segurança)',
+                    'Relatório de Visita e feedback com assinatura Digital',
+                    'Segurança Jurídica',
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
