@@ -14,41 +14,68 @@ import logoPrincipal from '@/assets/logo-principal.png';
 import { supabase } from '@/integrations/supabase/client';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 
-const FEATURES = [
+type Audience = 'construtora' | 'imobiliaria';
+
+const PLATFORM_FEATURES: { icon: typeof Share2; title: string; desc: string; audience: Audience[] }[] = [
   {
     icon: Share2,
     title: 'Links White-Label',
     desc: 'Páginas personalizadas por imobiliária com rastreamento individual de performance.',
+    audience: ['imobiliaria'],
   },
   {
     icon: BarChart3,
     title: 'Analytics em Tempo Real',
-    desc: 'Visualizações, leads, funil de conversão e heatmap de horários por imóvel e parceiro.',
+    desc: 'Funil de conversão, heatmap de horários e métricas individuais por imóvel e parceiro.',
+    audience: ['construtora', 'imobiliaria'],
   },
   {
     icon: Users,
-    title: 'CRM & Pipeline Visual',
-    desc: 'Painel visual com 8 etapas de venda, pontuação automática de leads e histórico completo de interações.',
+    title: 'CRM e Pipeline Visual',
+    desc: '8 etapas de venda, pontuação automática de leads e histórico completo de interações.',
+    audience: ['construtora', 'imobiliaria'],
   },
   {
     icon: Calendar,
     title: 'Agendamento Inteligente',
-    desc: 'Validação de disponibilidade, lembretes automáticos e confirmação digital.',
+    desc: 'Validação de disponibilidade, identificação por CNH, lembretes automáticos e confirmação digital.',
+    audience: ['construtora', 'imobiliaria'],
   },
   {
     icon: ClipboardCheck,
     title: 'Feedback Digital de Visitas',
-    desc: 'Formulários com NPS, assinatura digital e geração automática de PDF com validade jurídica, logo após a visita.',
+    desc: 'NPS, assinatura digital e geração automática de PDF com validade jurídica.',
+    audience: ['construtora', 'imobiliaria'],
   },
   {
     icon: MessageSquare,
     title: 'Chatbot com IA',
     desc: 'Assistente virtual treinado na base de conhecimento do imóvel para qualificação 24/7.',
+    audience: ['construtora'],
   },
   {
     icon: Star,
     title: 'Efeito UAU',
-    desc: 'Identifique quais aspectos do imóvel mais impressionam os visitantes e use esses dados para direcionar campanhas.',
+    desc: 'Ranking dos aspectos que mais impressionam visitantes, com gráficos de satisfação.',
+    audience: ['construtora', 'imobiliaria'],
+  },
+  {
+    icon: Building2,
+    title: 'Gestão de Parceiros',
+    desc: 'Visão consolidada de todas as imobiliárias e suas métricas de performance.',
+    audience: ['construtora'],
+  },
+  {
+    icon: Eye,
+    title: 'Relatórios e Exportação',
+    desc: 'PDF profissional com dados de visitas, leads e satisfação para proprietários e clientes.',
+    audience: ['construtora', 'imobiliaria'],
+  },
+  {
+    icon: Shield,
+    title: 'Segurança Jurídica',
+    desc: 'Relatório de visita com assinatura digital, rastreabilidade e validade legal.',
+    audience: ['imobiliaria'],
   },
 ];
 
@@ -146,92 +173,39 @@ export default function Apresentacao() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Plataforma Consolidada */}
       <section className="py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
-            Funcionalidades que transformam resultados
+            Tudo o que você precisa em uma única plataforma
           </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            Cada módulo foi projetado para acelerar vendas e dar transparência total ao processo.
+          <p className="text-muted-foreground text-center mb-4 max-w-2xl mx-auto">
+            Funcionalidades para Construtoras e Imobiliárias — sem repetição, sem lacunas.
           </p>
+          <div className="flex justify-center gap-4 mb-12 text-sm">
+            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-primary" /> Construtora</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-secondary" /> Imobiliária</span>
+          </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f, i) => (
+            {PLATFORM_FEATURES.map((f, i) => (
               <Card key={i} className="group hover:shadow-lg transition-shadow border">
                 <CardContent className="p-6">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
                     <f.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground">{f.desc}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{f.desc}</p>
+                  <div className="flex gap-2">
+                    {f.audience.includes('construtora') && (
+                      <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-xs font-semibold">Construtora</span>
+                    )}
+                    {f.audience.includes('imobiliaria') && (
+                      <span className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold">Imobiliária</span>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Per-profile benefits */}
-      <section className="py-16 md:py-20 bg-muted/30">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
-            Para cada perfil, benefícios específicos
-          </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            A plataforma se adapta às necessidades de quem constrói e de quem vende.
-          </p>
-          <div className="grid gap-8 md:grid-cols-2">
-            <Card className="border-2">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold">Para Construtoras</h3>
-                </div>
-                <ul className="space-y-3">
-                  {[
-                    'Visão consolidada de todos os imóveis e parceiros',
-                    'Pipeline visual com 8 etapas de venda',
-                    'Analytics com Efeito UAU e NPS',
-                    'Métricas individuais de cada imóvel',
-                    'Feedback pós-visita com gráficos de satisfação',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <Users className="h-6 w-6 text-secondary" />
-                  </div>
-                  <h3 className="text-xl font-bold">Para Imobiliárias</h3>
-                </div>
-                <ul className="space-y-3">
-                  {[
-                    'Links personalizados com sua marca',
-                    'Métricas individuais de cada imóvel',
-                    'Feedback pós-visita com gráficos de satisfação',
-                    'Exportação de relatórios para seus clientes',
-                    'Gestão autônoma de leads e agendamentos',
-                    'Agendamento definido pelo cliente e com identificação CNH (Segurança)',
-                    'Relatório de Visita e feedback com assinatura Digital',
-                    'Segurança Jurídica',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
