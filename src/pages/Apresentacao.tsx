@@ -11,6 +11,8 @@ import {
   ArrowRight, Play, CheckCircle2, Phone, Mail
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
+import { supabase } from '@/integrations/supabase/client';
+import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 
 const FEATURES = [
   {
@@ -65,11 +67,19 @@ export default function Apresentacao() {
       return;
     }
     setSending(true);
-    // Simulate sending — in production this would call an edge function
-    await new Promise(r => setTimeout(r, 1200));
-    toast.success('Solicitação enviada! Entraremos em contato em breve.');
-    setForm({ nome: '', empresa: '', email: '', telefone: '', mensagem: '' });
-    setSending(false);
+    try {
+      const { error } = await supabase.functions.invoke('send-demo-request', {
+        body: form,
+      });
+      if (error) throw error;
+      toast.success('Solicitação enviada! Entraremos em contato em breve.');
+      setForm({ nome: '', empresa: '', email: '', telefone: '', mensagem: '' });
+    } catch (err) {
+      console.error('Erro ao enviar solicitação:', err);
+      toast.error('Erro ao enviar. Tente novamente ou entre em contato pelo WhatsApp.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -261,6 +271,11 @@ export default function Apresentacao() {
       <footer className="py-8 border-t text-center text-sm text-muted-foreground">
         <p>© {new Date().getFullYear()} Godoy Prime Realty — Tecnologia para o mercado imobiliário de alto padrão</p>
       </footer>
+
+      <FloatingWhatsApp
+        phoneNumber="5521964075124"
+        message="Olá! Gostaria de agendar uma demonstração da plataforma Godoy Prime."
+      />
     </div>
   );
 }

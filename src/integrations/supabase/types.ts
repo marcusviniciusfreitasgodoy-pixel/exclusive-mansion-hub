@@ -497,6 +497,36 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          created_at: string
+          email: string
+          empresa: string
+          id: string
+          mensagem: string | null
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa: string
+          id?: string
+          mensagem?: string | null
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa?: string
+          id?: string
+          mensagem?: string | null
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       disponibilidade_corretor: {
         Row: {
           ativo: boolean | null
