@@ -157,7 +157,7 @@ export default function Apresentacao() {
       <section className="py-16 md:py-20 bg-muted/50">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">
-            Problemas que eliminamos do seu dia a dia
+            Problemas que eliminamos<br />do seu dia a dia
           </h2>
           <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
             Se algum destes cenários parece familiar, a Godoy Prime foi feita para você. Nossa plataforma resolve cada um deles de forma integrada — sem planilhas, sem retrabalho, sem perda de informação.
