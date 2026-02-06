@@ -8,7 +8,8 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, Eye, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
-import { DEMO_IMOVEIS, DEMO_ACCESS_DATA, DEMO_LEADS, DEMO_AGENDAMENTOS, DEMO_ANALYTICS } from '@/data/demo-data';
+import { DEMO_IMOVEIS, DEMO_ACCESS_DATA, DEMO_LEADS, DEMO_AGENDAMENTOS, DEMO_ANALYTICS, DEMO_FEEDBACKS } from '@/data/demo-data';
+import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
 
 function DemoImoveisDisponiveis() {
   const formatCurrency = (value: number | null) => {
@@ -127,6 +128,28 @@ function DemoAnalyticsImob() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Visitas e Satisfação */}
+      <div className="mt-2">
+        <VisitFeedbackAnalytics
+          agendamentos={DEMO_AGENDAMENTOS.filter(a => a.imobiliaria_id === 'demo-imobiliaria-001').map(a => ({ id: a.id, status: a.status, created_at: a.created_at }))}
+          feedbacks={DEMO_FEEDBACKS.filter(f => f.imobiliaria_id === 'demo-imobiliaria-001').map(f => ({
+            id: f.id,
+            nps_cliente: f.nps_cliente,
+            avaliacao_localizacao: f.avaliacao_localizacao,
+            avaliacao_acabamento: f.avaliacao_acabamento,
+            avaliacao_layout: f.avaliacao_layout,
+            avaliacao_custo_beneficio: f.avaliacao_custo_beneficio,
+            avaliacao_atendimento: f.avaliacao_atendimento,
+            interesse_compra: f.interesse_compra,
+            objecoes: f.objecoes ?? [],
+            efeito_uau: f.efeito_uau ?? [],
+            created_at: f.created_at,
+            feedback_cliente_em: f.feedback_cliente_em ?? null,
+            status: f.status,
+          }))}
+        />
       </div>
     </div>
   );

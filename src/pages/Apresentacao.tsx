@@ -45,6 +45,11 @@ const FEATURES = [
     title: 'Chatbot com IA',
     desc: 'Assistente virtual treinado na base de conhecimento do imóvel para qualificação 24/7.',
   },
+  {
+    icon: Star,
+    title: 'Efeito UAU',
+    desc: 'Identifique quais aspectos do imóvel mais impressionam os visitantes e use esses dados para direcionar campanhas.',
+  },
 ];
 
 const PAIN_POINTS = [
@@ -162,6 +167,67 @@ export default function Apresentacao() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Per-profile benefits */}
+      <section className="py-16 md:py-20 bg-muted/30">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
+            Para cada perfil, benefícios específicos
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            A plataforma se adapta às necessidades de quem constrói e de quem vende.
+          </p>
+          <div className="grid gap-8 md:grid-cols-2">
+            <Card className="border-2">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Para Construtoras</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Visão consolidada de todos os imóveis e parceiros',
+                    'Pipeline visual com 8 etapas de venda',
+                    'Analytics com Efeito UAU e NPS',
+                    'Relatórios em PDF para proprietários',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <Users className="h-6 w-6 text-secondary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Para Imobiliárias</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Links personalizados com sua marca',
+                    'Métricas individuais de cada imóvel',
+                    'Feedback pós-visita com gráficos de satisfação',
+                    'Exportação de relatórios para seus clientes',
+                    'Gestão autônoma de leads e agendamentos',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-secondary mt-0.5 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
