@@ -384,6 +384,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailPromises = [];
     const whatsappLinks: string[] = [];
+    const whatsappInserts: Record<string, unknown>[] = [];
+
+    // Helper: registrar mensagem WhatsApp na tabela
+    const buildWhatsappRecord = (
+      telefone: string,
+      nome: string,
+      mensagem: string,
+      tipo: string,
+      construtoraId: string,
+      imobiliariaId: string | null
+    ): Record<string, unknown> => ({
+      telefone_destino: telefone.replace(/\D/g, "").startsWith("55") ? telefone.replace(/\D/g, "") : `55${telefone.replace(/\D/g, "")}`,
+      nome_destino: nome,
+      tipo_mensagem: tipo,
+      conteudo: mensagem,
+      modo_envio: "wa_link",
+      status: "enviado",
+      enviado_em: new Date().toISOString(),
+      construtora_id: construtoraId,
+      imobiliaria_id: imobiliariaId,
+    });
+
+    // Mensagem WhatsApp para o cliente
+    const clienteWhatsappMsg = `Olá ${data.clienteNome}! 👋\n\nSua solicitação de visita ao imóvel *${data.imovelTitulo}* foi recebida com sucesso! ✅\n\n📅 Opção 1: ${data1Formatted}\n📅 Opção 2: ${data2Formatted}\n\nEntraremos em contato para confirmar a melhor data.\n\nObrigado! 🏠`;
+    const clientePhoneClean = data.clienteTelefone.replace(/\D/g, "");
+    const clientePhoneFull = clientePhoneClean.startsWith("55") ? clientePhoneClean : `55${clientePhoneClean}`;
+    whatsappLinks.push(`https://wa.me/${clientePhoneFull}?text=${encodeURIComponent(clienteWhatsappMsg)}`);
+    whatsappInserts.push(buildWhatsappRecord(data.clienteTelefone, data.clienteNome, clienteWhatsappMsg, "agendamento", data.construtoraId, data.imobiliariaId));
 
     // 1. Enviar email para o CLIENTE
     console.log("Enviando email para cliente:", data.clienteEmail);
@@ -419,20 +447,21 @@ const handler = async (req: Request): Promise<Response> => {
           throw err;
         })
       );
+    }
 
-      // Link WhatsApp para imobiliária
-      if (imobiliaria.telefone) {
-        const whatsappMsg = formatWhatsAppMessage(
-          data.clienteNome,
-          data.clienteTelefone,
-          data.imovelTitulo,
-          data.imovelEndereco,
-          data1Formatted,
-          data2Formatted,
-          null
-        );
-        whatsappLinks.push(`https://wa.me/55${imobiliaria.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
-      }
+    // WhatsApp para imobiliária
+    if (imobiliaria?.telefone) {
+      const whatsappMsg = formatWhatsAppMessage(
+        data.clienteNome,
+        data.clienteTelefone,
+        data.imovelTitulo,
+        data.imovelEndereco,
+        data1Formatted,
+        data2Formatted,
+        null
+      );
+      whatsappLinks.push(`https://wa.me/55${imobiliaria.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
+      whatsappInserts.push(buildWhatsappRecord(imobiliaria.telefone, imobiliaria.nome_empresa, whatsappMsg, "agendamento", data.construtoraId, data.imobiliariaId));
     }
 
     // 3. Enviar email para a CONSTRUTORA
@@ -452,22 +481,7 @@ const handler = async (req: Request): Promise<Response> => {
           throw err;
         })
       );
-
-      // Link WhatsApp para construtora
-      if (construtora.telefone) {
-        const whatsappMsg = formatWhatsAppMessage(
-          data.clienteNome,
-          data.clienteTelefone,
-          data.imovelTitulo,
-          data.imovelEndereco,
-          data1Formatted,
-          data2Formatted,
-          imobiliaria?.nome_empresa || null
-        );
-        whatsappLinks.push(`https://wa.me/55${construtora.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
-      }
     } else {
-      // Fallback: enviar para email fixo se não tiver email cadastrado
       console.log("Enviando email para construtora (fallback):", "contato@godoyprime.com.br");
       emailPromises.push(
         resend.emails.send({
@@ -477,6 +491,31 @@ const handler = async (req: Request): Promise<Response> => {
           html: construtoraEmailHtml,
         })
       );
+    }
+
+    // WhatsApp para construtora
+    if (construtora?.telefone) {
+      const whatsappMsg = formatWhatsAppMessage(
+        data.clienteNome,
+        data.clienteTelefone,
+        data.imovelTitulo,
+        data.imovelEndereco,
+        data1Formatted,
+        data2Formatted,
+        imobiliaria?.nome_empresa || null
+      );
+      whatsappLinks.push(`https://wa.me/55${construtora.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMsg)}`);
+      whatsappInserts.push(buildWhatsappRecord(construtora.telefone, construtora.nome_empresa, whatsappMsg, "agendamento", data.construtoraId, null));
+    }
+
+    // Registrar mensagens WhatsApp no banco
+    if (whatsappInserts.length > 0) {
+      try {
+        await supabase.from("whatsapp_messages").insert(whatsappInserts);
+        console.log(`${whatsappInserts.length} mensagens WhatsApp registradas`);
+      } catch (waErr) {
+        console.error("Erro ao registrar WhatsApp messages:", waErr);
+      }
     }
 
     const results = await Promise.allSettled(emailPromises);

@@ -675,6 +675,9 @@ export type Database = {
           duracao_minutos: number | null
           feedback_cliente_em: string | null
           feedback_corretor_em: string | null
+          followup_enviado_cliente: boolean
+          followup_enviado_corretor: boolean
+          forma_pagamento_cliente: string | null
           forma_pagamento_pretendida: string | null
           id: string
           imobiliaria_id: string | null
@@ -688,6 +691,7 @@ export type Database = {
           objecoes: Json | null
           objecoes_detalhes: string | null
           observacoes_corretor: string | null
+          orcamento_cliente: number | null
           orcamento_disponivel: number | null
           pdf_gerado_em: string | null
           pdf_url: string | null
@@ -696,7 +700,9 @@ export type Database = {
           pontos_negativos: string | null
           pontos_positivos: string | null
           prazo_compra: Database["public"]["Enums"]["prazo_compra"] | null
+          prazo_compra_cliente: string | null
           proximos_passos: string | null
+          proximos_passos_cliente: string | null
           qualificacao_lead:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null
@@ -739,6 +745,9 @@ export type Database = {
           duracao_minutos?: number | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
+          followup_enviado_cliente?: boolean
+          followup_enviado_corretor?: boolean
+          forma_pagamento_cliente?: string | null
           forma_pagamento_pretendida?: string | null
           id?: string
           imobiliaria_id?: string | null
@@ -752,6 +761,7 @@ export type Database = {
           objecoes?: Json | null
           objecoes_detalhes?: string | null
           observacoes_corretor?: string | null
+          orcamento_cliente?: number | null
           orcamento_disponivel?: number | null
           pdf_gerado_em?: string | null
           pdf_url?: string | null
@@ -760,7 +770,9 @@ export type Database = {
           pontos_negativos?: string | null
           pontos_positivos?: string | null
           prazo_compra?: Database["public"]["Enums"]["prazo_compra"] | null
+          prazo_compra_cliente?: string | null
           proximos_passos?: string | null
+          proximos_passos_cliente?: string | null
           qualificacao_lead?:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null
@@ -803,6 +815,9 @@ export type Database = {
           duracao_minutos?: number | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
+          followup_enviado_cliente?: boolean
+          followup_enviado_corretor?: boolean
+          forma_pagamento_cliente?: string | null
           forma_pagamento_pretendida?: string | null
           id?: string
           imobiliaria_id?: string | null
@@ -816,6 +831,7 @@ export type Database = {
           objecoes?: Json | null
           objecoes_detalhes?: string | null
           observacoes_corretor?: string | null
+          orcamento_cliente?: number | null
           orcamento_disponivel?: number | null
           pdf_gerado_em?: string | null
           pdf_url?: string | null
@@ -824,7 +840,9 @@ export type Database = {
           pontos_negativos?: string | null
           pontos_positivos?: string | null
           prazo_compra?: Database["public"]["Enums"]["prazo_compra"] | null
+          prazo_compra_cliente?: string | null
           proximos_passos?: string | null
+          proximos_passos_cliente?: string | null
           qualificacao_lead?:
             | Database["public"]["Enums"]["qualificacao_lead"]
             | null

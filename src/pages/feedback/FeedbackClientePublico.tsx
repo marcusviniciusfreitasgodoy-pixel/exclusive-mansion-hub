@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -37,6 +38,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { INTERESSE_LABELS, OBJECOES_OPTIONS } from "@/types/feedback";
 
+const PRAZO_COMPRA_OPTIONS = [
+  { value: "0-3_meses", label: "0 a 3 meses" },
+  { value: "3-6_meses", label: "3 a 6 meses" },
+  { value: "6-12_meses", label: "6 a 12 meses" },
+  { value: "acima_12_meses", label: "Acima de 12 meses" },
+  { value: "indefinido", label: "Indefinido" },
+] as const;
+
+const FORMA_PAGAMENTO_OPTIONS = [
+  { value: "financiamento", label: "Financiamento bancário" },
+  { value: "a_vista", label: "À vista" },
+  { value: "consorcio", label: "Consórcio" },
+  { value: "permuta", label: "Permuta" },
+  { value: "outro", label: "Outro" },
+] as const;
+
 const formSchema = z.object({
   nps_cliente: z.number().min(0).max(10, "Selecione uma nota"),
   avaliacao_localizacao: z.number().min(1).max(5),
@@ -46,12 +63,16 @@ const formSchema = z.object({
   avaliacao_atendimento: z.number().min(1).max(5),
   pontos_positivos: z.string().min(5, "Descreva os pontos positivos"),
   pontos_negativos: z.string().optional(),
-  sugestoes: z.string().optional(),
   interesse_compra: z.enum(["muito_interessado", "interessado", "pouco_interessado", "sem_interesse"], {
     required_error: "Selecione seu nível de interesse",
   }),
   objecoes: z.array(z.string()).optional(),
   objecoes_detalhes: z.string().optional(),
+  prazo_compra_cliente: z.string({ required_error: "Selecione o prazo estimado" }),
+  orcamento_cliente: z.string().optional(),
+  forma_pagamento_cliente: z.string().optional(),
+  comentarios_livres: z.string().optional(),
+  proximos_passos_cliente: z.string().optional(),
   declaracao_verdade: z.boolean().refine((val) => val === true, {
     message: "Você deve confirmar a veracidade das informações",
   }),
@@ -101,8 +122,12 @@ export default function FeedbackClientePublico() {
       avaliacao_atendimento: 0,
       pontos_positivos: "",
       pontos_negativos: "",
-      sugestoes: "",
       objecoes: [],
+      prazo_compra_cliente: "",
+      orcamento_cliente: "",
+      forma_pagamento_cliente: "",
+      comentarios_livres: "",
+      proximos_passos_cliente: "",
       declaracao_verdade: false,
     },
   });
@@ -143,10 +168,14 @@ export default function FeedbackClientePublico() {
           avaliacao_atendimento: data.avaliacao_atendimento,
           pontos_positivos: data.pontos_positivos,
           pontos_negativos: data.pontos_negativos || null,
-          sugestoes: data.sugestoes || null,
+          sugestoes: data.comentarios_livres || null,
           interesse_compra: data.interesse_compra,
           objecoes: data.objecoes || [],
           objecoes_detalhes: data.objecoes_detalhes || null,
+          prazo_compra_cliente: data.prazo_compra_cliente || null,
+          orcamento_cliente: data.orcamento_cliente ? parseFloat(data.orcamento_cliente) : null,
+          forma_pagamento_cliente: data.forma_pagamento_cliente || null,
+          proximos_passos_cliente: data.proximos_passos_cliente || null,
           assinatura_cliente: signatureData,
           assinatura_cliente_data: new Date().toISOString(),
           assinatura_cliente_device: navigator.userAgent,
@@ -454,16 +483,53 @@ export default function FeedbackClientePublico() {
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Prazo e Orçamento */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">💰 Planejamento de Compra</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="prazo_compra_cliente"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Qual o seu prazo estimado para a compra?</FormLabel>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {PRAZO_COMPRA_OPTIONS.map((opcao) => (
+                          <button
+                            key={opcao.value}
+                            type="button"
+                            onClick={() => field.onChange(opcao.value)}
+                            className={cn(
+                              "p-3 rounded-lg border-2 text-sm text-center transition-all",
+                              field.value === opcao.value
+                                ? "border-primary bg-primary/5 font-medium"
+                                : "border-muted hover:border-muted-foreground/30"
+                            )}
+                          >
+                            {opcao.label}
+                          </button>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
-                  name="sugestoes"
+                  name="orcamento_cliente"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sugestões ou comentários 💬</FormLabel>
+                      <FormLabel>Orçamento disponível (R$) — opcional</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Algo mais que gostaria de compartilhar? (opcional)"
+                        <Input
+                          type="number"
+                          placeholder="Ex: 500000"
                           {...field}
                         />
                       </FormControl>
@@ -471,13 +537,41 @@ export default function FeedbackClientePublico() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="forma_pagamento_cliente"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de pagamento preferida — opcional</FormLabel>
+                      <div className="grid grid-cols-2 gap-2">
+                        {FORMA_PAGAMENTO_OPTIONS.map((opcao) => (
+                          <button
+                            key={opcao.value}
+                            type="button"
+                            onClick={() => field.onChange(opcao.value)}
+                            className={cn(
+                              "p-3 rounded-lg border-2 text-sm text-center transition-all",
+                              field.value === opcao.value
+                                ? "border-primary bg-primary/5 font-medium"
+                                : "border-muted hover:border-muted-foreground/30"
+                            )}
+                          >
+                            {opcao.label}
+                          </button>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
-            {/* Interesse de Compra */}
+            {/* Interesse em Proposta */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Qual seu interesse no imóvel?</CardTitle>
+                <CardTitle className="text-lg">Tem interesse em fazer uma proposta? 🏡</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -515,8 +609,8 @@ export default function FeedbackClientePublico() {
                       control={form.control}
                       name="objecoes"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>O que te impediu? (selecione todos que se aplicam)</FormLabel>
+                    <FormItem>
+                          <FormLabel>Gostaríamos de entender melhor. O que pesou na sua decisão? 🙏</FormLabel>
                           <div className="grid grid-cols-2 gap-2">
                             {OBJECOES_OPTIONS.map((opcao) => (
                               <label
@@ -553,10 +647,10 @@ export default function FeedbackClientePublico() {
                       name="objecoes_detalhes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quer detalhar?</FormLabel>
+                          <FormLabel>Gostaria de detalhar? (opcional)</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Conte mais sobre o que te fez desistir..."
+                              placeholder="Sua opinião nos ajuda a melhorar..."
                               {...field}
                             />
                           </FormControl>
@@ -566,6 +660,50 @@ export default function FeedbackClientePublico() {
                     />
                   </>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Comentários e Próximos Passos */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  💬 Comentários e Próximos Passos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="comentarios_livres"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comentários livres (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Algo mais que gostaria de compartilhar?"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="proximos_passos_cliente"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>O que deseja como próximo passo? (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Ex: Receber mais informações, agendar nova visita, receber proposta comercial..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 

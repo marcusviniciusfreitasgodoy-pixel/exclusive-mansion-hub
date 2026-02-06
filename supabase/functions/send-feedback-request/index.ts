@@ -20,7 +20,9 @@ interface FeedbackRequestData {
   token: string;
   clienteNome: string;
   clienteEmail: string;
+  clienteTelefone?: string;
   imovelTitulo: string;
+  construtoraId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -154,6 +156,29 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Email de feedback enviado:", emailResponse);
+
+    // Registrar mensagem WhatsApp para o cliente
+    if (data.clienteTelefone) {
+      const phoneClean = data.clienteTelefone.replace(/\D/g, "");
+      const phoneFull = phoneClean.startsWith("55") ? phoneClean : `55${phoneClean}`;
+      const whatsappMsg = `Olá ${clienteNome}! 👋\n\nSua visita ao imóvel *${imovelTitulo}* foi registrada! Gostaríamos muito de ouvir sua opinião.\n\n⭐ Avalie sua experiência em menos de 2 minutos:\n${feedbackUrl}\n\nSua opinião é muito importante para nós! 🙏`;
+      
+      try {
+        await supabase.from("whatsapp_messages").insert({
+          telefone_destino: phoneFull,
+          nome_destino: clienteNome,
+          tipo_mensagem: "followup",
+          conteudo: whatsappMsg,
+          modo_envio: "wa_link",
+          status: "enviado",
+          enviado_em: new Date().toISOString(),
+          construtora_id: data.construtoraId || null,
+        });
+        console.log("WhatsApp de feedback registrado para cliente");
+      } catch (waErr) {
+        console.error("Erro ao registrar WhatsApp:", waErr);
+      }
+    }
 
     return successResponse({ 
       success: true, 

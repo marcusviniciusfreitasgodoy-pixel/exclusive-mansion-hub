@@ -42,11 +42,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAnalyticsTracking } from "@/components/integrations/AnalyticsScripts";
 import type { PropertyData, PropertyBranding } from "@/types/property-page";
 
-// Horários disponíveis (9h às 18h, intervalos de 30min)
+// Horários disponíveis (9h às 18h, intervalos de 1h30)
 const HORARIOS_DISPONIVEIS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
+  "09:00", "10:30", "12:00", "13:30", "15:00", "16:30", "18:00"
 ];
 
 // Tipos de documento aceitos
@@ -128,10 +126,6 @@ export function AgendarVisitaModal({
   const disabledDays = (date: Date) => {
     // Desabilitar datas passadas e hoje
     if (isBefore(startOfDay(date), startOfDay(minDate))) {
-      return true;
-    }
-    // Desabilitar domingos (opcional - remover se quiser permitir)
-    if (date.getDay() === 0) {
       return true;
     }
     return false;
