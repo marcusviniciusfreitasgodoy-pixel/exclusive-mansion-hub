@@ -204,6 +204,12 @@ export const TOUR_CONSTRUTORA: TourStep[] = [
     position: 'right',
   },
   {
+    targetSelector: '[data-tour="configuracoes"]',
+    title: 'Domínio Customizado',
+    description: 'Em Configurações, conecte seu próprio domínio para exibir imóveis com sua marca.',
+    position: 'right',
+  },
+  {
     targetSelector: '[data-tour="manual"]',
     title: 'Manual Completo',
     description: 'Acesse o manual completo da plataforma a qualquer momento pelo menu.',
@@ -240,6 +246,12 @@ export const TOUR_IMOBILIARIA: TourStep[] = [
     targetSelector: '[data-tour="agendamentos"]',
     title: 'Agendamentos',
     description: 'Acompanhe e gerencie visitas agendadas pelos seus clientes.',
+    position: 'right',
+  },
+  {
+    targetSelector: '[data-tour="configuracoes"]',
+    title: 'Domínio Customizado',
+    description: 'Em Configurações, conecte seu próprio domínio para exibir imóveis vinculados com sua marca.',
     position: 'right',
   },
 ];

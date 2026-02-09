@@ -48,7 +48,7 @@ const construtoraLinks = [
   { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3, tourId: 'analytics' },
   { title: 'Integrações', url: '/dashboard/construtora/integracoes', icon: Link2 },
   { title: 'Imobiliárias', url: '/dashboard/construtora/imobiliarias', icon: Users, tourId: 'imobiliarias' },
-  { title: 'Configurações', url: '/dashboard/construtora/configuracoes', icon: Settings },
+  { title: 'Configurações', url: '/dashboard/construtora/configuracoes', icon: Settings, tourId: 'configuracoes' },
 ];
 
 const imobiliariaLinks = [
@@ -62,7 +62,7 @@ const imobiliariaLinks = [
   { title: 'Meus Leads', url: '/dashboard/imobiliaria/leads', icon: MessageSquare, tourId: 'leads' },
   { title: 'Analytics', url: '/dashboard/imobiliaria/analytics', icon: BarChart3, tourId: 'analytics' },
   { title: 'Integrações', url: '/dashboard/imobiliaria/integracoes', icon: Link2 },
-  { title: 'Configurações', url: '/dashboard/imobiliaria/configuracoes', icon: Settings },
+  { title: 'Configurações', url: '/dashboard/imobiliaria/configuracoes', icon: Settings, tourId: 'configuracoes' },
 ];
 
 export function DashboardSidebar() {
