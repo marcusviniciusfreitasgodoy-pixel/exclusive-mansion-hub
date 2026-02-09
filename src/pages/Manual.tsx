@@ -8,7 +8,7 @@ import {
   Building2, Users, Home, Plus, Kanban, BarChart3, Calendar,
   ClipboardCheck, FileText, MessageSquare, Settings, Star, Share2,
   Link as LinkIcon, Images, Clock, ImagePlus, BookOpen, ArrowLeft,
-  Play, Brain,
+  Play, Brain, Globe,
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
 
@@ -21,6 +21,11 @@ const construtoraTopics = [
     icon: Settings,
     title: 'Cadastro e Configuração Inicial',
     content: `Após criar sua conta como construtora, acesse **Configurações** no menu lateral para completar seu perfil:\n\n• **Logo da empresa** — será exibido nas páginas dos imóveis e nos relatórios em PDF.\n• **Cores da marca** — personalize a identidade visual da plataforma.\n• **Dados de contato** — e-mail, telefone e site para que imobiliárias e clientes possam entrar em contato.\n\nEssas informações são utilizadas automaticamente em todo o ecossistema.`,
+  },
+  {
+    icon: Globe,
+    title: 'Domínio Customizado',
+    content: `Conecte seu próprio domínio para exibir seus imóveis com sua marca:\n\n1. **Salvar domínio** — em Configurações, insira o domínio desejado (ex: imoveis.suaempresa.com.br).\n2. **Configurar DNS** — no painel do seu provedor de domínio, crie um registro CNAME apontando para \`whitelabel.godoyprime.com.br\`.\n3. **Verificar e ativar** — clique em "Verificar" para confirmar a configuração. O sistema emitirá o certificado SSL automaticamente.\n\nApós a ativação, visitantes acessarão seu portfólio de imóveis diretamente pelo seu domínio, com branding completo da construtora.`,
   },
   {
     icon: Plus,
@@ -74,6 +79,11 @@ const imobiliariaTopics = [
     icon: Settings,
     title: 'Cadastro e Configuração',
     content: `Ao criar sua conta como imobiliária, preencha:\n\n• **Nome da empresa** e **CRECI**.\n• **Logo** — será exibido nas páginas white-label dos imóveis.\n• **Dados de contato** — telefone, e-mail e Instagram.\n• **Cor da marca** — personaliza elementos visuais nas suas páginas.\n• **Favicon** — ícone que aparece na aba do navegador.\n\nAcesse **Configurações** a qualquer momento para atualizar.`,
+  },
+  {
+    icon: Globe,
+    title: 'Domínio Customizado',
+    content: `Conecte seu próprio domínio para exibir os imóveis vinculados com sua marca:\n\n1. **Salvar domínio** — em Configurações, insira o domínio desejado (ex: imoveis.suaimobiliaria.com.br).\n2. **Configurar DNS** — no painel do seu provedor de domínio, crie um registro CNAME apontando para \`whitelabel.godoyprime.com.br\`.\n3. **Verificar e ativar** — clique em "Verificar" para confirmar a configuração. O certificado SSL será emitido automaticamente.\n\nApós a ativação, seus clientes acessarão os imóveis pelo seu domínio, com logo, cores e identidade visual da sua imobiliária.`,
   },
   {
     icon: LinkIcon,
