@@ -337,6 +337,7 @@ export type Database = {
           created_at: string | null
           dominio_customizado: string | null
           email_contato: string | null
+          favicon_url: string | null
           id: string
           instagram_url: string | null
           logo_url: string | null
@@ -354,6 +355,7 @@ export type Database = {
           created_at?: string | null
           dominio_customizado?: string | null
           email_contato?: string | null
+          favicon_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
@@ -371,6 +373,7 @@ export type Database = {
           created_at?: string | null
           dominio_customizado?: string | null
           email_contato?: string | null
+          favicon_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null

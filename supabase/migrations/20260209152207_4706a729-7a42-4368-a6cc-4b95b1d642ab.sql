@@ -1,0 +1,1 @@
+ALTER TABLE public.construtoras ADD COLUMN favicon_url text;
