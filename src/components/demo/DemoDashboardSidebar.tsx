@@ -43,6 +43,7 @@ const construtoraLinks = [
 
 const imobiliariaLinks = [
   { title: 'Imóveis Disponíveis', url: '/demo/imobiliaria', icon: Home },
+  { title: 'Sites & Templates', url: '/demo/imobiliaria/sites', icon: Globe },
   { title: 'Meus Links', url: '/demo/imobiliaria/meus-links', icon: LinkIcon },
   { title: 'Meus Leads', url: '/demo/imobiliaria/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/demo/imobiliaria/analytics', icon: BarChart3 },
