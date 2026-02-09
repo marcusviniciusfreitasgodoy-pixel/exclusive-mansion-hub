@@ -2077,6 +2077,46 @@ export type Database = {
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_construtora_id: { Args: { _user_id: string }; Returns: string }
+      get_feedback_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          assinatura_cliente: string | null
+          assinatura_cliente_data: string | null
+          avaliacao_acabamento: number | null
+          avaliacao_atendimento: number | null
+          avaliacao_custo_beneficio: number | null
+          avaliacao_layout: number | null
+          avaliacao_localizacao: number | null
+          cliente_email: string | null
+          cliente_nome: string | null
+          construtora_id: string | null
+          corretor_nome: string | null
+          data_visita: string | null
+          feedback_cliente_em: string | null
+          id: string | null
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          interesse_compra:
+            | Database["public"]["Enums"]["interesse_compra"]
+            | null
+          nps_cliente: number | null
+          objecoes: Json | null
+          objecoes_detalhes: string | null
+          pdf_url: string | null
+          pontos_negativos: string | null
+          pontos_positivos: string | null
+          respostas_cliente_customizadas: Json | null
+          status: Database["public"]["Enums"]["feedback_status"] | null
+          sugestoes: string | null
+          token_acesso_cliente: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "feedbacks_visitas_publico"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -2086,6 +2126,33 @@ export type Database = {
         Returns: boolean
       }
       imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
+      submit_client_feedback: {
+        Args: {
+          p_assinatura_cliente: string
+          p_assinatura_cliente_device: string
+          p_avaliacao_acabamento: number
+          p_avaliacao_atendimento: number
+          p_avaliacao_custo_beneficio: number
+          p_avaliacao_layout: number
+          p_avaliacao_localizacao: number
+          p_efeito_uau: string[]
+          p_efeito_uau_detalhe: string
+          p_forma_pagamento_cliente: string
+          p_interesse_compra: Database["public"]["Enums"]["interesse_compra"]
+          p_nps_cliente: number
+          p_objecoes: Json
+          p_objecoes_detalhes: string
+          p_orcamento_cliente: number
+          p_pontos_negativos: string
+          p_pontos_positivos: string
+          p_prazo_compra_cliente: string
+          p_proximos_passos_cliente: string
+          p_respostas_cliente_customizadas?: Json
+          p_sugestoes: string
+          p_token: string
+        }
+        Returns: string
+      }
       user_owns_imovel: { Args: { _imovel_id: string }; Returns: boolean }
       validate_feedback_token: {
         Args: { _feedback_id: string; _token: string }
