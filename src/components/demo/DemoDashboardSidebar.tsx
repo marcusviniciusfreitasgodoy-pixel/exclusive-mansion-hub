@@ -23,6 +23,7 @@ import {
   Users,
   ArrowLeft,
   BookOpen,
+  Globe,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 import type { AppRole } from '@/types/database';
@@ -30,6 +31,7 @@ import { DEMO_CONSTRUTORA, DEMO_IMOBILIARIA } from '@/data/demo-data';
 
 const construtoraLinks = [
   { title: 'Meus Imóveis', url: '/demo/construtora', icon: Home },
+  { title: 'Sites & Templates', url: '/demo/construtora/sites', icon: Globe },
   { title: 'Pipeline CRM', url: '/demo/construtora/pipeline', icon: Kanban },
   { title: 'Visitas Agendadas', url: '/demo/construtora/agendamentos', icon: Calendar },
   { title: 'Leads', url: '/demo/construtora/leads', icon: MessageSquare },
