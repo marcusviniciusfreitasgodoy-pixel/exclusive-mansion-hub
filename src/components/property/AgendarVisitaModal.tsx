@@ -229,7 +229,7 @@ export function AgendarVisitaModal({
         .insert({
           imovel_id: property.id,
           construtora_id: property.construtoraId,
-          imobiliaria_id: imobiliariaId,
+          imobiliaria_id: imobiliariaId || null,
           access_id: accessId,
           cliente_nome: data.nome.trim(),
           cliente_email: data.email.trim().toLowerCase(),

@@ -171,7 +171,7 @@ export function ChatbotWidget({
           session_id: sessionId,
           mensagem_usuario: messageText,
           imovel_id: imovelId,
-          imobiliaria_id: imobiliariaId,
+          imobiliaria_id: imobiliariaId || null,
           construtora_id: construtorId,
           input_type: inputType,
         },

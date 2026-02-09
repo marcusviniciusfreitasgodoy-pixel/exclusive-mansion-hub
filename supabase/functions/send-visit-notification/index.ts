@@ -83,7 +83,11 @@ const handler = async (req: Request): Promise<Response> => {
       return rateLimitResponse(rateLimitResult.resetAt);
     }
 
-    const data: VisitNotificationRequest = await req.json();
+    const rawData = await req.json();
+    const data: VisitNotificationRequest = {
+      ...rawData,
+      imobiliariaId: rawData.imobiliariaId || null,
+    };
 
     // ===== INPUT VALIDATION =====
     
