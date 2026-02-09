@@ -2100,6 +2100,69 @@ export type Database = {
         }
         Relationships: []
       }
+      mv_leads_diario: {
+        Row: {
+          dia: string | null
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mv_pageviews_diario: {
+        Row: {
+          dia: string | null
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pageviews_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pageviews_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pageviews_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_and_increment_rate_limit: {
@@ -2162,6 +2225,7 @@ export type Database = {
         Returns: boolean
       }
       imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
+      refresh_analytics_views: { Args: never; Returns: undefined }
       submit_client_feedback: {
         Args: {
           p_assinatura_cliente: string

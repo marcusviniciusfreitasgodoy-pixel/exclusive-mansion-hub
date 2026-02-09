@@ -162,13 +162,19 @@ function MainRoutes() {
                 </ProtectedRoute>
               } />
               <Route path="/admin/diagnostico" element={
-                <LazyRoute><Diagnostico /></LazyRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <LazyRoute><Diagnostico /></LazyRoute>
+                </ProtectedRoute>
               } />
               <Route path="/admin/base-conhecimento" element={
-                <LazyRoute><BaseConhecimento /></LazyRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <LazyRoute><BaseConhecimento /></LazyRoute>
+                </ProtectedRoute>
               } />
               <Route path="/admin/usuarios" element={
-                <LazyRoute><GerenciarUsuarios /></LazyRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <LazyRoute><GerenciarUsuarios /></LazyRoute>
+                </ProtectedRoute>
               } />
               
               {/* Auth Routes (eager loaded for fast initial load) */}
