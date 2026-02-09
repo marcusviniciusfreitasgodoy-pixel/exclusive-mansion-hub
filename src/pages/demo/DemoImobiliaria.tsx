@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, Eye, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
 import { DEMO_IMOVEIS, DEMO_ACCESS_DATA, DEMO_LEADS, DEMO_AGENDAMENTOS, DEMO_ANALYTICS, DEMO_FEEDBACKS } from '@/data/demo-data';
 import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
+import { DemoFeedbacksContent } from '@/components/demo/DemoFeedbacksContent';
 
 function DemoImoveisDisponiveis() {
   const formatCurrency = (value: number | null) => {
@@ -205,6 +206,7 @@ function DemoImobiliariaInner() {
                 <Route path="leads" element={<><h1 className="text-xl font-semibold mb-4">Meus Leads</h1><DemoLeadsImob /></>} />
                 <Route path="analytics" element={<><h1 className="text-xl font-semibold mb-4">Analytics</h1><DemoAnalyticsImob /></>} />
                 <Route path="agendamentos" element={<><h1 className="text-xl font-semibold mb-4">Agendamentos</h1><DemoAgendImob /></>} />
+                <Route path="feedbacks" element={<><h1 className="text-xl font-semibold mb-4">Feedbacks de Visitas</h1><DemoFeedbacksContent filterImobiliariaId="demo-imobiliaria-001" /></>} />
                 <Route path="*" element={<Navigate to="/demo/imobiliaria" replace />} />
               </Routes>
             </div>

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Building2, MessageSquare, Eye, TrendingUp, Globe } from 'lucide-react';
 import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
 import { DemoSitesContent } from '@/components/demo/DemoSitesContent';
+import { DemoFeedbacksContent } from '@/components/demo/DemoFeedbacksContent';
 
 function DemoConstrutoraDashboardContent() {
   const formatCurrency = (value: number | null) => {
@@ -283,6 +284,7 @@ function DemoConstructoraInner() {
                 <Route path="analytics" element={<><h1 className="text-xl font-semibold mb-4">Analytics</h1><DemoAnalyticsContent /></>} />
                 <Route path="pipeline" element={<><h1 className="text-xl font-semibold mb-4">Pipeline de Leads</h1><DemoPipelineContent /></>} />
                 <Route path="agendamentos" element={<><h1 className="text-xl font-semibold mb-4">Visitas Agendadas</h1><DemoAgendamentosContent /></>} />
+                <Route path="feedbacks" element={<><h1 className="text-xl font-semibold mb-4">Feedbacks & Satisfação</h1><DemoFeedbacksContent /></>} />
                 <Route path="imobiliarias" element={<><h1 className="text-xl font-semibold mb-4">Imobiliárias Parceiras</h1><DemoImobiliariasContent /></>} />
                 <Route path="*" element={<Navigate to="/demo/construtora" replace />} />
               </Routes>
