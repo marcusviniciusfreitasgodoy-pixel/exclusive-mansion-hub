@@ -1,39 +1,42 @@
 
 
-# Melhorar Visualizacao e Responsividade dos Cards da Plataforma
+## Atualizar Cards da Demo com Todas as Funcionalidades
 
-## Resumo
-Aprimorar os cards da secao "Tudo o que voce precisa em uma unica plataforma" para melhor hierarquia visual e experiencia mobile.
+Os cards da pagina `/demo` (DemoLanding) listam funcionalidades desatualizadas. Vou atualizar as listas para refletir todas as funcionalidades realmente disponíveis nos dashboards de Construtora e Imobiliária.
 
-## Alteracoes
+### Alteracao
 
-### Arquivo: `src/pages/Apresentacao.tsx`
+**Arquivo:** `src/pages/demo/DemoLanding.tsx`
 
-**Cards (linhas 189-207):**
+Atualizar o array `options` com as listas completas de features:
 
-1. **Layout responsivo melhorado:**
-   - Mobile: grid de 1 coluna com cards mais compactos (`grid-cols-1`)
-   - Tablet: 2 colunas (`sm:grid-cols-2`)
-   - Desktop: 3 colunas (`lg:grid-cols-3`)
-   - Reduzir gap no mobile (`gap-4 md:gap-6`)
+**Construtora** (atual: 6 itens, novo: 9 itens):
+- Portfolio de imoveis
+- Sites e Templates personalizados
+- Pipeline CRM (Kanban)
+- Visitas agendadas
+- Gestao de leads
+- Analytics avancado
+- Feedbacks e Efeito UAU
+- Imobiliarias parceiras
+- Relatorios em PDF
 
-2. **Visual dos cards aprimorado:**
-   - Adicionar altura minima uniforme para alinhar os cards (`flex flex-col h-full`)
-   - Empurrar os badges para o rodape do card com `mt-auto` para alinhamento consistente
-   - Borda lateral colorida sutil: borda esquerda dourada de 3px (`border-l-[3px] border-l-secondary`) para destaque visual
-   - Padding ajustado no mobile (`p-4 md:p-6`)
-   - Sombra hover mais pronunciada
+**Imobiliaria** (atual: 6 itens, novo: 8 itens):
+- Links white-label personalizados
+- Gestao de leads
+- Meus imoveis disponiveis
+- Analytics de performance
+- Agendamento de visitas
+- Feedbacks pos-visita
+- Relatorios em PDF
+- Exportacao CSV
 
-3. **Icone:**
-   - Fundo circular em vez de quadrado arredondado para mais elegancia (`rounded-full`)
-   - Tamanho levemente maior no desktop
+As descricoes dos cards tambem serao ajustadas para mencionar as novas funcionalidades como sites/templates e feedbacks.
 
-4. **Badges:**
-   - Envolver em `flex flex-wrap` para nao quebrar layout em telas pequenas
-   - Texto ligeiramente menor no mobile
+### Detalhes Tecnicos
 
-5. **Legenda (Construtora/Imobiliaria):**
-   - Manter a legenda com os circulos coloridos acima do grid
-
-### Nenhum arquivo novo, nenhuma dependencia nova
+- Apenas o arquivo `src/pages/demo/DemoLanding.tsx` sera modificado
+- Atualizacao dos arrays `features` dentro do objeto `options`
+- Atualizacao dos textos de `description` para cobrir melhor o escopo
+- Nenhuma dependencia nova necessaria
 
