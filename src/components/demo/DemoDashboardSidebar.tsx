@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   BookOpen,
   Globe,
+  Star,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 import type { AppRole } from '@/types/database';
@@ -36,6 +37,7 @@ const construtoraLinks = [
   { title: 'Visitas Agendadas', url: '/demo/construtora/agendamentos', icon: Calendar },
   { title: 'Leads', url: '/demo/construtora/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/demo/construtora/analytics', icon: BarChart3 },
+  { title: 'Feedbacks', url: '/demo/construtora/feedbacks', icon: Star },
   { title: 'Imobiliárias', url: '/demo/construtora/imobiliarias', icon: Users },
 ];
 
@@ -45,6 +47,7 @@ const imobiliariaLinks = [
   { title: 'Meus Leads', url: '/demo/imobiliaria/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/demo/imobiliaria/analytics', icon: BarChart3 },
   { title: 'Agendamentos', url: '/demo/imobiliaria/agendamentos', icon: Calendar },
+  { title: 'Feedbacks', url: '/demo/imobiliaria/feedbacks', icon: Star },
 ];
 
 interface DemoDashboardSidebarProps {
