@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload } from "@/components/dashboard/LogoUpload";
 import { FaviconUpload } from "@/components/dashboard/FaviconUpload";
+import { DomainConfigCard } from "@/components/dashboard/DomainConfigCard";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -387,6 +388,11 @@ export default function ConfiguracoesImobiliaria() {
                 />
               </CardContent>
             </Card>
+
+            {/* Domínio Customizado */}
+            {imobiliaria?.id && (
+              <DomainConfigCard entityType="imobiliaria" entityId={imobiliaria.id} />
+            )}
 
             {/* Botão Salvar */}
             <div className="flex justify-end">

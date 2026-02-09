@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload } from "@/components/dashboard/LogoUpload";
+import { DomainConfigCard } from "@/components/dashboard/DomainConfigCard";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -357,6 +358,11 @@ export default function ConfiguracoesConstrutora() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Domínio Customizado */}
+            {construtora?.id && (
+              <DomainConfigCard entityType="construtora" entityId={construtora.id} />
+            )}
 
             {/* Botão Salvar */}
             <div className="flex justify-end">
