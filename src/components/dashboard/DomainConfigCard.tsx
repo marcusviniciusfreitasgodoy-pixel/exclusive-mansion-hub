@@ -26,6 +26,61 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   failed: { label: "Falhou", variant: "destructive", icon: <AlertCircle className="h-3 w-3" /> },
 };
 
+const STEPS = [
+  { label: "Salvar domínio" },
+  { label: "Configurar DNS" },
+  { label: "Verificar e ativar" },
+];
+
+function getActiveStep(domain: DomainRecord | null): number {
+  if (!domain) return 0;
+  if (domain.status === "active") return 3; // all done
+  if (domain.status === "verified") return 2;
+  return 1; // pending or failed
+}
+
+function StepIndicator({ activeStep }: { activeStep: number }) {
+  return (
+    <div className="flex items-center justify-between px-6 pb-2">
+      {STEPS.map((step, i) => {
+        const completed = i < activeStep;
+        const current = i === activeStep;
+        return (
+          <div key={i} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold border-2 transition-colors ${
+                  completed
+                    ? "border-green-600 bg-green-600 text-white"
+                    : current
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-muted-foreground/30 bg-background text-muted-foreground"
+                }`}
+              >
+                {completed ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              </div>
+              <span
+                className={`text-[10px] leading-tight text-center max-w-[72px] ${
+                  completed ? "text-green-600 font-medium" : current ? "text-primary font-medium" : "text-muted-foreground"
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={`h-0.5 flex-1 mx-2 mt-[-14px] transition-colors ${
+                  i < activeStep ? "bg-green-600" : "bg-muted-foreground/20"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function DomainConfigCard({ entityType, entityId }: DomainConfigCardProps) {
   const [domain, setDomain] = useState("");
   const [existingDomain, setExistingDomain] = useState<DomainRecord | null>(null);
@@ -172,6 +227,7 @@ export function DomainConfigCard({ entityType, entityId }: DomainConfigCardProps
           Configure um domínio próprio para exibir seus imóveis com sua marca.
         </CardDescription>
       </CardHeader>
+      <StepIndicator activeStep={getActiveStep(existingDomain)} />
       <CardContent className="space-y-4">
         {/* Domain input */}
         <div className="flex gap-2">
