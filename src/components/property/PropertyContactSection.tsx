@@ -63,7 +63,7 @@ export function PropertyContactSection({
       // Insert lead into database
       const { data: leadData, error } = await supabase.from("leads").insert({
         imovel_id: property.id,
-        imobiliaria_id: imobiliariaId,
+        imobiliaria_id: imobiliariaId || null,
         access_id: accessId,
         nome: formData.nome,
         email: formData.email,

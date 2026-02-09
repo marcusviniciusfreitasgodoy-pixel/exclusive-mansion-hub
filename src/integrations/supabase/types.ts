@@ -949,7 +949,7 @@ export type Database = {
         Row: {
           acesso_concedido_em: string | null
           id: string
-          imobiliaria_id: string
+          imobiliaria_id: string | null
           imovel_id: string
           status: Database["public"]["Enums"]["access_status"] | null
           url_slug: string
@@ -958,7 +958,7 @@ export type Database = {
         Insert: {
           acesso_concedido_em?: string | null
           id?: string
-          imobiliaria_id: string
+          imobiliaria_id?: string | null
           imovel_id: string
           status?: Database["public"]["Enums"]["access_status"] | null
           url_slug: string
@@ -967,7 +967,7 @@ export type Database = {
         Update: {
           acesso_concedido_em?: string | null
           id?: string
-          imobiliaria_id?: string
+          imobiliaria_id?: string | null
           imovel_id?: string
           status?: Database["public"]["Enums"]["access_status"] | null
           url_slug?: string
