@@ -497,6 +497,36 @@ export type Database = {
           },
         ]
       }
+      custom_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          entity_id: string
+          entity_type: string
+          id: string
+          status: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          status?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           created_at: string
@@ -969,6 +999,7 @@ export type Database = {
           cor_primaria: string | null
           created_at: string | null
           creci: string
+          dominio_customizado: string | null
           email_contato: string | null
           favicon_url: string | null
           id: string
@@ -983,6 +1014,7 @@ export type Database = {
           cor_primaria?: string | null
           created_at?: string | null
           creci: string
+          dominio_customizado?: string | null
           email_contato?: string | null
           favicon_url?: string | null
           id?: string
@@ -997,6 +1029,7 @@ export type Database = {
           cor_primaria?: string | null
           created_at?: string | null
           creci?: string
+          dominio_customizado?: string | null
           email_contato?: string | null
           favicon_url?: string | null
           id?: string

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageLoadingSpinner } from "@/components/ui/skeleton-loaders";
+import { useDomainResolver } from "@/hooks/useDomainResolver";
 import NotFound from "./pages/NotFound";
 
 // Eager load auth pages (critical path)
@@ -68,6 +69,9 @@ const Diagnostico = lazy(() => import("./pages/admin/Diagnostico"));
 const BaseConhecimento = lazy(() => import("./pages/admin/BaseConhecimento"));
 const GerenciarUsuarios = lazy(() => import("./pages/admin/GerenciarUsuarios"));
 
+// Lazy load domain-resolved pages
+const CustomDomainPage = lazy(() => import("./pages/CustomDomainPage"));
+
 // Configure React Query with optimized defaults
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,15 +93,26 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+// Domain-aware app shell
+function AppRoutes() {
+  const { isCustomDomain, resolution, isLoading } = useDomainResolver();
+
+  if (isLoading) return <PageLoadingSpinner />;
+
+  if (isCustomDomain && resolution) {
+    return (
+      <LazyRoute>
+        <CustomDomainPage entityType={resolution.entityType} entityId={resolution.entityId} />
+      </LazyRoute>
+    );
+  }
+
+  return <MainRoutes />;
+}
+
+function MainRoutes() {
+  return (
+    <Routes>
             <Route path="/" element={<Login />} />
               
               {/* Demo Routes */}
@@ -321,6 +336,18 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+  );
+}
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

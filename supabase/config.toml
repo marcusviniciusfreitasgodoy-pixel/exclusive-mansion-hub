@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.send-feedback-followup]
 verify_jwt = false
+
+[functions.verify-domain]
+verify_jwt = false
