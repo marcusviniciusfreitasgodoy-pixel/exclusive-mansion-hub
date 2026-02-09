@@ -1,33 +1,89 @@
 
+## Link Direto da Construtora (sem imobiliaria parceira)
 
-## Adicionar Favicon Customizado para Construtora
+### Resumo
 
-### O que sera feito
+Permitir que a construtora gere um link publico do imovel usando seu proprio branding (logo, cores, favicon), sem depender de uma imobiliaria intermediaria. O visitante vera a pagina com a marca da construtora.
 
-Replicar a funcionalidade de upload de favicon que ja existe para imobiliarias, agora tambem para construtoras. Isso envolve uma alteracao no banco de dados e uma atualizacao na pagina de configuracoes.
+### Alteracoes Necessarias
 
-### Alteracoes
+#### 1. Banco de dados
 
-#### 1. Banco de dados -- Adicionar coluna `favicon_url`
-
-A tabela `construtoras` nao possui a coluna `favicon_url`. Sera criada uma migration para adiciona-la:
+**Tornar `imobiliaria_id` nullable na tabela `imobiliaria_imovel_access`:**
 
 ```sql
-ALTER TABLE public.construtoras ADD COLUMN favicon_url text;
+ALTER TABLE public.imobiliaria_imovel_access 
+  ALTER COLUMN imobiliaria_id DROP NOT NULL;
 ```
 
-#### 2. Pagina de Configuracoes da Construtora (`src/pages/dashboard/construtora/Configuracoes.tsx`)
+Quando `imobiliaria_id` for NULL, o registro representa um link direto da construtora. O `url_slug` continua funcionando normalmente.
 
-- Importar o componente `FaviconUpload` (ja existente em `src/components/dashboard/FaviconUpload.tsx`)
-- Adicionar estado `faviconUrl` (igual ao padrao da imobiliaria)
-- Carregar o valor de `favicon_url` no `useEffect` ao receber dados da construtora
-- Adicionar um novo `Card` de "Favicon" logo abaixo do card de Logo, contendo o componente `FaviconUpload`
-- Incluir `favicon_url: faviconUrl` no objeto de update enviado ao banco na funcao `onSubmit`
+**Atualizar RLS:** Adicionar policy para que a construtora consiga inserir registros com `imobiliaria_id = NULL` (a policy existente ja cobre isso via `user_owns_imovel`).
 
-O componente `FaviconUpload` ja lida com upload para o bucket `logos`, validacao de formato (ICO, PNG, SVG, WebP) e limite de 256KB -- nenhuma alteracao necessaria nele.
+#### 2. Hook `usePropertyPage.ts` -- Suportar branding da construtora
 
-### Arquivos modificados
-- **Migration SQL** -- nova coluna `favicon_url` na tabela `construtoras`
-- **`src/pages/dashboard/construtora/Configuracoes.tsx`** -- importar FaviconUpload, adicionar estado, card e salvar no update
+Quando o access record nao tiver `imobiliaria_id` (link direto), o branding sera montado a partir dos dados da construtora ao inves da imobiliaria:
 
-Nenhum arquivo novo. Nenhuma dependencia adicional.
+- `imobiliariaLogo` = construtora.logo_url
+- `imobiliariaNome` = construtora.nome_empresa
+- `corPrimaria` = construtora.cor_primaria
+- `telefone` = construtora.telefone
+- `faviconUrl` = construtora.favicon_url
+- `imobiliariaId` = "" (vazio, sem imobiliaria)
+
+Tambem ajustar a query do Supabase para incluir `cor_primaria`, `cor_secundaria`, `telefone`, `email_contato`, `favicon_url` no select de `construtoras`.
+
+#### 3. Dashboard da Construtora -- Botao "Gerar Link Direto"
+
+**`src/pages/dashboard/construtora/index.tsx`:**
+- Na funcao `copyLink`, quando nao houver access slug de imobiliaria, oferecer a opcao de gerar um link direto
+- Adicionar funcao `generateDirectLink(imovelId)` que cria um registro em `imobiliaria_imovel_access` com `imobiliaria_id = NULL` e um slug baseado no titulo do imovel
+
+**`src/pages/dashboard/construtora/GerenciarAcessos.tsx`:**
+- Na secao de links, mostrar o "Link Direto (Construtora)" quando existir um access com `imobiliaria_id = NULL`
+- Adicionar botao "Gerar Link Direto" caso ainda nao exista
+
+#### 4. Ajustes menores
+
+- **`PropertyContactSection`**: Quando `imobiliariaId` for vazio, enviar lead com `imobiliaria_id = null`
+- **`SofiaAssistentSection`**: Tratar `imobiliariaId` vazio
+- **Pageviews**: Inserir com `imobiliaria_id = null` quando for link direto
+
+### Detalhes Tecnicos
+
+**Arquivos modificados:**
+- Migration SQL -- `ALTER COLUMN imobiliaria_id DROP NOT NULL`
+- `src/hooks/usePropertyPage.ts` -- fallback para branding da construtora, incluir campos extras no select de construtoras
+- `src/pages/dashboard/construtora/index.tsx` -- funcao `generateDirectLink` e ajuste em `copyLink`
+- `src/pages/dashboard/construtora/GerenciarAcessos.tsx` -- exibir/gerar link direto
+- `src/components/property/PropertyContactSection.tsx` -- tratar imobiliariaId vazio
+
+**Nenhum arquivo novo. Nenhuma dependencia adicional.**
+
+### Fluxo do usuario
+
+```text
+Construtora cadastra imovel
+        |
+        v
+Dashboard "Meus Imoveis"
+        |
+        +-- Clica "Compartilhar" no card do imovel
+        |       |
+        |       v
+        |   Se ja tem link direto: copia o link
+        |   Se nao tem: gera automaticamente e copia
+        |
+        v
+Visitante acessa /imovel/slug-direto
+        |
+        v
+usePropertyPage detecta imobiliaria_id = NULL
+        |
+        v
+Monta branding com dados da construtora
+(logo, cores, favicon da construtora)
+        |
+        v
+Pagina renderiza com marca da construtora
+```
