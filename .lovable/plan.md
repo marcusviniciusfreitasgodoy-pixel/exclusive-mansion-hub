@@ -1,40 +1,33 @@
 
-## Incluir Dominio Customizado no Manual e Tour Guiado
+
+## Adicionar Favicon Customizado para Construtora
 
 ### O que sera feito
 
-Duas alteracoes simples para documentar a nova funcionalidade de dominio customizado:
+Replicar a funcionalidade de upload de favicon que ja existe para imobiliarias, agora tambem para construtoras. Isso envolve uma alteracao no banco de dados e uma atualizacao na pagina de configuracoes.
 
-### 1. Manual (`src/pages/Manual.tsx`)
+### Alteracoes
 
-**Construtora** -- Adicionar novo topico ao array `construtoraTopics`:
-- Icone: `Globe` (importar de lucide-react)
-- Titulo: "Dominio Customizado"
-- Conteudo explicando os 3 passos: salvar dominio, configurar CNAME apontando para `whitelabel.godoyprime.com.br`, e verificar/ativar. Mencionar que visitantes verao o portfolio com branding proprio.
+#### 1. Banco de dados -- Adicionar coluna `favicon_url`
 
-**Imobiliaria** -- Adicionar novo topico ao array `imobiliariaTopics`:
-- Mesmo icone e estrutura, adaptado para o contexto de imobiliaria (exibir imoveis vinculados com marca propria).
+A tabela `construtoras` nao possui a coluna `favicon_url`. Sera criada uma migration para adiciona-la:
 
-Posicao: logo apos o topico de "Cadastro e Configuracao" em ambos os arrays, pois e uma configuracao do perfil.
+```sql
+ALTER TABLE public.construtoras ADD COLUMN favicon_url text;
+```
 
-### 2. Tour Guiado (`src/components/dashboard/GuidedTour.tsx`)
+#### 2. Pagina de Configuracoes da Construtora (`src/pages/dashboard/construtora/Configuracoes.tsx`)
 
-**TOUR_CONSTRUTORA** -- Adicionar novo step antes do step "Manual":
-- `targetSelector`: `'[data-tour="configuracoes"]'`
-- `title`: "Dominio Customizado"
-- `description`: "Em Configuracoes, conecte seu proprio dominio para exibir imoveis com sua marca."
-- `position`: "right"
+- Importar o componente `FaviconUpload` (ja existente em `src/components/dashboard/FaviconUpload.tsx`)
+- Adicionar estado `faviconUrl` (igual ao padrao da imobiliaria)
+- Carregar o valor de `favicon_url` no `useEffect` ao receber dados da construtora
+- Adicionar um novo `Card` de "Favicon" logo abaixo do card de Logo, contendo o componente `FaviconUpload`
+- Incluir `favicon_url: faviconUrl` no objeto de update enviado ao banco na funcao `onSubmit`
 
-**TOUR_IMOBILIARIA** -- Adicionar novo step no final (antes de um eventual "Manual", se existir):
-- Mesmo seletor e estrutura adaptada para imobiliaria.
+O componente `FaviconUpload` ja lida com upload para o bucket `logos`, validacao de formato (ICO, PNG, SVG, WebP) e limite de 256KB -- nenhuma alteracao necessaria nele.
 
-Nota: O sidebar ja atribui `data-tour` dinamicamente via `tourId` nos links. Sera necessario verificar se o link de "Configuracoes" ja tem um `tourId` definido; caso contrario, adicionar `tourId: 'configuracoes'` na definicao do link no `DashboardSidebar.tsx`.
-
-### Detalhes Tecnicos
-
-**Arquivos modificados:**
-- `src/pages/Manual.tsx` -- adicionar 1 topico em `construtoraTopics` e 1 em `imobiliariaTopics`, importar icone `Globe`
-- `src/components/dashboard/GuidedTour.tsx` -- adicionar 1 step em `TOUR_CONSTRUTORA` e 1 em `TOUR_IMOBILIARIA`
-- `src/components/dashboard/DashboardSidebar.tsx` -- garantir que o link de Configuracoes tenha `tourId: 'configuracoes'`
+### Arquivos modificados
+- **Migration SQL** -- nova coluna `favicon_url` na tabela `construtoras`
+- **`src/pages/dashboard/construtora/Configuracoes.tsx`** -- importar FaviconUpload, adicionar estado, card e salvar no update
 
 Nenhum arquivo novo. Nenhuma dependencia adicional.
