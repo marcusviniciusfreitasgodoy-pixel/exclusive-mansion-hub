@@ -7,10 +7,11 @@ import { DemoDashboardSidebar } from '@/components/demo/DemoDashboardSidebar';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, ExternalLink, Eye, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
+import { Copy, ExternalLink, Eye, MessageSquare, Calendar, TrendingUp, Info } from 'lucide-react';
 import { DEMO_IMOVEIS, DEMO_ACCESS_DATA, DEMO_LEADS, DEMO_AGENDAMENTOS, DEMO_ANALYTICS, DEMO_FEEDBACKS } from '@/data/demo-data';
 import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
 import { DemoFeedbacksContent } from '@/components/demo/DemoFeedbacksContent';
+import { DemoSitesContent } from '@/components/demo/DemoSitesContent';
 
 function DemoImoveisDisponiveis() {
   const formatCurrency = (value: number | null) => {
@@ -202,6 +203,7 @@ function DemoImobiliariaInner() {
             <div className="p-6">
               <Routes>
                 <Route index element={<><h1 className="text-xl font-semibold mb-4">Imóveis Disponíveis</h1><DemoImoveisDisponiveis /></>} />
+                <Route path="sites" element={<><h1 className="text-xl font-semibold mb-4">Sites & Templates</h1><div className="mb-6 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300"><Info className="h-5 w-5 mt-0.5 flex-shrink-0" /><p>Os templates dos sites são <strong>selecionados pela construtora</strong> para cada imóvel. Como imobiliária, você recebe o link personalizado com o template já aplicado pela construtora.</p></div><DemoSitesContent /></>} />
                 <Route path="meus-links" element={<><h1 className="text-xl font-semibold mb-4">Meus Links</h1><DemoMeusLinks /></>} />
                 <Route path="leads" element={<><h1 className="text-xl font-semibold mb-4">Meus Leads</h1><DemoLeadsImob /></>} />
                 <Route path="analytics" element={<><h1 className="text-xl font-semibold mb-4">Analytics</h1><DemoAnalyticsImob /></>} />
