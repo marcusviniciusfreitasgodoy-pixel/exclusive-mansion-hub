@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload } from "@/components/dashboard/LogoUpload";
+import { FaviconUpload } from "@/components/dashboard/FaviconUpload";
 import { DomainConfigCard } from "@/components/dashboard/DomainConfigCard";
 
 const configSchema = z.object({
@@ -39,6 +40,7 @@ export default function ConfiguracoesConstrutora() {
   const { construtora, refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(configSchema),
@@ -65,6 +67,7 @@ export default function ConfiguracoesConstrutora() {
         site_url: (construtora as any).site_url || "",
       });
       setLogoUrl(construtora.logo_url || null);
+      setFaviconUrl((construtora as any).favicon_url || null);
     }
   }, [construtora, form]);
 
@@ -82,6 +85,7 @@ export default function ConfiguracoesConstrutora() {
           cor_primaria: data.cor_primaria || "#1e3a5f",
           cor_secundaria: data.cor_secundaria || "#b8860b",
           logo_url: logoUrl,
+          favicon_url: faviconUrl,
           instagram_url: data.instagram_url || null,
           site_url: data.site_url || null,
         })
@@ -131,6 +135,28 @@ export default function ConfiguracoesConstrutora() {
                     currentLogoUrl={logoUrl}
                     onLogoChange={setLogoUrl}
                     folder="construtoras"
+                    entityId={construtora.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Favicon */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Favicon
+                </CardTitle>
+                <CardDescription>
+                  Ícone exibido na aba do navegador nas páginas do seu portfólio.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {construtora?.id && (
+                  <FaviconUpload
+                    currentFaviconUrl={faviconUrl}
+                    onFaviconChange={setFaviconUrl}
                     entityId={construtora.id}
                   />
                 )}
