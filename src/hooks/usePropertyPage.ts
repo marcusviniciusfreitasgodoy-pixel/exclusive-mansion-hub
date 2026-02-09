@@ -114,7 +114,11 @@ export function usePropertyPage(): UsePropertyPageResult {
               materiais_promocionais,
               construtoras (
                 nome_empresa,
-                logo_url
+                logo_url,
+                cor_primaria,
+                telefone,
+                email_contato,
+                favicon_url
               )
             )
           `)
@@ -257,14 +261,26 @@ export function usePropertyPage(): UsePropertyPageResult {
           materiaisPromocionais: parseMateriaisPromocionais(imovel.materiais_promocionais),
         };
 
-        const branding: PropertyBranding = {
-          imobiliariaLogo: imobiliaria?.logo_url || null,
-          imobiliariaNome: imobiliaria?.nome_empresa || "",
-          corPrimaria: imobiliaria?.cor_primaria || "#1e3a5f",
-          telefone: imobiliaria?.telefone || null,
-          emailContato: imobiliaria?.email_contato || null,
-          faviconUrl: imobiliaria?.favicon_url || null,
-        };
+        // When imobiliaria_id is null, use construtora branding (direct link)
+        const isDirectLink = !accessData.imobiliaria_id;
+
+        const branding: PropertyBranding = isDirectLink
+          ? {
+              imobiliariaLogo: construtora?.logo_url || null,
+              imobiliariaNome: construtora?.nome_empresa || "",
+              corPrimaria: construtora?.cor_primaria || "#1e3a5f",
+              telefone: construtora?.telefone || null,
+              emailContato: construtora?.email_contato || null,
+              faviconUrl: construtora?.favicon_url || null,
+            }
+          : {
+              imobiliariaLogo: imobiliaria?.logo_url || null,
+              imobiliariaNome: imobiliaria?.nome_empresa || "",
+              corPrimaria: imobiliaria?.cor_primaria || "#1e3a5f",
+              telefone: imobiliaria?.telefone || null,
+              emailContato: imobiliaria?.email_contato || null,
+              faviconUrl: imobiliaria?.favicon_url || null,
+            };
 
         setData({
           property,
@@ -274,26 +290,28 @@ export function usePropertyPage(): UsePropertyPageResult {
             logo: construtora?.logo_url || null,
           },
           accessId: accessData.id,
-          imobiliariaId: accessData.imobiliaria_id,
+          imobiliariaId: accessData.imobiliaria_id || "",
         });
 
-        // Fetch active integrations for the imobiliaria
-        try {
-          const { data: integracoesData } = await supabase
-            .from("integracoes")
-            .select("*")
-            .eq("imobiliaria_id", accessData.imobiliaria_id)
-            .eq("ativa", true);
+        // Fetch active integrations for the imobiliaria (skip for direct links)
+        if (accessData.imobiliaria_id) {
+          try {
+            const { data: integracoesData } = await supabase
+              .from("integracoes")
+              .select("*")
+              .eq("imobiliaria_id", accessData.imobiliaria_id)
+              .eq("ativa", true);
           
           if (integracoesData) {
             setIntegracoes(integracoesData as unknown as Integracao[]);
           }
-        } catch (integrationError) {
-          console.warn("Could not fetch integrations:", integrationError);
+          } catch (integrationError) {
+            console.warn("Could not fetch integrations:", integrationError);
+          }
         }
 
         // Track pageview with localStorage deduplication (24h)
-        const viewKey = `viewed_${imovel.id}_${accessData.imobiliaria_id}`;
+        const viewKey = `viewed_${imovel.id}_${accessData.imobiliaria_id || 'direct'}`;
         const lastViewed = localStorage.getItem(viewKey);
         const now = Date.now();
         const twentyFourHours = 24 * 60 * 60 * 1000;
@@ -301,7 +319,7 @@ export function usePropertyPage(): UsePropertyPageResult {
         if (!lastViewed || (now - parseInt(lastViewed, 10)) > twentyFourHours) {
           await supabase.from("pageviews").insert({
             imovel_id: imovel.id,
-            imobiliaria_id: accessData.imobiliaria_id,
+            imobiliaria_id: accessData.imobiliaria_id || null,
             access_id: accessData.id,
             user_agent: navigator.userAgent,
             referrer: document.referrer || null,

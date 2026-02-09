@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Loader2, Copy, Plus, Trash2, ExternalLink, Users, ArrowLeft, MessageSquare, Eye } from 'lucide-react';
+import { Loader2, Copy, Plus, Trash2, ExternalLink, Users, ArrowLeft, MessageSquare, Eye, Building2 } from 'lucide-react';
 
 interface Access {
   id: string;
@@ -22,7 +22,7 @@ interface Access {
   status: string;
   visitas: number;
   acesso_concedido_em: string;
-  imobiliaria_id: string;
+  imobiliaria_id: string | null;
   imobiliarias: {
     id: string;
     nome_empresa: string;
@@ -220,8 +220,52 @@ export default function GerenciarAcessos() {
     );
   }
 
-  const activeAccesses = accesses?.filter(a => a.status === 'active') || [];
+  const directLinkAccess = accesses?.find(a => a.status === 'active' && !a.imobiliaria_id);
+  const activeAccesses = accesses?.filter(a => a.status === 'active' && a.imobiliaria_id) || [];
   const revokedAccesses = accesses?.filter(a => a.status === 'revoked') || [];
+
+  const generateDirectSlug = () => {
+    return (imovel?.titulo || 'imovel')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 40) + '-direto';
+  };
+
+  const handleGenerateDirectLink = async () => {
+    if (!imovelId) return;
+    const slug = generateDirectSlug();
+    const { error } = await supabase
+      .from('imobiliaria_imovel_access')
+      .insert({
+        imovel_id: imovelId,
+        imobiliaria_id: null,
+        url_slug: slug,
+        status: 'active',
+        visitas: 0,
+      });
+    if (error) {
+      // Try with random suffix if slug exists
+      const slugRetry = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+      const { error: retryError } = await supabase
+        .from('imobiliaria_imovel_access')
+        .insert({
+          imovel_id: imovelId,
+          imobiliaria_id: null,
+          url_slug: slugRetry,
+          status: 'active',
+          visitas: 0,
+        });
+      if (retryError) {
+        toast({ title: 'Erro', description: retryError.message, variant: 'destructive' });
+        return;
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['accesses', imovelId] });
+    toast({ title: 'Link direto gerado!', description: 'O link da construtora foi criado com sucesso.' });
+  };
 
   return (
     <DashboardLayout title="Gerenciar Acessos">
@@ -288,6 +332,46 @@ export default function GerenciarAcessos() {
               )}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Direct Link (Construtora) */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Link Direto (Construtora)
+          </CardTitle>
+          <CardDescription>
+            Link público com branding da sua construtora, sem imobiliária intermediária
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {directLinkAccess ? (
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <code className="text-xs bg-muted px-2 py-1 rounded">
+                  {directLinkAccess.url_slug}
+                </code>
+                <span className="text-sm text-muted-foreground">
+                  {directLinkAccess.visitas || 0} visitas
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyLink(directLinkAccess.url_slug)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`/imovel/${directLinkAccess.url_slug}`, '_blank')}>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button onClick={handleGenerateDirectLink} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Gerar Link Direto
+            </Button>
+          )}
         </CardContent>
       </Card>
 

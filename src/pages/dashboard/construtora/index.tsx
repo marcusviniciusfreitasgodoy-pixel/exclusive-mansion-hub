@@ -204,23 +204,77 @@ export default function ConstrutoraDashboard() {
     },
   });
 
+  const generateSlug = (titulo: string) => {
+    return titulo
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 40) + '-direto';
+  };
+
   const copyLink = async (imovelId: string, titulo: string) => {
-    // Get the first access slug for this imovel
-    const { data } = await supabase
+    // First try to find an existing direct link (imobiliaria_id is null)
+    const { data: directLink } = await supabase
       .from('imobiliaria_imovel_access')
       .select('url_slug')
       .eq('imovel_id', imovelId)
+      .is('imobiliaria_id', null)
       .eq('status', 'active')
       .limit(1)
       .maybeSingle();
 
-    if (data?.url_slug) {
-      const url = `${window.location.origin}/imovel/${data.url_slug}`;
+    if (directLink?.url_slug) {
+      const url = `${window.location.origin}/imovel/${directLink.url_slug}`;
       await navigator.clipboard.writeText(url);
-      toast({ title: 'Link copiado!', description: 'O link foi copiado para a área de transferência.' });
-    } else {
-      toast({ title: 'Sem link', description: 'Este imóvel ainda não tem um link white-label.', variant: 'destructive' });
+      toast({ title: 'Link copiado!', description: 'Link direto da construtora copiado.' });
+      return;
     }
+
+    // No direct link exists — generate one automatically
+    const slug = generateSlug(titulo);
+    const { data: newAccess, error } = await supabase
+      .from('imobiliaria_imovel_access')
+      .insert({
+        imovel_id: imovelId,
+        imobiliaria_id: null,
+        url_slug: slug,
+        status: 'active',
+        visitas: 0,
+      })
+      .select('url_slug')
+      .single();
+
+    if (error) {
+      // Slug may already exist, try with random suffix
+      const slugRetry = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+      const { data: retryAccess, error: retryError } = await supabase
+        .from('imobiliaria_imovel_access')
+        .insert({
+          imovel_id: imovelId,
+          imobiliaria_id: null,
+          url_slug: slugRetry,
+          status: 'active',
+          visitas: 0,
+        })
+        .select('url_slug')
+        .single();
+
+      if (retryError) {
+        toast({ title: 'Erro', description: 'Não foi possível gerar o link direto.', variant: 'destructive' });
+        return;
+      }
+
+      const url = `${window.location.origin}/imovel/${retryAccess.url_slug}`;
+      await navigator.clipboard.writeText(url);
+    } else {
+      const url = `${window.location.origin}/imovel/${newAccess.url_slug}`;
+      await navigator.clipboard.writeText(url);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['access-data'] });
+    toast({ title: 'Link direto gerado e copiado!', description: 'O link da construtora foi criado e copiado.' });
   };
 
   // Filter and sort logic
