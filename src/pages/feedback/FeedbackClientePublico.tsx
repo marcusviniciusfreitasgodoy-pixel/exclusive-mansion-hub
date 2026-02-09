@@ -104,24 +104,37 @@ export default function FeedbackClientePublico() {
   const signatureRef = useRef<SignaturePadRef>(null);
   const [hasSignature, setHasSignature] = useState(false);
 
-  // Buscar feedback pelo token usando VIEW segura que não expõe dados sensíveis
+  // Buscar feedback pelo token usando RPC segura (sem política pública de SELECT)
   const { data: feedback, isLoading, error, refetch } = useQuery({
     queryKey: ["feedback-publico", token],
     queryFn: async () => {
-      // Usar VIEW segura para leitura - não expõe IP, device, geolocation, orçamento
+      // Usar RPC segura para leitura - token é validado server-side
       const { data: feedbackData, error: feedbackError } = await supabase
-        .from("feedbacks_visitas_publico")
-        .select(`
-          *,
-          imoveis(titulo, endereco, bairro, cidade, valor),
-          imobiliarias(nome_empresa, logo_url),
-          construtoras(nome_empresa, logo_url)
-        `)
-        .eq("token_acesso_cliente", tokenValue)
+        .rpc("get_feedback_by_token", { p_token: tokenValue })
         .maybeSingle();
 
       if (feedbackError) throw feedbackError;
-      return feedbackData;
+      if (!feedbackData) return null;
+
+      // Buscar dados relacionados (imoveis, imobiliarias, construtoras são públicos)
+      const [imovelRes, imobiliariaRes, construtoraRes] = await Promise.all([
+        feedbackData.imovel_id
+          ? supabase.from("imoveis").select("titulo, endereco, bairro, cidade, valor").eq("id", feedbackData.imovel_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        feedbackData.imobiliaria_id
+          ? supabase.from("imobiliarias_public").select("nome_empresa, logo_url").eq("id", feedbackData.imobiliaria_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        feedbackData.construtora_id
+          ? supabase.from("construtoras").select("nome_empresa, logo_url").eq("id", feedbackData.construtora_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      return {
+        ...feedbackData,
+        imoveis: imovelRes.data,
+        imobiliarias: imobiliariaRes.data,
+        construtoras: construtoraRes.data,
+      };
     },
     enabled: isValidToken,
   });
@@ -173,36 +186,31 @@ export default function FeedbackClientePublico() {
     try {
       const signatureData = signatureRef.current?.getSignatureData() || "";
 
-      // Atualizar feedback com dados do cliente - status muda para aguardando_corretor
+      // Usar RPC segura para submeter feedback (sem política pública de UPDATE)
       const { error: updateError } = await supabase
-        .from("feedbacks_visitas")
-        .update({
-          nps_cliente: data.nps_cliente,
-          avaliacao_localizacao: data.avaliacao_localizacao,
-          avaliacao_acabamento: data.avaliacao_acabamento,
-          avaliacao_layout: data.avaliacao_layout,
-          avaliacao_custo_beneficio: data.avaliacao_custo_beneficio,
-          avaliacao_atendimento: data.avaliacao_atendimento,
-          pontos_positivos: data.pontos_positivos,
-          pontos_negativos: data.pontos_negativos || null,
-          sugestoes: data.comentarios_livres || null,
-          interesse_compra: data.interesse_compra,
-          objecoes: data.objecoes || [],
-          objecoes_detalhes: data.objecoes_detalhes || null,
-          efeito_uau: data.efeito_uau?.length ? data.efeito_uau : null,
-          efeito_uau_detalhe: data.efeito_uau_detalhe || null,
-          prazo_compra_cliente: data.prazo_compra_cliente || null,
-          orcamento_cliente: data.orcamento_cliente ? parseFloat(data.orcamento_cliente) : null,
-          forma_pagamento_cliente: data.forma_pagamento_cliente || null,
-          proximos_passos_cliente: data.proximos_passos_cliente || null,
-          assinatura_cliente: signatureData,
-          assinatura_cliente_data: new Date().toISOString(),
-          assinatura_cliente_device: navigator.userAgent,
-          status: "aguardando_corretor", // CHANGED: Agora aguarda corretor completar
-          feedback_cliente_em: new Date().toISOString(),
-          // NÃO define completo_em - será definido quando corretor assinar
-        })
-        .eq("id", feedback.id);
+        .rpc("submit_client_feedback", {
+          p_token: tokenValue,
+          p_nps_cliente: data.nps_cliente,
+          p_avaliacao_localizacao: data.avaliacao_localizacao,
+          p_avaliacao_acabamento: data.avaliacao_acabamento,
+          p_avaliacao_layout: data.avaliacao_layout,
+          p_avaliacao_custo_beneficio: data.avaliacao_custo_beneficio,
+          p_avaliacao_atendimento: data.avaliacao_atendimento,
+          p_pontos_positivos: data.pontos_positivos,
+          p_pontos_negativos: data.pontos_negativos || "",
+          p_sugestoes: data.comentarios_livres || "",
+          p_interesse_compra: data.interesse_compra,
+          p_objecoes: data.objecoes || [],
+          p_objecoes_detalhes: data.objecoes_detalhes || "",
+          p_efeito_uau: data.efeito_uau?.length ? data.efeito_uau : [],
+          p_efeito_uau_detalhe: data.efeito_uau_detalhe || "",
+          p_prazo_compra_cliente: data.prazo_compra_cliente || "",
+          p_orcamento_cliente: data.orcamento_cliente ? parseFloat(data.orcamento_cliente) : null,
+          p_forma_pagamento_cliente: data.forma_pagamento_cliente || "",
+          p_proximos_passos_cliente: data.proximos_passos_cliente || "",
+          p_assinatura_cliente: signatureData,
+          p_assinatura_cliente_device: navigator.userAgent,
+        });
 
       if (updateError) throw updateError;
 
