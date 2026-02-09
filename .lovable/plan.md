@@ -1,89 +1,57 @@
 
-## Link Direto da Construtora (sem imobiliaria parceira)
+
+## Ajustes para Link Direto: Leads, Agendamentos e Chatbot
 
 ### Resumo
 
-Permitir que a construtora gere um link publico do imovel usando seu proprio branding (logo, cores, favicon), sem depender de uma imobiliaria intermediaria. O visitante vera a pagina com a marca da construtora.
+A funcionalidade de link direto da construtora ja esta implementada e funciona para a maioria dos cenarios. Porem, ha um problema tecnico em alguns componentes que passam `imobiliariaId` como string vazia (`""`) ao inves de `null`, o que pode causar erros de chave estrangeira no banco de dados.
 
-### Alteracoes Necessarias
+### O que ja funciona corretamente
 
-#### 1. Banco de dados
+- **Leads via formulario de contato** -- Ja converte string vazia para `null` antes de inserir
+- **Pageviews** -- Ja trata corretamente com `|| null`
+- **Notificacoes por email** -- A construtora ja recebe o email de novo lead; a imobiliaria so recebe se houver email configurado
+- **Dashboard de Leads da construtora** -- Consulta por `imovel_id` (via imoveis da construtora), entao leads de links diretos aparecem normalmente
+- **Pipeline/CRM** -- Funciona da mesma forma, baseado nos imoveis da construtora
+- **Analytics** -- Pageviews com `imobiliaria_id = null` sao contabilizados como "Trafego Direto"
 
-**Tornar `imobiliaria_id` nullable na tabela `imobiliaria_imovel_access`:**
+### Problemas encontrados (bugs a corrigir)
 
-```sql
-ALTER TABLE public.imobiliaria_imovel_access 
-  ALTER COLUMN imobiliaria_id DROP NOT NULL;
-```
+#### 1. AgendarVisitaModal -- imobiliaria_id recebe string vazia
 
-Quando `imobiliaria_id` for NULL, o registro representa um link direto da construtora. O `url_slug` continua funcionando normalmente.
+No arquivo `src/components/property/AgendarVisitaModal.tsx` (linha 232), o `imobiliariaId` e inserido diretamente sem conversao. Quando vem de um link direto, o valor e `""` (string vazia), o que causa erro de chave estrangeira.
 
-**Atualizar RLS:** Adicionar policy para que a construtora consiga inserir registros com `imobiliaria_id = NULL` (a policy existente ja cobre isso via `user_owns_imovel`).
+**Correcao:** Trocar `imobiliaria_id: imobiliariaId` por `imobiliaria_id: imobiliariaId || null`
 
-#### 2. Hook `usePropertyPage.ts` -- Suportar branding da construtora
+#### 2. ChatbotWidget -- imobiliaria_id recebe string vazia
 
-Quando o access record nao tiver `imobiliaria_id` (link direto), o branding sera montado a partir dos dados da construtora ao inves da imobiliaria:
+No arquivo `src/components/chatbot/ChatbotWidget.tsx` (linha 174), mesmo problema. O `imobiliariaId` e passado diretamente na insercao da tabela `conversas_chatbot`.
 
-- `imobiliariaLogo` = construtora.logo_url
-- `imobiliariaNome` = construtora.nome_empresa
-- `corPrimaria` = construtora.cor_primaria
-- `telefone` = construtora.telefone
-- `faviconUrl` = construtora.favicon_url
-- `imobiliariaId` = "" (vazio, sem imobiliaria)
+**Correcao:** Trocar `imobiliaria_id: imobiliariaId` por `imobiliaria_id: imobiliariaId || null`
 
-Tambem ajustar a query do Supabase para incluir `cor_primaria`, `cor_secundaria`, `telefone`, `email_contato`, `favicon_url` no select de `construtoras`.
+#### 3. send-visit-notification -- imobiliariaId pode ser string vazia
 
-#### 3. Dashboard da Construtora -- Botao "Gerar Link Direto"
+A edge function recebe `imobiliariaId` no body e pode tentar buscar dados de imobiliaria com string vazia.
 
-**`src/pages/dashboard/construtora/index.tsx`:**
-- Na funcao `copyLink`, quando nao houver access slug de imobiliaria, oferecer a opcao de gerar um link direto
-- Adicionar funcao `generateDirectLink(imovelId)` que cria um registro em `imobiliaria_imovel_access` com `imobiliaria_id = NULL` e um slug baseado no titulo do imovel
-
-**`src/pages/dashboard/construtora/GerenciarAcessos.tsx`:**
-- Na secao de links, mostrar o "Link Direto (Construtora)" quando existir um access com `imobiliaria_id = NULL`
-- Adicionar botao "Gerar Link Direto" caso ainda nao exista
-
-#### 4. Ajustes menores
-
-- **`PropertyContactSection`**: Quando `imobiliariaId` for vazio, enviar lead com `imobiliaria_id = null`
-- **`SofiaAssistentSection`**: Tratar `imobiliariaId` vazio
-- **Pageviews**: Inserir com `imobiliaria_id = null` quando for link direto
+**Correcao:** Adicionar tratamento `const effectiveImobiliariaId = body.imobiliariaId || null` no inicio da funcao.
 
 ### Detalhes Tecnicos
 
 **Arquivos modificados:**
-- Migration SQL -- `ALTER COLUMN imobiliaria_id DROP NOT NULL`
-- `src/hooks/usePropertyPage.ts` -- fallback para branding da construtora, incluir campos extras no select de construtoras
-- `src/pages/dashboard/construtora/index.tsx` -- funcao `generateDirectLink` e ajuste em `copyLink`
-- `src/pages/dashboard/construtora/GerenciarAcessos.tsx` -- exibir/gerar link direto
-- `src/components/property/PropertyContactSection.tsx` -- tratar imobiliariaId vazio
+- `src/components/property/AgendarVisitaModal.tsx` -- converter `imobiliariaId` vazio para `null` na insercao
+- `src/components/chatbot/ChatbotWidget.tsx` -- converter `imobiliariaId` vazio para `null` na insercao
+- `supabase/functions/send-visit-notification/index.ts` -- tratar `imobiliariaId` vazio
 
-**Nenhum arquivo novo. Nenhuma dependencia adicional.**
+**Nenhum arquivo novo. Nenhuma migration. Nenhuma dependencia adicional.**
 
-### Fluxo do usuario
+### Resultado final
 
-```text
-Construtora cadastra imovel
-        |
-        v
-Dashboard "Meus Imoveis"
-        |
-        +-- Clica "Compartilhar" no card do imovel
-        |       |
-        |       v
-        |   Se ja tem link direto: copia o link
-        |   Se nao tem: gera automaticamente e copia
-        |
-        v
-Visitante acessa /imovel/slug-direto
-        |
-        v
-usePropertyPage detecta imobiliaria_id = NULL
-        |
-        v
-Monta branding com dados da construtora
-(logo, cores, favicon da construtora)
-        |
-        v
-Pagina renderiza com marca da construtora
-```
+Apos essas correcoes, a construtora sem imobiliarias parceiras tera acesso completo a:
+- Recebimento de leads (formulario + chatbot)
+- Notificacoes por email de novos leads
+- Agendamento de visitas pelos clientes
+- Metricas de visualizacoes e leads no dashboard
+- Pipeline/CRM com todos os leads
+- Analytics consolidado (leads diretos aparecem como "Trafego Direto")
+- Chatbot Sofia funcionando normalmente
+
