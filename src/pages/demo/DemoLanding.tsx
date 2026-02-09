@@ -11,17 +11,17 @@ export default function DemoLanding() {
     {
       role: 'construtora',
       title: 'Explorar como Construtora',
-      description: 'Gerencie imóveis, acompanhe leads, veja analytics e controle imobiliárias parceiras.',
+      description: 'Gerencie imóveis, crie sites personalizados, acompanhe leads no CRM Kanban, monitore feedbacks e controle imobiliárias parceiras.',
       icon: Building2,
-      features: ['Portfólio de imóveis', 'Pipeline de vendas', 'Analytics avançado', 'Gestão de parceiros', 'Efeito UAU e satisfação', 'Relatórios em PDF'],
+      features: ['Portfólio de imóveis', 'Sites e Templates personalizados', 'Pipeline CRM (Kanban)', 'Visitas agendadas', 'Gestão de leads', 'Analytics avançado', 'Feedbacks e Efeito UAU', 'Imobiliárias parceiras', 'Relatórios em PDF'],
       path: '/demo/construtora',
     },
     {
       role: 'imobiliaria',
       title: 'Explorar como Imobiliária',
-      description: 'Divulgue imóveis com sua marca, capture leads, acompanhe satisfação dos visitantes e exporte relatórios de performance.',
+      description: 'Divulgue imóveis com links white-label, capture leads, agende visitas, colete feedbacks pós-visita e exporte relatórios de performance.',
       icon: Home,
-      features: ['Links personalizados', 'Gestão de leads', 'Analytics de satisfação', 'Feedback pós-visita', 'Relatórios em PDF', 'Agendamento de visitas'],
+      features: ['Links white-label personalizados', 'Gestão de leads', 'Meus imóveis disponíveis', 'Analytics de performance', 'Agendamento de visitas', 'Feedbacks pós-visita', 'Relatórios em PDF', 'Exportação CSV'],
       path: '/demo/imobiliaria',
     },
   ];
