@@ -7,8 +7,10 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MessageSquare, Eye, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, MessageSquare, Eye, TrendingUp, Globe } from 'lucide-react';
 import { VisitFeedbackAnalytics } from '@/components/analytics/VisitFeedbackAnalytics';
+import { DemoSitesContent } from '@/components/demo/DemoSitesContent';
 
 function DemoConstrutoraDashboardContent() {
   const formatCurrency = (value: number | null) => {
@@ -48,9 +50,22 @@ function DemoConstrutoraDashboardContent() {
             <CardContent className="pb-2">
               <p className="text-lg font-bold text-primary">{formatCurrency(imovel.valor)}</p>
             </CardContent>
-            <CardFooter className="gap-4 text-xs text-muted-foreground">
+            <CardFooter className="gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{leadCounts[imovel.id] || 0} leads</span>
               <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{Math.floor(Math.random() * 200 + 50)} views</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto gap-1 text-xs h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const tpl = (imovel.template_escolhido || 'luxo').replace('-', '_');
+                  window.open(`/templates?template=${tpl}`, '_blank');
+                }}
+              >
+                <Globe className="h-3 w-3" />
+                Ver Site
+              </Button>
             </CardFooter>
           </Card>
         ))}
@@ -263,6 +278,7 @@ function DemoConstructoraInner() {
             <div className="p-6">
               <Routes>
                 <Route index element={<><h1 className="text-xl font-semibold mb-4">Meus Imóveis</h1><DemoConstrutoraDashboardContent /></>} />
+                <Route path="sites" element={<><h1 className="text-xl font-semibold mb-4">Sites & Templates</h1><DemoSitesContent /></>} />
                 <Route path="leads" element={<><h1 className="text-xl font-semibold mb-4">Leads</h1><DemoLeadsContent /></>} />
                 <Route path="analytics" element={<><h1 className="text-xl font-semibold mb-4">Analytics</h1><DemoAnalyticsContent /></>} />
                 <Route path="pipeline" element={<><h1 className="text-xl font-semibold mb-4">Pipeline de Leads</h1><DemoPipelineContent /></>} />
