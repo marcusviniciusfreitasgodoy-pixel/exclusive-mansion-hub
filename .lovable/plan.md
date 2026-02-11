@@ -1,21 +1,33 @@
-## Remover Assinatura Duplicada da Proposta
 
-### Problema
 
-Existem dois campos de assinatura digital no formulario:
+## Ajustar Campos de Valores para Mascara BRL
 
-1. Um ao lado do Upload CNH, dentro da secao da proposta (linha 1162-1172) -- **sera removido**
-2. Um no final do formulario, "Assinatura Digital" do feedback (linha 1223-1233) -- **sera mantido e usado para ambos**
+### Analise
+
+Dos campos de valor na proposta:
+- `prop_valor_ofertado` -- ja usa `CurrencyInput` (OK)
+- `prop_sinal_entrada` -- usa `Input` texto livre, mas e um valor monetario -- **converter para CurrencyInput**
+- `prop_parcelas` -- campo descritivo (ex: "12x de R$ 5.000") -- **manter como Input**, mas separar em dois campos: quantidade de parcelas (numerico) e valor da parcela (CurrencyInput)
+- `prop_financiamento` -- campo descritivo (ex: "Financiamento CEF 360 meses") -- **manter como Input texto**
 
 ### Alteracoes em `src/pages/feedback/FeedbackClientePublico.tsx`
 
-1. **Remover** o `SignaturePad` da proposta (o que esta ao lado da CNH, linhas 1156-1173):
-  - Remover o grid `md:grid-cols-2` que colocava CNH e assinatura lado a lado
-  - Manter apenas o `CNHUpload` ocupando largura total
-2. **Remover** o ref `proposalSignatureRef` (linha 155) -- nao sera mais necessario
-3. **Atualizar logica de submit** (linha 286-289): remover a validacao separada de `proposalSignatureRef.current?.isEmpty()`, pois a assinatura final (`signatureRef`) ja e validada
-4. **Atualizar dados da proposta** (linha 329): usar `signatureRef.current?.getSignatureData()` em vez de `proposalSignatureRef.current?.getSignatureData()` ao chamar `submit_proposta_compra`
+1. **Campo `prop_sinal_entrada`** (linha 1045-1056): trocar `<Input>` por `<CurrencyInput>`, ajustando `value` e `onChange` para o mesmo padrao do `prop_valor_ofertado`
 
-inclua a confirmaçao por e-mail e whatsapp para o cliente e a imobiliaria/corretor   
-  
-Resultado: apenas um campo de assinatura no final do formulario, servindo tanto para o feedback quanto para a proposta.
+2. **Campo `prop_parcelas`** (linha 1058-1069): separar em dois campos lado a lado:
+   - `prop_parcelas_qtd` -- Input numerico (placeholder: "Ex: 12")
+   - `prop_parcelas_valor` -- CurrencyInput (placeholder: "R$ 0")
+   - Na logica de submit, concatenar como string: `"12x de R$ 5.000"` para manter compatibilidade com o banco (campo TEXT)
+
+3. **Atualizar schema Zod**: adicionar `prop_parcelas_qtd` e `prop_parcelas_valor` como opcionais, remover `prop_parcelas` original
+
+4. **Atualizar defaultValues**: incluir os novos campos
+
+5. **Atualizar onSubmit**: montar `p_sinal_entrada` parseando o valor numerico do CurrencyInput para string formatada, e `p_parcelas` concatenando qtd + valor
+
+### Detalhes Tecnicos
+
+- `prop_sinal_entrada`: o valor sera armazenado como string formatada (ex: "R$ 50.000") no banco, pois a coluna e TEXT
+- `prop_parcelas`: sera montado como "12x de R$ 5.000" a partir dos dois subcampos
+- `prop_financiamento`: permanece como texto livre, pois descreve tipo de financiamento e nao apenas um valor
+
