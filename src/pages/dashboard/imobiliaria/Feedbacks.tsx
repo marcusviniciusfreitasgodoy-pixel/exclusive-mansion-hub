@@ -412,37 +412,39 @@ export default function FeedbacksPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="mt-0">
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map(i => (
-                <Card key={i} className="p-4">
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <Skeleton className="h-6 w-full mb-2" />
-                  <Skeleton className="h-4 w-32 mb-4" />
-                  <Skeleton className="h-16 w-full mb-4" />
-                  <Skeleton className="h-9 w-full" />
-                </Card>
-              ))}
-            </div>
-          ) : filteredFeedbacks.length === 0 ? (
-            <Card className="flex flex-col items-center justify-center py-12 text-center">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {searchQuery || selectedImovel !== 'all' 
-                  ? 'Nenhum feedback encontrado com os filtros aplicados.'
-                  : 'Nenhum feedback disponível ainda. Realize visitas para gerar feedbacks.'
-                }
-              </p>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredFeedbacks.map(feedback => (
-                <FeedbackCard key={feedback.id} feedback={feedback} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+        {activeTab !== 'propostas' && (
+          <TabsContent value={activeTab} className="mt-0">
+            {isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="p-4">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-6 w-full mb-2" />
+                    <Skeleton className="h-4 w-32 mb-4" />
+                    <Skeleton className="h-16 w-full mb-4" />
+                    <Skeleton className="h-9 w-full" />
+                  </Card>
+                ))}
+              </div>
+            ) : filteredFeedbacks.length === 0 ? (
+              <Card className="flex flex-col items-center justify-center py-12 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {searchQuery || selectedImovel !== 'all' 
+                    ? 'Nenhum feedback encontrado com os filtros aplicados.'
+                    : 'Nenhum feedback disponível ainda. Realize visitas para gerar feedbacks.'
+                  }
+                </p>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredFeedbacks.map(feedback => (
+                  <FeedbackCard key={feedback.id} feedback={feedback} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         {/* Propostas Tab */}
         <TabsContent value="propostas" className="mt-0">
