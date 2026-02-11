@@ -311,6 +311,52 @@ export default function FeedbacksPage() {
         </Card>
       </div>
 
+      {/* Performance por Corretor */}
+      {(() => {
+        const corretorMap: Record<string, { count: number; totalNPS: number }> = {};
+        completeFeedbacks.forEach(f => {
+          const nome = f.corretor_nome || 'Não informado';
+          if (!corretorMap[nome]) corretorMap[nome] = { count: 0, totalNPS: 0 };
+          corretorMap[nome].count++;
+          corretorMap[nome].totalNPS += f.nps_cliente || 0;
+        });
+        const corretorData = Object.entries(corretorMap)
+          .map(([nome, { count, totalNPS }]) => ({ nome, count, avgNPS: count > 0 ? totalNPS / count : 0 }))
+          .sort((a, b) => b.count - a.count);
+
+        if (corretorData.length === 0) return null;
+
+        return (
+          <Card className="mb-6">
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Performance por Corretor</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 font-medium text-muted-foreground">Corretor</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">Feedbacks</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">NPS Médio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {corretorData.map(c => (
+                      <tr key={c.nome} className="border-b last:border-0">
+                        <td className="py-2">{c.nome}</td>
+                        <td className="py-2 text-right">{c.count}</td>
+                        <td className="py-2 text-right font-bold">{c.avgNPS.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
