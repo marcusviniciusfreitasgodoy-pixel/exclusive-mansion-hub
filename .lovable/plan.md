@@ -1,24 +1,49 @@
 
 
-## Corrigir Exibicao da Aba de Propostas na Imobiliaria
+## Segundo Lembrete Automatico de Follow-up (48h)
 
-### Problema
+### Situacao Atual
 
-A aba "Propostas" mostra "Nenhum feedback encontrado" em vez de exibir as propostas. Isso acontece porque existe um `TabsContent` generico (linha 415) com `value={activeTab}` que captura qualquer valor de aba -- incluindo "propostas". Assim, o `TabsContent` especifico de propostas (linha 448) nunca e exibido.
+- Existe apenas 1 lembrete (24h) controlado pelas flags `followup_enviado_cliente` e `followup_enviado_corretor`
+- Cliente recebe Email + WhatsApp; Corretor recebe apenas Email
+- Apos o primeiro envio, as flags sao marcadas como `true` e nenhum outro lembrete e disparado
 
-### Solucao
+### Alteracoes Necessarias
 
-Alterar o `TabsContent` generico para que ele so renderize quando a aba ativa NAO for "propostas". Existem duas abordagens possiveis:
+#### 1. Migracao de Banco de Dados
 
-**Abordagem escolhida**: Substituir o `TabsContent` dinamico por `TabsContent` individuais para cada status de feedback (`all`, `aguardando_corretor`, `aguardando_cliente`, `completo`, `arquivado`), cada um renderizando a mesma lista filtrada. Porem, a forma mais simples e manter o `TabsContent` com `value={activeTab}` mas envolve-lo em uma condicao `{activeTab !== 'propostas' && ...}`.
+Adicionar duas novas colunas na tabela `feedbacks_visitas`:
 
-### Alteracao
+- `followup_2_enviado_cliente` (boolean, default false)
+- `followup_2_enviado_corretor` (boolean, default false)
 
-**`src/pages/dashboard/imobiliaria/Feedbacks.tsx`** (linha 415):
+Essas colunas controlam o segundo lembrete de 48h, separado do primeiro de 24h.
 
-- De: `<TabsContent value={activeTab} className="mt-0">`
-- Para: Envolver todo o bloco (linhas 415-445) em `{activeTab !== 'propostas' && (...)}`
+#### 2. Edge Function `send-feedback-followup/index.ts`
 
-Isso garante que quando a aba "Propostas" estiver ativa, somente o `TabsContent` dedicado (linha 448) sera renderizado, exibindo corretamente a lista de propostas.
+Adicionar dois novos blocos de busca e envio apos os existentes:
 
-Nenhuma outra alteracao e necessaria. Os dados ja existem no banco e a query do `PropostasTab` esta correta.
+**Cliente (48h) - Tom cordial:**
+- Buscar feedbacks com `status = 'aguardando_cliente'`, `followup_enviado_cliente = true`, `followup_2_enviado_cliente = false`, e `created_at` menor que 48h atras
+- Enviar Email com tom cordial: "Sabemos que a rotina e corrida... sua opiniao nos ajuda muito"
+- Enviar WhatsApp com mensagem gentil
+- Marcar `followup_2_enviado_cliente = true`
+
+**Corretor (48h) - Tom urgente:**
+- Buscar feedbacks com `status = 'aguardando_corretor'`, `followup_enviado_corretor = true`, `followup_2_enviado_corretor = false`, e `feedback_cliente_em` menor que 48h atras
+- Enviar Email com tom mais urgente: destaque vermelho, "URGENTE", "O cliente ja avaliou ha mais de 48h"
+- Enviar WhatsApp com mensagem de urgencia (novo - nao existia para corretor)
+- Para o WhatsApp do corretor, buscar o telefone via join com a tabela de imobiliarias ou usar o campo `corretor_email` para localizar
+- Marcar `followup_2_enviado_corretor = true`
+
+**Nota sobre telefone do corretor:** O campo `corretor_telefone` nao existe na tabela `feedbacks_visitas`. Para enviar WhatsApp ao corretor, sera necessario adicionar uma coluna `corretor_telefone` na tabela ou buscar o telefone da imobiliaria associada. A abordagem mais simples e adicionar a coluna `corretor_telefone` na tabela.
+
+#### 3. Resumo dos Arquivos
+
+| Arquivo | Acao |
+|---------|------|
+| Migracao SQL | Adicionar 3 colunas: `followup_2_enviado_cliente`, `followup_2_enviado_corretor`, `corretor_telefone` |
+| `supabase/functions/send-feedback-followup/index.ts` | Adicionar blocos 5 e 6 para segundo lembrete (48h) com tons diferenciados e WhatsApp para corretor |
+
+Nenhuma alteracao no frontend e necessaria. O cron job existente (a cada 2h) ja cobrira os novos lembretes automaticamente.
+
