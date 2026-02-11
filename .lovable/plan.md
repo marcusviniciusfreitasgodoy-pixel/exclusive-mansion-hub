@@ -1,33 +1,22 @@
 
 
-## Ajustar Campos de Valores para Mascara BRL
+## Corrigir Erro de Assinatura Digital
 
-### Analise
+### Problema
 
-Dos campos de valor na proposta:
-- `prop_valor_ofertado` -- ja usa `CurrencyInput` (OK)
-- `prop_sinal_entrada` -- usa `Input` texto livre, mas e um valor monetario -- **converter para CurrencyInput**
-- `prop_parcelas` -- campo descritivo (ex: "12x de R$ 5.000") -- **manter como Input**, mas separar em dois campos: quantidade de parcelas (numerico) e valor da parcela (CurrencyInput)
-- `prop_financiamento` -- campo descritivo (ex: "Financiamento CEF 360 meses") -- **manter como Input texto**
+O erro `(0 , import_trim_canvas.default) is not a function` ocorre na biblioteca `react-signature-canvas` quando o metodo `getTrimmedCanvas()` e chamado. Esse e um bug conhecido de compatibilidade da biblioteca com bundlers modernos (Vite).
 
-### Alteracoes em `src/pages/feedback/FeedbackClientePublico.tsx`
+### Solucao
 
-1. **Campo `prop_sinal_entrada`** (linha 1045-1056): trocar `<Input>` por `<CurrencyInput>`, ajustando `value` e `onChange` para o mesmo padrao do `prop_valor_ofertado`
+No arquivo `src/components/feedback/SignaturePad.tsx`, na linha 30, substituir `getTrimmedCanvas().toDataURL(...)` por `getCanvas().toDataURL(...)`.
 
-2. **Campo `prop_parcelas`** (linha 1058-1069): separar em dois campos lado a lado:
-   - `prop_parcelas_qtd` -- Input numerico (placeholder: "Ex: 12")
-   - `prop_parcelas_valor` -- CurrencyInput (placeholder: "R$ 0")
-   - Na logica de submit, concatenar como string: `"12x de R$ 5.000"` para manter compatibilidade com o banco (campo TEXT)
+O metodo `getCanvas()` retorna o canvas sem tentar usar a dependencia `trim-canvas` que esta quebrada. A diferenca e que a imagem gerada tera o fundo branco completo em vez de ser cortada, o que e perfeitamente aceitavel para uma assinatura.
 
-3. **Atualizar schema Zod**: adicionar `prop_parcelas_qtd` e `prop_parcelas_valor` como opcionais, remover `prop_parcelas` original
+### Arquivo alterado
 
-4. **Atualizar defaultValues**: incluir os novos campos
+**`src/components/feedback/SignaturePad.tsx`** (linha 30):
+- De: `sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png")`
+- Para: `sigCanvas.current?.getCanvas().toDataURL("image/png")`
 
-5. **Atualizar onSubmit**: montar `p_sinal_entrada` parseando o valor numerico do CurrencyInput para string formatada, e `p_parcelas` concatenando qtd + valor
-
-### Detalhes Tecnicos
-
-- `prop_sinal_entrada`: o valor sera armazenado como string formatada (ex: "R$ 50.000") no banco, pois a coluna e TEXT
-- `prop_parcelas`: sera montado como "12x de R$ 5.000" a partir dos dois subcampos
-- `prop_financiamento`: permanece como texto livre, pois descreve tipo de financiamento e nao apenas um valor
+Apenas uma linha de codigo precisa ser alterada.
 
