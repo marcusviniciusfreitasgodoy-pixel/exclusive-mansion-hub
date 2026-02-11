@@ -152,7 +152,6 @@ export default function FeedbackClientePublico() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const signatureRef = useRef<SignaturePadRef>(null);
-  const proposalSignatureRef = useRef<SignaturePadRef>(null);
   const [hasSignature, setHasSignature] = useState(false);
   const [cnhUrl, setCnhUrl] = useState<string | null>(null);
   const [isUploadingCNH, setIsUploadingCNH] = useState(false);
@@ -283,12 +282,6 @@ export default function FeedbackClientePublico() {
       return;
     }
 
-    if (data.gostaria_fazer_proposta && proposalSignatureRef.current?.isEmpty()) {
-      toast.error("Assinatura da proposta obrigatória", {
-        description: "Por favor, assine a proposta antes de enviar.",
-      });
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -326,7 +319,6 @@ export default function FeedbackClientePublico() {
 
       // 2. Submit proposal if checked
       if (data.gostaria_fazer_proposta) {
-        const proposalSignatureData = proposalSignatureRef.current?.getSignatureData() || "";
         const valorNum = data.prop_valor_ofertado ? parseFloat(data.prop_valor_ofertado.replace(/\D/g, "")) : null;
 
         const { error: proposalError } = await supabase
@@ -345,7 +337,7 @@ export default function FeedbackClientePublico() {
             p_financiamento: data.prop_financiamento || null,
             p_outras_condicoes: data.prop_outras_condicoes || null,
             p_validade_proposta: data.prop_validade_proposta || null,
-            p_assinatura_proponente: proposalSignatureData || null,
+            p_assinatura_proponente: signatureData || null,
             p_cnh_url: cnhUrl || null,
           });
 
@@ -361,6 +353,29 @@ export default function FeedbackClientePublico() {
           ? "Sua proposta de compra também foi registrada."
           : "O corretor será notificado para completar a avaliação.",
       });
+
+      // 3. Send confirmation emails & WhatsApp (fire-and-forget)
+      try {
+        const feedbackIdRes = await supabase
+          .rpc("get_feedback_by_token", { p_token: tokenValue })
+          .maybeSingle();
+        
+        if (feedbackIdRes.data?.id) {
+          fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-feedback-confirmation`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+              body: JSON.stringify({
+                feedback_id: feedbackIdRes.data.id,
+                incluir_proposta: !!data.gostaria_fazer_proposta,
+              }),
+            }
+          ).catch((e) => console.error("Erro ao enviar confirmações:", e));
+        }
+      } catch (e) {
+        console.error("Erro ao disparar confirmações:", e);
+      }
 
       setIsComplete(true);
       refetch();
@@ -1153,24 +1168,11 @@ export default function FeedbackClientePublico() {
                       </p>
                     </div>
 
-                    {/* CNH Upload + Assinatura do Proponente - side by side */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <CNHUpload
-                        onUpload={handleCNHUpload}
-                        isUploading={isUploadingCNH}
-                      />
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">✍️ Assinatura do Proponente</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <SignaturePad
-                            ref={proposalSignatureRef}
-                            height={120}
-                          />
-                        </CardContent>
-                      </Card>
-                    </div>
+                    {/* CNH Upload */}
+                    <CNHUpload
+                      onUpload={handleCNHUpload}
+                      isUploading={isUploadingCNH}
+                    />
                   </div>
                 )}
               </CardContent>
