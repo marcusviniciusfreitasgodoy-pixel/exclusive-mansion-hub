@@ -13,8 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Star, MapPin, User, Search, AlertCircle, Building2, Download,
-  TrendingUp, ThumbsUp, FileText, BarChart3, Eye
+  TrendingUp, ThumbsUp, FileText, BarChart3, Eye, Receipt
 } from 'lucide-react';
+import { PropostasTab } from '@/components/propostas/PropostasTab';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -207,6 +208,10 @@ export default function FeedbacksConstrutora() {
             <TabsTrigger value="list" className="gap-1">
               <FileText className="h-4 w-4" />
               Feedbacks ({completeFeedbacks.length})
+            </TabsTrigger>
+            <TabsTrigger value="propostas" className="gap-1">
+              <Receipt className="h-4 w-4" />
+              Propostas
             </TabsTrigger>
           </TabsList>
           
@@ -548,6 +553,15 @@ export default function FeedbacksConstrutora() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Propostas Tab */}
+        <TabsContent value="propostas" className="mt-0">
+          <PropostasTab
+            entityId={construtora?.id}
+            entityType="construtora"
+            imoveis={imoveis || []}
+          />
         </TabsContent>
       </Tabs>
 
