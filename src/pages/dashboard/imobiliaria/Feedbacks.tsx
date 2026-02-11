@@ -15,10 +15,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, Download, Send, Eye, Star, MapPin, User, Calendar,
-  Search, AlertCircle, RefreshCw, TrendingUp, ThumbsUp, Clock, Receipt
+  Search, AlertCircle, RefreshCw, TrendingUp, ThumbsUp, Clock, Receipt,
+  AlertTriangle, Zap
 } from 'lucide-react';
 import { PropostasTab } from '@/components/propostas/PropostasTab';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { FeedbackStatus, FeedbackWithDetails } from '@/types/feedback';
 import { INTERESSE_LABELS, QUALIFICACAO_LABELS } from '@/types/feedback';
@@ -88,6 +89,55 @@ export default function FeedbacksPage() {
     onError: () => {
       toast({ title: 'Erro', description: 'Não foi possível reenviar o link.', variant: 'destructive' });
     },
+  });
+
+  const followupMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.functions.invoke('send-feedback-followup', {
+        body: { manual: true },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: 'Lembretes disparados!', description: 'Follow-ups enviados para todos os pendentes.' });
+      queryClient.invalidateQueries({ queryKey: ['feedbacks-imobiliaria'] });
+    },
+    onError: () => {
+      toast({ title: 'Erro', description: 'Não foi possível disparar os lembretes.', variant: 'destructive' });
+    },
+  });
+
+  // Pending feedbacks calculations
+  const now = new Date();
+  const pendingFeedbacks = feedbacks?.filter(f => {
+    if (f.status === 'aguardando_cliente') {
+      return differenceInHours(now, new Date(f.created_at || '')) >= 24;
+    }
+    if (f.status === 'aguardando_corretor') {
+      const ref = f.feedback_cliente_em || f.created_at;
+      return ref && differenceInHours(now, new Date(ref)) >= 24;
+    }
+    return false;
+  }) || [];
+
+  const pending24h = pendingFeedbacks.filter(f => {
+    const ref = f.status === 'aguardando_cliente' ? f.created_at : (f.feedback_cliente_em || f.created_at);
+    return ref && differenceInHours(now, new Date(ref)) >= 24 && differenceInHours(now, new Date(ref)) < 48;
+  });
+  const pending48h = pendingFeedbacks.filter(f => {
+    const ref = f.status === 'aguardando_cliente' ? f.created_at : (f.feedback_cliente_em || f.created_at);
+    return ref && differenceInHours(now, new Date(ref)) >= 48;
+  });
+
+  const pending24hCliente = pending24h.filter(f => f.status === 'aguardando_cliente').length;
+  const pending24hCorretor = pending24h.filter(f => f.status === 'aguardando_corretor').length;
+  const pending48hCliente = pending48h.filter(f => f.status === 'aguardando_cliente').length;
+  const pending48hCorretor = pending48h.filter(f => f.status === 'aguardando_corretor').length;
+
+  const sortedPending = [...pendingFeedbacks].sort((a, b) => {
+    const refA = a.status === 'aguardando_cliente' ? a.created_at : (a.feedback_cliente_em || a.created_at);
+    const refB = b.status === 'aguardando_cliente' ? b.created_at : (b.feedback_cliente_em || b.created_at);
+    return new Date(refA || '').getTime() - new Date(refB || '').getTime();
   });
 
   // Filter logic
@@ -357,6 +407,111 @@ export default function FeedbacksPage() {
           </Card>
         );
       })()}
+
+      {/* Pending Feedbacks Urgency Panel */}
+      {pendingFeedbacks.length > 0 && (
+        <div className="mb-6 space-y-4">
+          {/* Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border-yellow-300 bg-yellow-50/50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-8 w-8 text-yellow-600" />
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">Pendentes +24h</p>
+                    <p className="text-2xl font-bold text-yellow-900">{pending24h.length + pending48h.length}</p>
+                    <p className="text-xs text-yellow-700">
+                      {pending24hCliente + pending48hCliente} cliente · {pending24hCorretor + pending48hCorretor} corretor
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className={`border-red-400 bg-red-50/50 ${pending48h.length > 0 ? 'ring-2 ring-red-400/50' : ''}`}>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <Zap className={`h-8 w-8 text-red-600 ${pending48h.length > 0 ? 'animate-pulse' : ''}`} />
+                  <div>
+                    <p className="text-sm font-medium text-red-800">Críticos +48h</p>
+                    <p className="text-2xl font-bold text-red-900">{pending48h.length}</p>
+                    <p className="text-xs text-red-700">
+                      {pending48hCliente} cliente · {pending48hCorretor} corretor
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Urgent List */}
+          <Card>
+            <CardHeader className="pb-2 flex-row items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                Feedbacks Urgentes ({sortedPending.length})
+              </h3>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => followupMutation.mutate()}
+                disabled={followupMutation.isPending}
+              >
+                <Zap className={`mr-1 h-3 w-3 ${followupMutation.isPending ? 'animate-spin' : ''}`} />
+                Disparar Lembretes
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {sortedPending.map(f => {
+                  const ref = f.status === 'aguardando_cliente' ? f.created_at : (f.feedback_cliente_em || f.created_at);
+                  const hours = ref ? differenceInHours(now, new Date(ref)) : 0;
+                  const is48h = hours >= 48;
+                  const raw = f as any;
+                  const followups = f.status === 'aguardando_cliente'
+                    ? { f1: raw.followup_enviado_cliente, f2: raw.followup_2_enviado_cliente }
+                    : { f1: raw.followup_enviado_corretor, f2: raw.followup_2_enviado_corretor };
+
+                  return (
+                    <div key={f.id} className="flex items-center justify-between py-3 gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{f.cliente_nome}</p>
+                          <p className="text-xs text-muted-foreground truncate">{f.imovel?.titulo}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {ref && formatDistanceToNow(new Date(ref), { locale: ptBR, addSuffix: true })}
+                        </span>
+                        <StatusBadge status={f.status} />
+                        <Badge className={is48h ? 'bg-red-500 text-white animate-pulse' : 'bg-yellow-500 text-white'}>
+                          +{hours}h
+                        </Badge>
+                        {followups.f1 && (
+                          <Badge variant="outline" className="text-xs">1º lembrete</Badge>
+                        )}
+                        {followups.f2 && (
+                          <Badge variant="outline" className="text-xs">2º lembrete</Badge>
+                        )}
+                        {f.status === 'aguardando_cliente' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => resendMutation.mutate(f)}
+                            disabled={resendMutation.isPending}
+                          >
+                            <RefreshCw className={`h-3 w-3 ${resendMutation.isPending ? 'animate-spin' : ''}`} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
