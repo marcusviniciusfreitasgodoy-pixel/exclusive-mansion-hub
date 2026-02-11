@@ -1,89 +1,48 @@
 
 
-## Ficha de Visita com Assinatura Digital - Funcionalidades Faltantes
+## Painel de Feedbacks Pendentes com Indicadores de Urgencia
 
-### O que ja existe
+### Objetivo
 
-| Funcionalidade | Status |
-|---|---|
-| Tabela `fichas_visita` com colunas `assinatura_visitante` e `assinatura_corretor` | Existe |
-| Funcao `generate_visit_code()` | Existe |
-| Modal de criacao `NovaFichaModal` | Existe |
-| Listagem `FichasTab` | Existe |
-| Componente `SignaturePad` (react-signature-canvas) | Existe |
-| **Pagina de detalhe da ficha (ver/editar/assinar presencialmente)** | **NAO EXISTE** |
-| **Pagina publica de assinatura remota (sem login)** | **NAO EXISTE** |
-| **RPC `get_ficha_for_signature` (dados seguros para pagina publica)** | **NAO EXISTE** |
-| **Rotas `/ficha/:id` e `/assinatura/:codigo/:tipo`** | **NAO EXISTE** |
-| **Exportacao PDF da ficha com assinaturas embutidas** | **NAO EXISTE** |
-| **Botao "Ver Ficha" nos cards da FichasTab** | **NAO EXISTE** |
-| **Compartilhamento de link para assinatura remota** | **NAO EXISTE** |
+Adicionar um painel de alerta no topo da pagina de Feedbacks da Imobiliaria (`src/pages/dashboard/imobiliaria/Feedbacks.tsx`) mostrando feedbacks pendentes ha mais de 24h e 48h, com indicadores visuais de urgencia e botao para reenviar manualmente (email + WhatsApp via edge function existente).
 
-### Plano de Implementacao
+### O que sera adicionado
 
-#### 1. Migracao de Banco de Dados
+Um componente `PendingFeedbacksPanel` inserido entre os cards de analytics e os filtros, contendo:
 
-Criar a funcao RPC `get_ficha_for_signature(p_codigo TEXT)` com `SECURITY DEFINER` que retorna apenas dados nao-sensiveis (id, codigo, endereco_imovel, data_visita, nome_corretor, status, assinatura_visitante, assinatura_corretor). Isso permite que a pagina publica de assinatura funcione sem expor CPF, telefone ou outros dados pessoais.
+**Cards de resumo (2 colunas):**
+- Card amarelo "Pendentes +24h": quantidade de feedbacks aguardando ha mais de 24 horas
+- Card vermelho "Pendentes +48h": quantidade de feedbacks aguardando ha mais de 48 horas
+- Cada card mostra contagem separada de "Aguardando Cliente" e "Aguardando Corretor"
 
-Adicionar policy RLS para permitir UPDATE anonimo apenas nos campos de assinatura (via RPC seguro).
-
-#### 2. Pagina de Detalhe da Ficha (`FichaVisitaPage.tsx`)
-
-Rota: `/dashboard/imobiliaria/ficha/:id` (autenticada)
-
-Funcionalidades:
-- Visualizar todos os dados da ficha (visitante, imovel, intermediacao)
-- Modo edicao inline para campos editaveis
-- Alterar status (agendada/confirmada/realizada/cancelada)
-- **Assinatura presencial**: Dois canvas `SignaturePad` lado a lado (visitante e corretor), usando o componente existente. Salva base64 PNG direto na tabela
-- **Links de assinatura remota**: Gerar e copiar URLs no formato `/assinatura/{codigo}/visitante` e `/assinatura/{codigo}/corretor` para enviar via WhatsApp
-- **Indicadores de assinatura**: Check verde se ja assinada, circulo vazio se pendente
-- **Exportar PDF**: Botao que gera PDF com jsPDF contendo dados da ficha + assinaturas embutidas como imagens
-
-#### 3. Pagina Publica de Assinatura Remota (`AssinaturaVisita.tsx`)
-
-Rota: `/assinatura/:codigo/:tipo` (publica, sem login)
-
-Funcionalidades:
-- Buscar ficha via RPC `get_ficha_for_signature` (nao expoe PII)
-- Exibir dados minimos: endereco do imovel, data da visita, nome do corretor
-- Canvas de assinatura touch-friendly (funciona em celular e desktop)
-- Salvar assinatura no campo correto (`assinatura_visitante` ou `assinatura_corretor`)
-- Tela de confirmacao com check verde apos salvar
-- Tela de "ja assinado" se a assinatura ja existe
-- Tela de "nao encontrado" se o codigo for invalido
-- Texto legal sobre Lei 6.530/78
-
-#### 4. Exportacao PDF
-
-Usar `jsPDF` (ja instalado) para gerar PDF da ficha contendo:
-- Cabecalho com codigo e data
-- Secao 1: Dados do visitante (nome, CPF, telefone, endereco, acompanhantes)
-- Secao 2: Dados do imovel (endereco, condominio, unidade, proprietario, valor)
-- Secao 3: Intermediacao (corretor, notas, LGPD)
-- Secao 4: Assinaturas embutidas como imagens PNG
-- Rodape com data/hora de geracao
-
-#### 5. Atualizacoes na FichasTab
-
-Adicionar botao "Ver Ficha" em cada card que navega para `/dashboard/imobiliaria/ficha/{id}`.
-
-#### 6. Rotas no App.tsx
-
-Adicionar:
-- Rota autenticada: `/dashboard/imobiliaria/ficha/:id` com `FichaVisitaPage`
-- Rota publica: `/assinatura/:codigo/:tipo` com `AssinaturaVisita`
+**Lista de feedbacks urgentes (abaixo dos cards):**
+- Feedbacks ordenados por tempo pendente (mais antigos primeiro)
+- Cada item mostra: nome do cliente, imovel, tempo pendente (ex: "ha 3 dias"), status, e badges de urgencia
+- Badge amarela para +24h, badge vermelha pulsante para +48h
+- Indicadores de follow-up ja enviado (1o lembrete, 2o lembrete)
+- Botao "Reenviar" em cada item que chama a edge function `send-feedback-request` existente (para clientes) ou `send-feedback-followup` (para disparo manual geral)
+- O painel so aparece se houver pelo menos 1 feedback pendente ha mais de 24h
 
 ### Detalhes Tecnicos
 
-**Arquivos a criar:**
-- `src/pages/dashboard/imobiliaria/FichaVisitaPage.tsx` - Pagina de detalhe com assinatura presencial, links remotos e PDF
-- `src/pages/AssinaturaVisita.tsx` - Pagina publica de assinatura remota
-- Migracao SQL para RPC `get_ficha_for_signature` e RPC de update seguro
+**Arquivo a modificar:**
+- `src/pages/dashboard/imobiliaria/Feedbacks.tsx`
 
-**Arquivos a modificar:**
-- `src/App.tsx` - Adicionar 2 novas rotas
-- `src/components/agendamentos/FichasTab.tsx` - Adicionar botao "Ver Ficha" nos cards
+Toda a logica sera adicionada inline neste arquivo (sem criar componente separado, seguindo o padrao existente da pagina):
 
-**Dependencias:** Nenhuma nova. Usa `react-signature-canvas`, `jsPDF`, `date-fns` e componentes shadcn/ui ja instalados.
+1. Calcular a partir dos feedbacks ja carregados (`feedbacks` query existente) quais estao pendentes ha +24h e +48h usando `differenceInHours` do date-fns
+2. Para `aguardando_cliente`: comparar `created_at` com `now()`
+3. Para `aguardando_corretor`: comparar `feedback_cliente_em` com `now()`
+4. Renderizar o painel entre a section de analytics cards (linha 313) e os filtros (linha 362)
+5. Reutilizar a `resendMutation` ja existente (linha 72-91) para o botao de reenvio ao cliente
+6. Adicionar uma segunda mutation para disparar `send-feedback-followup` manualmente (botao "Disparar Lembretes")
+
+**Campos utilizados do banco (ja disponiveis no select existente):**
+- `created_at`, `feedback_cliente_em`, `status`
+- `followup_enviado_cliente`, `followup_2_enviado_cliente`
+- `followup_enviado_corretor`, `followup_2_enviado_corretor`
+
+**Imports adicionais:** `differenceInHours` do date-fns, `AlertTriangle` e `Zap` do lucide-react
+
+**Nenhuma dependencia nova.** Nenhuma migracao de banco necessaria.
 
