@@ -42,7 +42,7 @@ const construtoraLinks = [
   { title: 'Novo Imóvel', url: '/dashboard/construtora/novo-imovel', icon: Plus },
   { title: 'Aprovar Mídias', url: '/dashboard/construtora/aprovar-midias', icon: ImagePlus, hasBadge: true },
   { title: 'Pipeline CRM', url: '/dashboard/construtora/pipeline', icon: Kanban, tourId: 'pipeline' },
-  { title: 'Visitas Agendadas', url: '/dashboard/construtora/agendamentos', icon: Calendar, tourId: 'agendamentos' },
+  { title: 'Dashboard de Visitas', url: '/dashboard/construtora/agendamentos', icon: Calendar, tourId: 'agendamentos' },
   { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3, tourId: 'analytics' },
