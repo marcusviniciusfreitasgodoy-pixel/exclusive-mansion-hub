@@ -1,53 +1,24 @@
 
 
-## Adicionar Aba de Propostas nos Dashboards de Feedbacks
+## Corrigir Exibicao da Aba de Propostas na Imobiliaria
 
-### Objetivo
-Adicionar uma aba "Propostas" nas paginas de Feedbacks tanto da construtora quanto da imobiliaria, permitindo visualizar todas as propostas de compra vinculadas aos feedbacks.
+### Problema
 
-### Alteracoes
+A aba "Propostas" mostra "Nenhum feedback encontrado" em vez de exibir as propostas. Isso acontece porque existe um `TabsContent` generico (linha 415) com `value={activeTab}` que captura qualquer valor de aba -- incluindo "propostas". Assim, o `TabsContent` especifico de propostas (linha 448) nunca e exibido.
 
-#### 1. Construtora - `src/pages/dashboard/construtora/Feedbacks.tsx`
+### Solucao
 
-- Adicionar nova aba "Propostas" ao TabsList existente (ao lado de "Analytics" e "Feedbacks")
-- Criar query para buscar propostas da tabela `propostas_compra` filtradas por `construtora_id`, com join em `imoveis` e `imobiliarias`
-- Criar `TabsContent` com listagem em tabela contendo:
-  - Codigo da proposta
-  - Nome do proponente
-  - Imovel (titulo)
-  - Valor ofertado (formatado BRL)
-  - Sinal / Parcelas / Financiamento
-  - Status (pendente/aceita/recusada/expirada) com badges coloridas
-  - Data de criacao
-  - Botao para ver detalhes em modal
-- Modal de detalhes da proposta com todos os campos: dados pessoais, valores, condicoes de pagamento, assinatura digital (preview da imagem), CNH (link)
-- Filtros: busca por nome, filtro por imovel (reutilizar os existentes), filtro por status da proposta
+Alterar o `TabsContent` generico para que ele so renderize quando a aba ativa NAO for "propostas". Existem duas abordagens possiveis:
 
-#### 2. Imobiliaria - `src/pages/dashboard/imobiliaria/Feedbacks.tsx`
+**Abordagem escolhida**: Substituir o `TabsContent` dinamico por `TabsContent` individuais para cada status de feedback (`all`, `aguardando_corretor`, `aguardando_cliente`, `completo`, `arquivado`), cada um renderizando a mesma lista filtrada. Porem, a forma mais simples e manter o `TabsContent` com `value={activeTab}` mas envolve-lo em uma condicao `{activeTab !== 'propostas' && ...}`.
 
-- Adicionar nova aba "Propostas" ao TabsList existente (ao lado das abas de status)
-- Criar query para buscar propostas da tabela `propostas_compra` filtradas por `imobiliaria_id`, com join em `imoveis`
-- Criar `TabsContent` com listagem em cards (mesmo padrao visual dos feedback cards) contendo:
-  - Codigo, nome, imovel, valor ofertado, status, data
-  - Botao "Ver Detalhes" abrindo modal
-- Modal de detalhes com mesma estrutura da construtora
-- Reutilizar filtros existentes (busca e imovel)
+### Alteracao
 
-#### 3. Detalhes Tecnicos
+**`src/pages/dashboard/imobiliaria/Feedbacks.tsx`** (linha 415):
 
-- Importar `DollarSign` ou `Receipt` do lucide-react para icone da aba
-- Status badges:
-  - `pendente`: amarelo
-  - `aceita`: verde
-  - `recusada`: vermelho
-  - `expirada`: cinza
-- Valores monetarios formatados com `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`
-- Assinatura exibida como `<img src={assinatura_proponente} />` no modal de detalhes
-- CNH exibida como link externo para download
+- De: `<TabsContent value={activeTab} className="mt-0">`
+- Para: Envolver todo o bloco (linhas 415-445) em `{activeTab !== 'propostas' && (...)}`
 
-#### 4. Arquivos Modificados
+Isso garante que quando a aba "Propostas" estiver ativa, somente o `TabsContent` dedicado (linha 448) sera renderizado, exibindo corretamente a lista de propostas.
 
-- `src/pages/dashboard/construtora/Feedbacks.tsx` - nova aba + query + modal
-- `src/pages/dashboard/imobiliaria/Feedbacks.tsx` - nova aba + query + modal
-
-Nenhuma tabela ou migracao necessaria -- a tabela `propostas_compra` ja existe com todos os campos.
+Nenhuma outra alteracao e necessaria. Os dados ja existem no banco e a query do `PropostasTab` esta correta.
