@@ -1,29 +1,53 @@
 
 
-## Adicionar "Performance por Corretor" na pagina de Feedbacks da Imobiliaria
+## Inserir Dados Simulados para Testes -- Imobiliaria
 
-### Problema
-A pagina de Feedbacks da imobiliaria (`src/pages/dashboard/imobiliaria/Feedbacks.tsx`) nao possui uma secao de Performance. A construtora tem "Performance por Imobiliaria", mas para a imobiliaria o agrupamento correto e por **Corretor**.
+### Objetivo
+Inserir dados simulados nas tabelas `agendamentos_visitas` e `feedbacks_visitas` vinculados a sua imobiliaria (`0808cf71-aa0c-4531-94f3-a3741a2efea0`) para popular as secoes de Dashboard de Visitas e Feedbacks com dados variados.
 
-### O que sera feito
+### Dados Atuais
+- **Agendamentos:** 6 registros (2 pendentes, 2 confirmados, 1 realizado, 1 cancelado)
+- **Feedbacks:** 3 registros (todos completos, com 2 corretores: Joao Corretor e Ana Corretora)
 
-**Arquivo:** `src/pages/dashboard/imobiliaria/Feedbacks.tsx`
+### O que sera inserido
 
-1. **Calcular performance por corretor** -- Agrupar os feedbacks completos pelo campo `corretor_nome` (ja disponivel na tabela `feedbacks_visitas`), calculando:
-   - Quantidade de feedbacks por corretor
-   - NPS medio por corretor
+**7 novos agendamentos** com variedade de status e corretores:
 
-2. **Adicionar secao "Performance por Corretor"** -- Tabela com colunas:
-   - Corretor (nome)
-   - Feedbacks (contagem)
-   - NPS Medio (valor formatado em negrito)
+| Cliente | Imovel | Corretor | Status |
+|---|---|---|---|
+| Luciana Teixeira | GRID 201 | Carlos Vendedor | pendente |
+| Marcos Almeida | Lucio Costa | Carlos Vendedor | confirmado |
+| Beatriz Ferreira | GRID 201 | Joao Corretor | realizado |
+| Gabriel Santos | Mansao Malibu | Ana Corretora | realizado |
+| Patricia Monteiro | Lucio Costa | Carlos Vendedor | realizado |
+| Roberto Dias | GRID 201 | Ana Corretora | cancelado |
+| Juliana Ribeiro | Mansao Malibu | Joao Corretor | pendente |
 
-   A tabela sera adicionada apos os cards de KPI e antes da area de filtros/tabs de feedbacks, seguindo o mesmo estilo visual da tabela da construtora (com `<table>` dentro de um `<Card>`).
+**5 novos feedbacks** com diferentes corretores, NPS e niveis de interesse:
+
+| Cliente | Corretor | NPS | Interesse | Status |
+|---|---|---|---|---|
+| Beatriz Ferreira | Joao Corretor | 10 | muito_interessado | completo |
+| Gabriel Santos | Ana Corretora | 8 | interessado | completo |
+| Patricia Monteiro | Carlos Vendedor | 9 | muito_interessado | completo |
+| Roberto Dias | Ana Corretora | 5 | pouco_interessado | aguardando_cliente |
+| Juliana Ribeiro | Carlos Vendedor | -- | -- | aguardando_corretor |
+
+Isso vai permitir:
+- **Performance por Corretor** com 3 corretores (Joao, Ana, Carlos)
+- **KPIs variados** com NPS de 5 a 10
+- **Fichas pendentes** (aguardando_corretor e aguardando_cliente)
+- **Feedbacks completos** com diferentes avaliacoes
 
 ### Detalhes Tecnicos
 
-- O campo `corretor_nome` ja e retornado na query existente (`select *` da tabela `feedbacks_visitas`)
-- Nenhuma query adicional e necessaria
-- A logica de agrupamento sera feita no frontend com `useMemo` ou calculo direto a partir de `completeFeedbacks`
-- A secao so aparece se houver feedbacks completos com `corretor_nome` preenchido
-- Sera posicionada logo apos os 3 cards de KPI (NPS Medio, Muito Interessados, Total de Feedbacks)
+**Metodo:** Migration SQL com INSERTs nas tabelas `agendamentos_visitas` e `feedbacks_visitas`
+
+**IDs fixos usados:**
+- Imobiliaria: `0808cf71-aa0c-4531-94f3-a3741a2efea0`
+- Construtora: `8de22a19-9ce7-41a6-a1dc-deab3ad6d275`
+- Imoveis: GRID 201 (`ea860551`), Lucio Costa (`96367cb7`), Mansao Malibu (`996ec17b`)
+
+**Arquivo criado:**
+- Nova migration SQL com os INSERTs (nenhum arquivo de codigo sera alterado)
+
