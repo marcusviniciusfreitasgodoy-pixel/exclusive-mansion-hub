@@ -1,49 +1,88 @@
 
+## Adicionar Criacao Manual de Agendamento e Fichas de Visita Avulsa
 
-## Segundo Lembrete Automatico de Follow-up (48h)
+### Analise Comparativa: O que ja existe vs. O que falta
 
-### Situacao Atual
+| Funcionalidade | Status Atual |
+|---|---|
+| Tabela `agendamentos_visitas` | Existe |
+| Tabela `disponibilidade_corretor` + `bloqueios_agenda` | Existe |
+| Modal publico de agendamento (cliente via pagina do imovel) | Existe |
+| Listagem/gestao de agendamentos (imobiliaria) | Existe |
+| Dashboard de visitas (construtora) | Existe |
+| Configurar agenda (imobiliaria) | Existe |
+| **Criacao manual de agendamento pelo corretor/imobiliaria** | **NAO EXISTE** |
+| **Tabela `fichas_visita`** | **NAO EXISTE** |
+| **Formulario de ficha avulsa** | **NAO EXISTE** |
+| **Criar ficha a partir de agendamento existente** | **NAO EXISTE** |
 
-- Existe apenas 1 lembrete (24h) controlado pelas flags `followup_enviado_cliente` e `followup_enviado_corretor`
-- Cliente recebe Email + WhatsApp; Corretor recebe apenas Email
-- Apos o primeiro envio, as flags sao marcadas como `true` e nenhum outro lembrete e disparado
-
-### Alteracoes Necessarias
+### Plano de Implementacao
 
 #### 1. Migracao de Banco de Dados
 
-Adicionar duas novas colunas na tabela `feedbacks_visitas`:
+Criar a tabela `fichas_visita` com os campos do plano fornecido, adaptados ao modelo existente (usando `imobiliaria_id` e `construtora_id` em vez de `organization_id`/`profiles`):
 
-- `followup_2_enviado_cliente` (boolean, default false)
-- `followup_2_enviado_corretor` (boolean, default false)
+- `id`, `codigo` (unico, gerado automaticamente)
+- Dados do visitante: `nome_visitante`, `cpf_visitante`, `telefone_visitante`, `email_visitante`, `rg_visitante`, `endereco_visitante`
+- `acompanhantes` (JSONB)
+- Dados do imovel: `imovel_id` (FK opcional para imoveis), `endereco_imovel`, `condominio_edificio`, `unidade_imovel`, `valor_imovel`, `nome_proprietario`
+- Intermediacao: `corretor_nome`, `data_visita`, `status`, `notas`
+- Assinaturas: `assinatura_visitante`, `assinatura_corretor`
+- `aceita_ofertas_similares` (boolean)
+- `imobiliaria_id`, `construtora_id`
+- `agendamento_visita_id` (FK opcional - para fichas criadas a partir de agendamento)
+- Timestamps
 
-Essas colunas controlam o segundo lembrete de 48h, separado do primeiro de 24h.
+RLS: imobiliaria ve apenas suas fichas, construtora ve fichas dos seus imoveis.
 
-#### 2. Edge Function `send-feedback-followup/index.ts`
+Funcao SQL `generate_visit_code()` para gerar codigos unicos tipo `VIS-20260211-A3F2`.
 
-Adicionar dois novos blocos de busca e envio apos os existentes:
+#### 2. Botao "Nova Visita" na pagina de Agendamentos da Imobiliaria
 
-**Cliente (48h) - Tom cordial:**
-- Buscar feedbacks com `status = 'aguardando_cliente'`, `followup_enviado_cliente = true`, `followup_2_enviado_cliente = false`, e `created_at` menor que 48h atras
-- Enviar Email com tom cordial: "Sabemos que a rotina e corrida... sua opiniao nos ajuda muito"
-- Enviar WhatsApp com mensagem gentil
-- Marcar `followup_2_enviado_cliente = true`
+Adicionar um botao no topo da pagina `src/pages/dashboard/imobiliaria/Agendamentos.tsx` que abre um modal/dialog com formulario para criar agendamento manualmente. Campos:
 
-**Corretor (48h) - Tom urgente:**
-- Buscar feedbacks com `status = 'aguardando_corretor'`, `followup_enviado_corretor = true`, `followup_2_enviado_corretor = false`, e `feedback_cliente_em` menor que 48h atras
-- Enviar Email com tom mais urgente: destaque vermelho, "URGENTE", "O cliente ja avaliou ha mais de 48h"
-- Enviar WhatsApp com mensagem de urgencia (novo - nao existia para corretor)
-- Para o WhatsApp do corretor, buscar o telefone via join com a tabela de imobiliarias ou usar o campo `corretor_email` para localizar
-- Marcar `followup_2_enviado_corretor = true`
+- Cliente: Nome, Telefone, Email
+- Imovel: Select dos imoveis com acesso ativo
+- Data/Horario: Usando o calendario inteligente ja existente (slots da disponibilidade)
+- Corretor: Nome e email (texto livre)
+- Observacoes
+- Status inicial: `confirmado` (ja que e o corretor criando diretamente)
 
-**Nota sobre telefone do corretor:** O campo `corretor_telefone` nao existe na tabela `feedbacks_visitas`. Para enviar WhatsApp ao corretor, sera necessario adicionar uma coluna `corretor_telefone` na tabela ou buscar o telefone da imobiliaria associada. A abordagem mais simples e adicionar a coluna `corretor_telefone` na tabela.
+Ao salvar, insere na tabela `agendamentos_visitas` existente.
 
-#### 3. Resumo dos Arquivos
+#### 3. Botao "Nova Ficha" na pagina de Agendamentos da Imobiliaria
 
-| Arquivo | Acao |
-|---------|------|
-| Migracao SQL | Adicionar 3 colunas: `followup_2_enviado_cliente`, `followup_2_enviado_corretor`, `corretor_telefone` |
-| `supabase/functions/send-feedback-followup/index.ts` | Adicionar blocos 5 e 6 para segundo lembrete (48h) com tons diferenciados e WhatsApp para corretor |
+Adicionar botao que abre um formulario completo para criar uma ficha de visita avulsa (sem agendamento previo). Dividido em 3 secoes:
 
-Nenhuma alteracao no frontend e necessaria. O cron job existente (a cada 2h) ja cobrira os novos lembretes automaticamente.
+**Secao 1 - Identificacao do Cliente:**
+Nome, CPF, RG, Telefone, Email, Endereco, Acompanhantes (ate 2, dinamicos)
 
+**Secao 2 - Identificacao do Imovel:**
+Imovel (select ou endereco livre), Condominio/Edificio, Unidade, Proprietario, Valor
+
+**Secao 3 - Intermediacao:**
+Corretor, Data/Hora, Notas, Aceita ofertas similares (LGPD)
+
+Gera codigo automatico e salva na tabela `fichas_visita`.
+
+#### 4. Botao "Criar Ficha" no card de agendamento realizado
+
+Nos agendamentos com status `realizado`, adicionar botao para criar uma ficha de visita pre-preenchida com os dados do agendamento (nome, telefone, email, imovel). O corretor completa os campos faltantes (CPF, assinaturas, etc).
+
+#### 5. Aba "Fichas" na pagina de Agendamentos da Imobiliaria
+
+Adicionar uma nova aba que lista todas as fichas de visita da imobiliaria, com:
+- Cards com status, dados do visitante e imovel
+- Filtro por status
+- Botao para ver detalhes e editar
+
+### Detalhes Tecnicos
+
+**Arquivos a criar:**
+- `supabase/migrations/XXXX_create_fichas_visita.sql` - Tabela + RLS + funcao de codigo
+
+**Arquivos a modificar:**
+- `src/pages/dashboard/imobiliaria/Agendamentos.tsx` - Adicionar botoes "Nova Visita" e "Nova Ficha", aba "Fichas", modais de criacao
+- `src/integrations/supabase/types.ts` - Sera atualizado automaticamente
+
+**Dependencias:** Nenhuma nova. Usa react-hook-form, zod, date-fns, lucide-react e componentes shadcn/ui ja instalados.
