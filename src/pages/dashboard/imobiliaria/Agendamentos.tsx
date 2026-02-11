@@ -16,10 +16,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { exportarLeadsCSV } from '@/lib/form-helpers';
 import { RespostasCustomizadas } from '@/components/forms/RespostasCustomizadas';
+import { NovaVisitaModal } from '@/components/agendamentos/NovaVisitaModal';
+import { NovaFichaModal } from '@/components/agendamentos/NovaFichaModal';
+import { FichasTab } from '@/components/agendamentos/FichasTab';
 import { 
   Calendar, Clock, Phone, Mail, MapPin, User, 
   CheckCircle, XCircle, Search, MessageSquare,
-  CalendarCheck, AlertCircle, Download, Eye
+  CalendarCheck, AlertCircle, Download, Eye, Plus, FileText
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -70,8 +73,12 @@ export default function AgendamentosPage() {
   const [activeTab, setActiveTab] = useState<AgendamentoStatus | 'all'>('pendente');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImovel, setSelectedImovel] = useState<string>('all');
+  const [mainTab, setMainTab] = useState<'agendamentos' | 'fichas'>('agendamentos');
   
   // Modal states
+  const [novaVisitaOpen, setNovaVisitaOpen] = useState(false);
+  const [novaFichaOpen, setNovaFichaOpen] = useState(false);
+  const [fichaFromAgendamento, setFichaFromAgendamento] = useState<any>(null);
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null; opcao: 1 | 2 }>({ open: false, agendamento: null, opcao: 1 });
   const [cancelModal, setCancelModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null }>({ open: false, agendamento: null });
   const [realizeModal, setRealizeModal] = useState<{ open: boolean; agendamento: AgendamentoWithDetails | null }>({ open: false, agendamento: null });
@@ -105,7 +112,7 @@ export default function AgendamentosPage() {
       
       const { data } = await supabase
         .from('imobiliaria_imovel_access')
-        .select('imovel:imoveis(id, titulo)')
+        .select('imovel:imoveis(id, titulo, endereco, construtora_id)')
         .eq('imobiliaria_id', imobiliaria.id)
         .eq('status', 'active');
 
@@ -113,6 +120,8 @@ export default function AgendamentosPage() {
     },
     enabled: !!imobiliaria?.id,
   });
+
+  const imoveisFlat = (imoveis || []) as Array<{ id: string; titulo: string; endereco?: string | null; construtora_id?: string }>;
 
   // Mutations
   const confirmMutation = useMutation({
@@ -392,6 +401,29 @@ export default function AgendamentosPage() {
           </>
         )}
 
+        {agendamento.status === 'realizado' && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setFichaFromAgendamento({
+                nome_visitante: agendamento.cliente_nome,
+                telefone_visitante: agendamento.cliente_telefone,
+                email_visitante: agendamento.cliente_email,
+                imovel_id: agendamento.imovel_id,
+                endereco_imovel: agendamento.imovel?.endereco || '',
+                corretor_nome: agendamento.corretor_nome || '',
+                agendamento_visita_id: agendamento.id,
+                construtora_id: agendamento.construtora_id,
+              });
+              setNovaFichaOpen(true);
+            }}
+          >
+            <FileText className="mr-1 h-3 w-3" />
+            Criar Ficha
+          </Button>
+        )}
+
         <Button 
           size="sm" 
           variant="ghost"
@@ -412,6 +444,30 @@ export default function AgendamentosPage() {
 
   return (
     <DashboardLayout title="Agendamentos de Visitas">
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button onClick={() => setNovaVisitaOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Visita
+        </Button>
+        <Button variant="outline" onClick={() => { setFichaFromAgendamento(null); setNovaFichaOpen(true); }}>
+          <FileText className="mr-2 h-4 w-4" />
+          Nova Ficha
+        </Button>
+      </div>
+
+      {/* Main Tabs: Agendamentos | Fichas */}
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as any)} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
+          <TabsTrigger value="fichas">Fichas de Visita</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="fichas" className="mt-4">
+          <FichasTab />
+        </TabsContent>
+
+        <TabsContent value="agendamentos" className="mt-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
@@ -536,8 +592,8 @@ export default function AgendamentosPage() {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* Confirm Modal */}
+        </TabsContent>
+      </Tabs>
       <Dialog open={confirmModal.open} onOpenChange={(open) => !open && setConfirmModal({ open: false, agendamento: null, opcao: 1 })}>
         <DialogContent>
           <DialogHeader>
@@ -756,6 +812,21 @@ export default function AgendamentosPage() {
           )}
         </DialogContent>
       </Dialog>
+
+
+
+      {/* Modals */}
+      <NovaVisitaModal
+        open={novaVisitaOpen}
+        onOpenChange={setNovaVisitaOpen}
+        imoveis={imoveisFlat}
+      />
+      <NovaFichaModal
+        open={novaFichaOpen}
+        onOpenChange={(open) => { setNovaFichaOpen(open); if (!open) setFichaFromAgendamento(null); }}
+        imoveis={imoveisFlat}
+        prefill={fichaFromAgendamento}
+      />
     </DashboardLayout>
   );
 }
