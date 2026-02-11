@@ -1704,6 +1704,108 @@ export type Database = {
           },
         ]
       }
+      propostas_compra: {
+        Row: {
+          assinatura_proponente: string | null
+          cnh_url: string | null
+          codigo: string
+          construtora_id: string | null
+          cpf_cnpj: string
+          created_at: string | null
+          email: string | null
+          endereco_resumido: string | null
+          feedback_id: string | null
+          financiamento: string | null
+          forma_aceite: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          matricula: string | null
+          moeda: string | null
+          nome_completo: string
+          outras_condicoes: string | null
+          parcelas: string | null
+          sinal_entrada: string | null
+          status: string | null
+          telefone: string
+          unidade: string | null
+          updated_at: string | null
+          validade_proposta: string | null
+          valor_ofertado: number | null
+        }
+        Insert: {
+          assinatura_proponente?: string | null
+          cnh_url?: string | null
+          codigo: string
+          construtora_id?: string | null
+          cpf_cnpj: string
+          created_at?: string | null
+          email?: string | null
+          endereco_resumido?: string | null
+          feedback_id?: string | null
+          financiamento?: string | null
+          forma_aceite?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          matricula?: string | null
+          moeda?: string | null
+          nome_completo: string
+          outras_condicoes?: string | null
+          parcelas?: string | null
+          sinal_entrada?: string | null
+          status?: string | null
+          telefone: string
+          unidade?: string | null
+          updated_at?: string | null
+          validade_proposta?: string | null
+          valor_ofertado?: number | null
+        }
+        Update: {
+          assinatura_proponente?: string | null
+          cnh_url?: string | null
+          codigo?: string
+          construtora_id?: string | null
+          cpf_cnpj?: string
+          created_at?: string | null
+          email?: string | null
+          endereco_resumido?: string | null
+          feedback_id?: string | null
+          financiamento?: string | null
+          forma_aceite?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          matricula?: string | null
+          moeda?: string | null
+          nome_completo?: string
+          outras_condicoes?: string | null
+          parcelas?: string | null
+          sinal_entrada?: string | null
+          status?: string | null
+          telefone?: string
+          unidade?: string | null
+          updated_at?: string | null
+          validade_proposta?: string | null
+          valor_ofertado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propostas_compra_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedbacks_visitas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_compra_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedbacks_visitas_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           created_at: string | null
@@ -2250,6 +2352,27 @@ export type Database = {
           p_respostas_cliente_customizadas?: Json
           p_sugestoes: string
           p_token: string
+        }
+        Returns: string
+      }
+      submit_proposta_compra: {
+        Args: {
+          p_assinatura_proponente?: string
+          p_cnh_url?: string
+          p_cpf_cnpj: string
+          p_email?: string
+          p_endereco_resumido?: string
+          p_financiamento?: string
+          p_matricula?: string
+          p_nome_completo: string
+          p_outras_condicoes?: string
+          p_parcelas?: string
+          p_sinal_entrada?: string
+          p_telefone: string
+          p_token: string
+          p_unidade?: string
+          p_validade_proposta?: string
+          p_valor_ofertado?: number
         }
         Returns: string
       }

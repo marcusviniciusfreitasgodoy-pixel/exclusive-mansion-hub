@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,6 +103,8 @@ export default function FeedbackClientePublico() {
   const [isComplete, setIsComplete] = useState(false);
   const signatureRef = useRef<SignaturePadRef>(null);
   const [hasSignature, setHasSignature] = useState(false);
+  const [showProposalForm, setShowProposalForm] = useState(false);
+  const [submittedInteresse, setSubmittedInteresse] = useState<string | null>(null);
 
   // Buscar feedback pelo token usando RPC segura (sem política pública de SELECT)
   const { data: feedback, isLoading, error, refetch } = useQuery({
@@ -221,6 +223,7 @@ export default function FeedbackClientePublico() {
         description: "O corretor será notificado para completar a avaliação.",
       });
 
+      setSubmittedInteresse(data.interesse_compra);
       setIsComplete(true);
       refetch();
     } catch (error) {
@@ -270,6 +273,34 @@ export default function FeedbackClientePublico() {
 
   // Página de sucesso / já completo
   if (isComplete) {
+    const showProposalCTA = submittedInteresse === "muito_interessado" || submittedInteresse === "interessado";
+
+    if (showProposalForm) {
+      const ProposalForm = lazy(() => import("@/components/proposta/ProposalForm").then(m => ({ default: m.ProposalForm })));
+      const endereco = [feedback.imoveis?.endereco, feedback.imoveis?.bairro, feedback.imoveis?.cidade]
+        .filter(Boolean)
+        .join(", ");
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-background to-muted py-8 px-4">
+          <div className="max-w-2xl mx-auto">
+            <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />}>
+              <ProposalForm
+                preFill={{
+                  nome_completo: feedback.cliente_nome || "",
+                  telefone: (feedback as any).cliente_telefone || "",
+                  email: feedback.cliente_email || "",
+                  endereco_resumido: endereco,
+                  valor_ofertado: feedback.imoveis?.valor || undefined,
+                  token: tokenValue,
+                }}
+              />
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-6">
         <div className="text-center max-w-md">
@@ -282,12 +313,24 @@ export default function FeedbackClientePublico() {
             <strong> {feedback.imoveis?.titulo}</strong>.
           </p>
           {feedback.pdf_url && (
-            <Button asChild>
+            <Button asChild className="mb-4">
               <a href={feedback.pdf_url} target="_blank" rel="noopener noreferrer">
                 <Download className="mr-2 h-4 w-4" />
                 Baixar Relatório PDF
               </a>
             </Button>
+          )}
+          {showProposalCTA && (
+            <div className="mt-6 p-4 rounded-lg border bg-card">
+              <h3 className="font-semibold mb-2">📝 Deseja formalizar uma proposta de compra?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Você indicou interesse no imóvel. Formalize sua proposta com valor, condições de pagamento e assinatura digital.
+              </p>
+              <Button onClick={() => setShowProposalForm(true)} className="w-full" size="lg">
+                <FileText className="mr-2 h-4 w-4" />
+                Formalizar Proposta de Compra
+              </Button>
+            </div>
           )}
         </div>
       </div>

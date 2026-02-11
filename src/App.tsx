@@ -55,6 +55,7 @@ const DemoImobiliaria = lazy(() => import("./pages/demo/DemoImobiliaria"));
 
 // Lazy load public pages
 const PropertyPage = lazy(() => import("./pages/imovel/PropertyPage"));
+const PropostaPage = lazy(() => import("./pages/proposta/PropostaPage"));
 const FeedbackClientePublico = lazy(() => import("./pages/feedback/FeedbackClientePublico"));
 const TemplatesShowcase = lazy(() => import("./pages/TemplatesShowcase"));
 const EmpreendimentosHome = lazy(() => import("./pages/empreendimentos/Home"));
@@ -337,6 +338,11 @@ function MainRoutes() {
               {/* Feedback Público (sem autenticação) */}
               <Route path="/feedback-visita/:token" element={
                 <LazyRoute><FeedbackClientePublico /></LazyRoute>
+              } />
+              
+              {/* Proposta Pública (sem autenticação) */}
+              <Route path="/proposta/:token" element={
+                <LazyRoute><PropostaPage /></LazyRoute>
               } />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
