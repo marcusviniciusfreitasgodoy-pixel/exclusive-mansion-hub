@@ -1,88 +1,89 @@
 
-## Adicionar Criacao Manual de Agendamento e Fichas de Visita Avulsa
 
-### Analise Comparativa: O que ja existe vs. O que falta
+## Ficha de Visita com Assinatura Digital - Funcionalidades Faltantes
 
-| Funcionalidade | Status Atual |
+### O que ja existe
+
+| Funcionalidade | Status |
 |---|---|
-| Tabela `agendamentos_visitas` | Existe |
-| Tabela `disponibilidade_corretor` + `bloqueios_agenda` | Existe |
-| Modal publico de agendamento (cliente via pagina do imovel) | Existe |
-| Listagem/gestao de agendamentos (imobiliaria) | Existe |
-| Dashboard de visitas (construtora) | Existe |
-| Configurar agenda (imobiliaria) | Existe |
-| **Criacao manual de agendamento pelo corretor/imobiliaria** | **NAO EXISTE** |
-| **Tabela `fichas_visita`** | **NAO EXISTE** |
-| **Formulario de ficha avulsa** | **NAO EXISTE** |
-| **Criar ficha a partir de agendamento existente** | **NAO EXISTE** |
+| Tabela `fichas_visita` com colunas `assinatura_visitante` e `assinatura_corretor` | Existe |
+| Funcao `generate_visit_code()` | Existe |
+| Modal de criacao `NovaFichaModal` | Existe |
+| Listagem `FichasTab` | Existe |
+| Componente `SignaturePad` (react-signature-canvas) | Existe |
+| **Pagina de detalhe da ficha (ver/editar/assinar presencialmente)** | **NAO EXISTE** |
+| **Pagina publica de assinatura remota (sem login)** | **NAO EXISTE** |
+| **RPC `get_ficha_for_signature` (dados seguros para pagina publica)** | **NAO EXISTE** |
+| **Rotas `/ficha/:id` e `/assinatura/:codigo/:tipo`** | **NAO EXISTE** |
+| **Exportacao PDF da ficha com assinaturas embutidas** | **NAO EXISTE** |
+| **Botao "Ver Ficha" nos cards da FichasTab** | **NAO EXISTE** |
+| **Compartilhamento de link para assinatura remota** | **NAO EXISTE** |
 
 ### Plano de Implementacao
 
 #### 1. Migracao de Banco de Dados
 
-Criar a tabela `fichas_visita` com os campos do plano fornecido, adaptados ao modelo existente (usando `imobiliaria_id` e `construtora_id` em vez de `organization_id`/`profiles`):
+Criar a funcao RPC `get_ficha_for_signature(p_codigo TEXT)` com `SECURITY DEFINER` que retorna apenas dados nao-sensiveis (id, codigo, endereco_imovel, data_visita, nome_corretor, status, assinatura_visitante, assinatura_corretor). Isso permite que a pagina publica de assinatura funcione sem expor CPF, telefone ou outros dados pessoais.
 
-- `id`, `codigo` (unico, gerado automaticamente)
-- Dados do visitante: `nome_visitante`, `cpf_visitante`, `telefone_visitante`, `email_visitante`, `rg_visitante`, `endereco_visitante`
-- `acompanhantes` (JSONB)
-- Dados do imovel: `imovel_id` (FK opcional para imoveis), `endereco_imovel`, `condominio_edificio`, `unidade_imovel`, `valor_imovel`, `nome_proprietario`
-- Intermediacao: `corretor_nome`, `data_visita`, `status`, `notas`
-- Assinaturas: `assinatura_visitante`, `assinatura_corretor`
-- `aceita_ofertas_similares` (boolean)
-- `imobiliaria_id`, `construtora_id`
-- `agendamento_visita_id` (FK opcional - para fichas criadas a partir de agendamento)
-- Timestamps
+Adicionar policy RLS para permitir UPDATE anonimo apenas nos campos de assinatura (via RPC seguro).
 
-RLS: imobiliaria ve apenas suas fichas, construtora ve fichas dos seus imoveis.
+#### 2. Pagina de Detalhe da Ficha (`FichaVisitaPage.tsx`)
 
-Funcao SQL `generate_visit_code()` para gerar codigos unicos tipo `VIS-20260211-A3F2`.
+Rota: `/dashboard/imobiliaria/ficha/:id` (autenticada)
 
-#### 2. Botao "Nova Visita" na pagina de Agendamentos da Imobiliaria
+Funcionalidades:
+- Visualizar todos os dados da ficha (visitante, imovel, intermediacao)
+- Modo edicao inline para campos editaveis
+- Alterar status (agendada/confirmada/realizada/cancelada)
+- **Assinatura presencial**: Dois canvas `SignaturePad` lado a lado (visitante e corretor), usando o componente existente. Salva base64 PNG direto na tabela
+- **Links de assinatura remota**: Gerar e copiar URLs no formato `/assinatura/{codigo}/visitante` e `/assinatura/{codigo}/corretor` para enviar via WhatsApp
+- **Indicadores de assinatura**: Check verde se ja assinada, circulo vazio se pendente
+- **Exportar PDF**: Botao que gera PDF com jsPDF contendo dados da ficha + assinaturas embutidas como imagens
 
-Adicionar um botao no topo da pagina `src/pages/dashboard/imobiliaria/Agendamentos.tsx` que abre um modal/dialog com formulario para criar agendamento manualmente. Campos:
+#### 3. Pagina Publica de Assinatura Remota (`AssinaturaVisita.tsx`)
 
-- Cliente: Nome, Telefone, Email
-- Imovel: Select dos imoveis com acesso ativo
-- Data/Horario: Usando o calendario inteligente ja existente (slots da disponibilidade)
-- Corretor: Nome e email (texto livre)
-- Observacoes
-- Status inicial: `confirmado` (ja que e o corretor criando diretamente)
+Rota: `/assinatura/:codigo/:tipo` (publica, sem login)
 
-Ao salvar, insere na tabela `agendamentos_visitas` existente.
+Funcionalidades:
+- Buscar ficha via RPC `get_ficha_for_signature` (nao expoe PII)
+- Exibir dados minimos: endereco do imovel, data da visita, nome do corretor
+- Canvas de assinatura touch-friendly (funciona em celular e desktop)
+- Salvar assinatura no campo correto (`assinatura_visitante` ou `assinatura_corretor`)
+- Tela de confirmacao com check verde apos salvar
+- Tela de "ja assinado" se a assinatura ja existe
+- Tela de "nao encontrado" se o codigo for invalido
+- Texto legal sobre Lei 6.530/78
 
-#### 3. Botao "Nova Ficha" na pagina de Agendamentos da Imobiliaria
+#### 4. Exportacao PDF
 
-Adicionar botao que abre um formulario completo para criar uma ficha de visita avulsa (sem agendamento previo). Dividido em 3 secoes:
+Usar `jsPDF` (ja instalado) para gerar PDF da ficha contendo:
+- Cabecalho com codigo e data
+- Secao 1: Dados do visitante (nome, CPF, telefone, endereco, acompanhantes)
+- Secao 2: Dados do imovel (endereco, condominio, unidade, proprietario, valor)
+- Secao 3: Intermediacao (corretor, notas, LGPD)
+- Secao 4: Assinaturas embutidas como imagens PNG
+- Rodape com data/hora de geracao
 
-**Secao 1 - Identificacao do Cliente:**
-Nome, CPF, RG, Telefone, Email, Endereco, Acompanhantes (ate 2, dinamicos)
+#### 5. Atualizacoes na FichasTab
 
-**Secao 2 - Identificacao do Imovel:**
-Imovel (select ou endereco livre), Condominio/Edificio, Unidade, Proprietario, Valor
+Adicionar botao "Ver Ficha" em cada card que navega para `/dashboard/imobiliaria/ficha/{id}`.
 
-**Secao 3 - Intermediacao:**
-Corretor, Data/Hora, Notas, Aceita ofertas similares (LGPD)
+#### 6. Rotas no App.tsx
 
-Gera codigo automatico e salva na tabela `fichas_visita`.
-
-#### 4. Botao "Criar Ficha" no card de agendamento realizado
-
-Nos agendamentos com status `realizado`, adicionar botao para criar uma ficha de visita pre-preenchida com os dados do agendamento (nome, telefone, email, imovel). O corretor completa os campos faltantes (CPF, assinaturas, etc).
-
-#### 5. Aba "Fichas" na pagina de Agendamentos da Imobiliaria
-
-Adicionar uma nova aba que lista todas as fichas de visita da imobiliaria, com:
-- Cards com status, dados do visitante e imovel
-- Filtro por status
-- Botao para ver detalhes e editar
+Adicionar:
+- Rota autenticada: `/dashboard/imobiliaria/ficha/:id` com `FichaVisitaPage`
+- Rota publica: `/assinatura/:codigo/:tipo` com `AssinaturaVisita`
 
 ### Detalhes Tecnicos
 
 **Arquivos a criar:**
-- `supabase/migrations/XXXX_create_fichas_visita.sql` - Tabela + RLS + funcao de codigo
+- `src/pages/dashboard/imobiliaria/FichaVisitaPage.tsx` - Pagina de detalhe com assinatura presencial, links remotos e PDF
+- `src/pages/AssinaturaVisita.tsx` - Pagina publica de assinatura remota
+- Migracao SQL para RPC `get_ficha_for_signature` e RPC de update seguro
 
 **Arquivos a modificar:**
-- `src/pages/dashboard/imobiliaria/Agendamentos.tsx` - Adicionar botoes "Nova Visita" e "Nova Ficha", aba "Fichas", modais de criacao
-- `src/integrations/supabase/types.ts` - Sera atualizado automaticamente
+- `src/App.tsx` - Adicionar 2 novas rotas
+- `src/components/agendamentos/FichasTab.tsx` - Adicionar botao "Ver Ficha" nos cards
 
-**Dependencias:** Nenhuma nova. Usa react-hook-form, zod, date-fns, lucide-react e componentes shadcn/ui ja instalados.
+**Dependencias:** Nenhuma nova. Usa `react-signature-canvas`, `jsPDF`, `date-fns` e componentes shadcn/ui ja instalados.
+
