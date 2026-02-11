@@ -1794,6 +1794,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "propostas_compra_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "propostas_compra_feedback_id_fkey"
             columns: ["feedback_id"]
             isOneToOne: false
@@ -1805,6 +1812,27 @@ export type Database = {
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "feedbacks_visitas_publico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_compra_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_compra_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_compra_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
             referencedColumns: ["id"]
           },
         ]
