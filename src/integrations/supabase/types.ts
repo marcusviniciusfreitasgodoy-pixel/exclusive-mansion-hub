@@ -957,6 +957,132 @@ export type Database = {
           },
         ]
       }
+      fichas_visita: {
+        Row: {
+          aceita_ofertas_similares: boolean | null
+          acompanhantes: Json | null
+          agendamento_visita_id: string | null
+          assinatura_corretor: string | null
+          assinatura_visitante: string | null
+          codigo: string
+          condominio_edificio: string | null
+          construtora_id: string | null
+          corretor_nome: string
+          cpf_visitante: string
+          created_at: string | null
+          data_visita: string | null
+          email_visitante: string | null
+          endereco_imovel: string
+          endereco_visitante: string | null
+          id: string
+          imobiliaria_id: string | null
+          imovel_id: string | null
+          nome_proprietario: string | null
+          nome_visitante: string
+          notas: string | null
+          rg_visitante: string | null
+          status: string
+          telefone_visitante: string
+          unidade_imovel: string | null
+          updated_at: string | null
+          valor_imovel: number | null
+        }
+        Insert: {
+          aceita_ofertas_similares?: boolean | null
+          acompanhantes?: Json | null
+          agendamento_visita_id?: string | null
+          assinatura_corretor?: string | null
+          assinatura_visitante?: string | null
+          codigo: string
+          condominio_edificio?: string | null
+          construtora_id?: string | null
+          corretor_nome: string
+          cpf_visitante: string
+          created_at?: string | null
+          data_visita?: string | null
+          email_visitante?: string | null
+          endereco_imovel: string
+          endereco_visitante?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          nome_proprietario?: string | null
+          nome_visitante: string
+          notas?: string | null
+          rg_visitante?: string | null
+          status?: string
+          telefone_visitante: string
+          unidade_imovel?: string | null
+          updated_at?: string | null
+          valor_imovel?: number | null
+        }
+        Update: {
+          aceita_ofertas_similares?: boolean | null
+          acompanhantes?: Json | null
+          agendamento_visita_id?: string | null
+          assinatura_corretor?: string | null
+          assinatura_visitante?: string | null
+          codigo?: string
+          condominio_edificio?: string | null
+          construtora_id?: string | null
+          corretor_nome?: string
+          cpf_visitante?: string
+          created_at?: string | null
+          data_visita?: string | null
+          email_visitante?: string | null
+          endereco_imovel?: string
+          endereco_visitante?: string | null
+          id?: string
+          imobiliaria_id?: string | null
+          imovel_id?: string | null
+          nome_proprietario?: string | null
+          nome_visitante?: string
+          notas?: string | null
+          rg_visitante?: string | null
+          status?: string
+          telefone_visitante?: string
+          unidade_imovel?: string | null
+          updated_at?: string | null
+          valor_imovel?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fichas_visita_agendamento_visita_id_fkey"
+            columns: ["agendamento_visita_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_visitas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fichas_visita_construtora_id_fkey"
+            columns: ["construtora_id"]
+            isOneToOne: false
+            referencedRelation: "construtoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fichas_visita_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fichas_visita_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fichas_visita_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imobiliaria_imovel_access: {
         Row: {
           acesso_concedido_em: string | null
@@ -2317,6 +2443,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      generate_visit_code: { Args: never; Returns: string }
       get_construtora_id: { Args: { _user_id: string }; Returns: string }
       get_feedback_by_token: {
         Args: { p_token: string }
