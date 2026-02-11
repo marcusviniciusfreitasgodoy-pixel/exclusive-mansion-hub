@@ -701,6 +701,7 @@ export type Database = {
           construtora_id: string
           corretor_email: string | null
           corretor_nome: string | null
+          corretor_telefone: string | null
           created_at: string | null
           data_followup: string | null
           data_visita: string
@@ -710,6 +711,8 @@ export type Database = {
           efeito_uau_detalhe: string | null
           feedback_cliente_em: string | null
           feedback_corretor_em: string | null
+          followup_2_enviado_cliente: boolean
+          followup_2_enviado_corretor: boolean
           followup_enviado_cliente: boolean
           followup_enviado_corretor: boolean
           forma_pagamento_cliente: string | null
@@ -774,6 +777,7 @@ export type Database = {
           construtora_id: string
           corretor_email?: string | null
           corretor_nome?: string | null
+          corretor_telefone?: string | null
           created_at?: string | null
           data_followup?: string | null
           data_visita: string
@@ -783,6 +787,8 @@ export type Database = {
           efeito_uau_detalhe?: string | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
+          followup_2_enviado_cliente?: boolean
+          followup_2_enviado_corretor?: boolean
           followup_enviado_cliente?: boolean
           followup_enviado_corretor?: boolean
           forma_pagamento_cliente?: string | null
@@ -847,6 +853,7 @@ export type Database = {
           construtora_id?: string
           corretor_email?: string | null
           corretor_nome?: string | null
+          corretor_telefone?: string | null
           created_at?: string | null
           data_followup?: string | null
           data_visita?: string
@@ -856,6 +863,8 @@ export type Database = {
           efeito_uau_detalhe?: string | null
           feedback_cliente_em?: string | null
           feedback_corretor_em?: string | null
+          followup_2_enviado_cliente?: boolean
+          followup_2_enviado_corretor?: boolean
           followup_enviado_cliente?: boolean
           followup_enviado_corretor?: boolean
           forma_pagamento_cliente?: string | null
