@@ -27,7 +27,7 @@ export const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
         if (sigCanvas.current?.isEmpty()) {
           return "";
         }
-        return sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png") || "";
+        return sigCanvas.current?.getCanvas().toDataURL("image/png") || "";
       },
       clear: () => {
         sigCanvas.current?.clear();
