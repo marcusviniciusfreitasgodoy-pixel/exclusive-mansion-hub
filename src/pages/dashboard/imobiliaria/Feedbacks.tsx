@@ -15,8 +15,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, Download, Send, Eye, Star, MapPin, User, Calendar,
-  Search, AlertCircle, RefreshCw, TrendingUp, ThumbsUp, Clock
+  Search, AlertCircle, RefreshCw, TrendingUp, ThumbsUp, Clock, Receipt
 } from 'lucide-react';
+import { PropostasTab } from '@/components/propostas/PropostasTab';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { FeedbackStatus, FeedbackWithDetails } from '@/types/feedback';
@@ -27,7 +28,7 @@ export default function FeedbacksPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<FeedbackStatus | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<FeedbackStatus | 'all' | 'propostas'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImovel, setSelectedImovel] = useState<string>('all');
   const [viewModal, setViewModal] = useState<{ open: boolean; feedback: FeedbackWithDetails | null }>({ open: false, feedback: null });
@@ -384,7 +385,7 @@ export default function FeedbacksPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FeedbackStatus | 'all')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FeedbackStatus | 'all' | 'propostas')}>
         <TabsList className="mb-6 flex-wrap h-auto gap-1">
           <TabsTrigger value="aguardando_corretor" className="gap-1">
             Aguardando Corretor
@@ -405,6 +406,10 @@ export default function FeedbacksPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="propostas" className="gap-1">
+            <Receipt className="h-4 w-4" />
+            Propostas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-0">
@@ -437,6 +442,15 @@ export default function FeedbacksPage() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Propostas Tab */}
+        <TabsContent value="propostas" className="mt-0">
+          <PropostasTab
+            entityId={imobiliaria?.id}
+            entityType="imobiliaria"
+            imoveis={imoveis?.map((im: any) => ({ id: im.id, titulo: im.titulo })) || []}
+          />
         </TabsContent>
       </Tabs>
 
