@@ -1,22 +1,53 @@
 
 
-## Corrigir Erro de Assinatura Digital
+## Adicionar Aba de Propostas nos Dashboards de Feedbacks
 
-### Problema
+### Objetivo
+Adicionar uma aba "Propostas" nas paginas de Feedbacks tanto da construtora quanto da imobiliaria, permitindo visualizar todas as propostas de compra vinculadas aos feedbacks.
 
-O erro `(0 , import_trim_canvas.default) is not a function` ocorre na biblioteca `react-signature-canvas` quando o metodo `getTrimmedCanvas()` e chamado. Esse e um bug conhecido de compatibilidade da biblioteca com bundlers modernos (Vite).
+### Alteracoes
 
-### Solucao
+#### 1. Construtora - `src/pages/dashboard/construtora/Feedbacks.tsx`
 
-No arquivo `src/components/feedback/SignaturePad.tsx`, na linha 30, substituir `getTrimmedCanvas().toDataURL(...)` por `getCanvas().toDataURL(...)`.
+- Adicionar nova aba "Propostas" ao TabsList existente (ao lado de "Analytics" e "Feedbacks")
+- Criar query para buscar propostas da tabela `propostas_compra` filtradas por `construtora_id`, com join em `imoveis` e `imobiliarias`
+- Criar `TabsContent` com listagem em tabela contendo:
+  - Codigo da proposta
+  - Nome do proponente
+  - Imovel (titulo)
+  - Valor ofertado (formatado BRL)
+  - Sinal / Parcelas / Financiamento
+  - Status (pendente/aceita/recusada/expirada) com badges coloridas
+  - Data de criacao
+  - Botao para ver detalhes em modal
+- Modal de detalhes da proposta com todos os campos: dados pessoais, valores, condicoes de pagamento, assinatura digital (preview da imagem), CNH (link)
+- Filtros: busca por nome, filtro por imovel (reutilizar os existentes), filtro por status da proposta
 
-O metodo `getCanvas()` retorna o canvas sem tentar usar a dependencia `trim-canvas` que esta quebrada. A diferenca e que a imagem gerada tera o fundo branco completo em vez de ser cortada, o que e perfeitamente aceitavel para uma assinatura.
+#### 2. Imobiliaria - `src/pages/dashboard/imobiliaria/Feedbacks.tsx`
 
-### Arquivo alterado
+- Adicionar nova aba "Propostas" ao TabsList existente (ao lado das abas de status)
+- Criar query para buscar propostas da tabela `propostas_compra` filtradas por `imobiliaria_id`, com join em `imoveis`
+- Criar `TabsContent` com listagem em cards (mesmo padrao visual dos feedback cards) contendo:
+  - Codigo, nome, imovel, valor ofertado, status, data
+  - Botao "Ver Detalhes" abrindo modal
+- Modal de detalhes com mesma estrutura da construtora
+- Reutilizar filtros existentes (busca e imovel)
 
-**`src/components/feedback/SignaturePad.tsx`** (linha 30):
-- De: `sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png")`
-- Para: `sigCanvas.current?.getCanvas().toDataURL("image/png")`
+#### 3. Detalhes Tecnicos
 
-Apenas uma linha de codigo precisa ser alterada.
+- Importar `DollarSign` ou `Receipt` do lucide-react para icone da aba
+- Status badges:
+  - `pendente`: amarelo
+  - `aceita`: verde
+  - `recusada`: vermelho
+  - `expirada`: cinza
+- Valores monetarios formatados com `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`
+- Assinatura exibida como `<img src={assinatura_proponente} />` no modal de detalhes
+- CNH exibida como link externo para download
 
+#### 4. Arquivos Modificados
+
+- `src/pages/dashboard/construtora/Feedbacks.tsx` - nova aba + query + modal
+- `src/pages/dashboard/imobiliaria/Feedbacks.tsx` - nova aba + query + modal
+
+Nenhuma tabela ou migracao necessaria -- a tabela `propostas_compra` ja existe com todos os campos.
