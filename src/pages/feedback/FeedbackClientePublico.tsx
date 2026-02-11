@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Form,
   FormControl,
@@ -33,10 +36,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignaturePad, SignaturePadRef } from "@/components/feedback/SignaturePad";
 import { StarRating } from "@/components/feedback/StarRating";
 import { NPSScale } from "@/components/feedback/NPSScale";
+import { CNHUpload } from "@/components/proposta/CNHUpload";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { INTERESSE_LABELS, OBJECOES_OPTIONS } from "@/types/feedback";
+import { OBJECOES_OPTIONS } from "@/types/feedback";
 
 const PRAZO_COMPRA_OPTIONS = [
   { value: "0-3_meses", label: "0 a 3 meses" },
@@ -67,7 +71,20 @@ const EFEITO_UAU_OPTIONS = [
   { value: "seguranca", label: "🔒 Segurança" },
 ] as const;
 
-const formSchema = z.object({
+const INTERESSE_OPTIONS = [
+  { value: "muito_interessado", label: "🔥 Muito Alto", sublabel: "Quero fazer uma proposta" },
+  { value: "interessado", label: "👍 Alto", sublabel: "Preciso pensar mais" },
+  { value: "pouco_interessado", label: "🤔 Médio", sublabel: "Tenho dúvidas" },
+  { value: "sem_interesse", label: "❌ Baixo", sublabel: "Não tenho interesse" },
+] as const;
+
+const PERCEPCAO_VALOR_OPTIONS = [
+  { value: "abaixo_mercado", label: "Abaixo do mercado" },
+  { value: "preco_justo", label: "Preço justo" },
+  { value: "acima_mercado", label: "Acima do mercado" },
+] as const;
+
+const baseSchema = z.object({
   nps_cliente: z.number().min(0).max(10, "Selecione uma nota"),
   avaliacao_localizacao: z.number().min(1).max(5),
   avaliacao_acabamento: z.number().min(1).max(5),
@@ -79,6 +96,7 @@ const formSchema = z.object({
   interesse_compra: z.enum(["muito_interessado", "interessado", "pouco_interessado", "sem_interesse"], {
     required_error: "Selecione seu nível de interesse",
   }),
+  percepcao_valor: z.string().optional(),
   objecoes: z.array(z.string()).optional(),
   objecoes_detalhes: z.string().optional(),
   efeito_uau: z.array(z.string()).optional(),
@@ -91,9 +109,41 @@ const formSchema = z.object({
   declaracao_verdade: z.boolean().refine((val) => val === true, {
     message: "Você deve confirmar a veracidade das informações",
   }),
+  // Proposal fields
+  gostaria_fazer_proposta: z.boolean().optional(),
+  prop_nome_completo: z.string().optional(),
+  prop_cpf_cnpj: z.string().optional(),
+  prop_telefone: z.string().optional(),
+  prop_email: z.string().optional(),
+  prop_endereco_resumido: z.string().optional(),
+  prop_unidade: z.string().optional(),
+  prop_matricula: z.string().optional(),
+  prop_valor_ofertado: z.string().optional(),
+  prop_sinal_entrada: z.string().optional(),
+  prop_parcelas: z.string().optional(),
+  prop_financiamento: z.string().optional(),
+  prop_outras_condicoes: z.string().optional(),
+  prop_cidade_uf: z.string().optional(),
+  prop_validade_proposta: z.string().optional(),
+  prop_forma_aceite: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.gostaria_fazer_proposta) {
+    if (!data.prop_nome_completo || data.prop_nome_completo.length < 3) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Nome obrigatório (min. 3 caracteres)", path: ["prop_nome_completo"] });
+    }
+    if (!data.prop_cpf_cnpj || data.prop_cpf_cnpj.length < 11) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CPF/CNPJ obrigatório", path: ["prop_cpf_cnpj"] });
+    }
+    if (!data.prop_telefone || data.prop_telefone.length < 10) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Telefone obrigatório", path: ["prop_telefone"] });
+    }
+    if (!data.prop_valor_ofertado) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Valor ofertado obrigatório", path: ["prop_valor_ofertado"] });
+    }
+  }
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof baseSchema>;
 
 export default function FeedbackClientePublico() {
   const { token } = useParams<{ token: string }>();
@@ -102,15 +152,14 @@ export default function FeedbackClientePublico() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const signatureRef = useRef<SignaturePadRef>(null);
+  const proposalSignatureRef = useRef<SignaturePadRef>(null);
   const [hasSignature, setHasSignature] = useState(false);
-  const [showProposalForm, setShowProposalForm] = useState(false);
-  const [submittedInteresse, setSubmittedInteresse] = useState<string | null>(null);
+  const [cnhUrl, setCnhUrl] = useState<string | null>(null);
+  const [isUploadingCNH, setIsUploadingCNH] = useState(false);
 
-  // Buscar feedback pelo token usando RPC segura (sem política pública de SELECT)
   const { data: feedback, isLoading, error, refetch } = useQuery({
     queryKey: ["feedback-publico", token],
     queryFn: async () => {
-      // Usar RPC segura para leitura - token é validado server-side
       const { data: feedbackData, error: feedbackError } = await supabase
         .rpc("get_feedback_by_token", { p_token: tokenValue })
         .maybeSingle();
@@ -118,7 +167,6 @@ export default function FeedbackClientePublico() {
       if (feedbackError) throw feedbackError;
       if (!feedbackData) return null;
 
-      // Buscar dados relacionados (imoveis, imobiliarias, construtoras são públicos)
       const [imovelRes, imobiliariaRes, construtoraRes] = await Promise.all([
         feedbackData.imovel_id
           ? supabase.from("imoveis").select("titulo, endereco, bairro, cidade, valor").eq("id", feedbackData.imovel_id).maybeSingle()
@@ -141,8 +189,12 @@ export default function FeedbackClientePublico() {
     enabled: isValidToken,
   });
 
+  const enderecoImovel = feedback
+    ? [feedback.imoveis?.endereco, feedback.imoveis?.bairro, feedback.imoveis?.cidade].filter(Boolean).join(", ")
+    : "";
+
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(baseSchema),
     defaultValues: {
       nps_cliente: -1,
       avaliacao_localizacao: 0,
@@ -161,17 +213,65 @@ export default function FeedbackClientePublico() {
       comentarios_livres: "",
       proximos_passos_cliente: "",
       declaracao_verdade: false,
+      percepcao_valor: "",
+      gostaria_fazer_proposta: false,
+      prop_nome_completo: "",
+      prop_cpf_cnpj: "",
+      prop_telefone: "",
+      prop_email: "",
+      prop_endereco_resumido: "",
+      prop_unidade: "",
+      prop_matricula: "",
+      prop_valor_ofertado: "",
+      prop_sinal_entrada: "",
+      prop_parcelas: "",
+      prop_financiamento: "",
+      prop_outras_condicoes: "",
+      prop_cidade_uf: "",
+      prop_validade_proposta: "",
+      prop_forma_aceite: "assinatura",
     },
   });
 
   const interesseCompra = form.watch("interesse_compra");
   const showObjecoes = interesseCompra === "pouco_interessado" || interesseCompra === "sem_interesse";
+  const gostariaFazerProposta = form.watch("gostaria_fazer_proposta");
+
+  // Pre-fill proposal fields when feedback data is available
+  useEffect(() => {
+    if (feedback) {
+      form.setValue("prop_nome_completo", feedback.cliente_nome || "");
+      form.setValue("prop_telefone", (feedback as any).cliente_telefone || "");
+      form.setValue("prop_email", feedback.cliente_email || "");
+      form.setValue("prop_endereco_resumido", enderecoImovel);
+    }
+  }, [feedback, enderecoImovel]);
 
   useEffect(() => {
     if (feedback?.status === "completo") {
       setIsComplete(true);
     }
   }, [feedback]);
+
+  const handleCNHUpload = async (file: File): Promise<string> => {
+    setIsUploadingCNH(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `proposta-${tokenValue}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("documentos-proposta")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from("documentos-proposta")
+        .getPublicUrl(path);
+      const url = urlData.publicUrl;
+      setCnhUrl(url);
+      return url;
+    } finally {
+      setIsUploadingCNH(false);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!feedback) return;
@@ -183,12 +283,19 @@ export default function FeedbackClientePublico() {
       return;
     }
 
+    if (data.gostaria_fazer_proposta && proposalSignatureRef.current?.isEmpty()) {
+      toast.error("Assinatura da proposta obrigatória", {
+        description: "Por favor, assine a proposta antes de enviar.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const signatureData = signatureRef.current?.getSignatureData() || "";
 
-      // Usar RPC segura para submeter feedback (sem política pública de UPDATE)
+      // 1. Submit feedback
       const { error: updateError } = await supabase
         .rpc("submit_client_feedback", {
           p_token: tokenValue,
@@ -212,18 +319,49 @@ export default function FeedbackClientePublico() {
           p_proximos_passos_cliente: data.proximos_passos_cliente || "",
           p_assinatura_cliente: signatureData,
           p_assinatura_cliente_device: navigator.userAgent,
+          p_percepcao_valor: data.percepcao_valor || "",
         });
 
       if (updateError) throw updateError;
 
-      // Notificar corretor que é sua vez (via dashboard - email opcional futuro)
-      // NÃO gera PDF ainda - será gerado quando corretor completar
+      // 2. Submit proposal if checked
+      if (data.gostaria_fazer_proposta) {
+        const proposalSignatureData = proposalSignatureRef.current?.getSignatureData() || "";
+        const valorNum = data.prop_valor_ofertado ? parseFloat(data.prop_valor_ofertado.replace(/\D/g, "")) : null;
+
+        const { error: proposalError } = await supabase
+          .rpc("submit_proposta_compra", {
+            p_token: tokenValue,
+            p_nome_completo: data.prop_nome_completo || "",
+            p_cpf_cnpj: data.prop_cpf_cnpj || "",
+            p_telefone: data.prop_telefone || "",
+            p_email: data.prop_email || null,
+            p_endereco_resumido: data.prop_endereco_resumido || null,
+            p_unidade: data.prop_unidade || null,
+            p_matricula: data.prop_matricula || null,
+            p_valor_ofertado: valorNum,
+            p_sinal_entrada: data.prop_sinal_entrada || null,
+            p_parcelas: data.prop_parcelas || null,
+            p_financiamento: data.prop_financiamento || null,
+            p_outras_condicoes: data.prop_outras_condicoes || null,
+            p_validade_proposta: data.prop_validade_proposta || null,
+            p_assinatura_proponente: proposalSignatureData || null,
+            p_cnh_url: cnhUrl || null,
+          });
+
+        if (proposalError) {
+          console.error("Erro ao enviar proposta:", proposalError);
+          // Don't block - feedback was already submitted
+          toast.warning("Feedback enviado, mas houve um erro ao registrar a proposta.");
+        }
+      }
 
       toast.success("Feedback enviado com sucesso!", {
-        description: "O corretor será notificado para completar a avaliação.",
+        description: data.gostaria_fazer_proposta
+          ? "Sua proposta de compra também foi registrada."
+          : "O corretor será notificado para completar a avaliação.",
       });
 
-      setSubmittedInteresse(data.interesse_compra);
       setIsComplete(true);
       refetch();
     } catch (error) {
@@ -271,36 +409,8 @@ export default function FeedbackClientePublico() {
     );
   }
 
-  // Página de sucesso / já completo
+  // Success page
   if (isComplete) {
-    const showProposalCTA = submittedInteresse === "muito_interessado" || submittedInteresse === "interessado";
-
-    if (showProposalForm) {
-      const ProposalForm = lazy(() => import("@/components/proposta/ProposalForm").then(m => ({ default: m.ProposalForm })));
-      const endereco = [feedback.imoveis?.endereco, feedback.imoveis?.bairro, feedback.imoveis?.cidade]
-        .filter(Boolean)
-        .join(", ");
-
-      return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted py-8 px-4">
-          <div className="max-w-2xl mx-auto">
-            <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />}>
-              <ProposalForm
-                preFill={{
-                  nome_completo: feedback.cliente_nome || "",
-                  telefone: (feedback as any).cliente_telefone || "",
-                  email: feedback.cliente_email || "",
-                  endereco_resumido: endereco,
-                  valor_ofertado: feedback.imoveis?.valor || undefined,
-                  token: tokenValue,
-                }}
-              />
-            </Suspense>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-6">
         <div className="text-center max-w-md">
@@ -309,7 +419,7 @@ export default function FeedbackClientePublico() {
           </div>
           <h1 className="text-2xl font-bold mb-4">Feedback Enviado!</h1>
           <p className="text-muted-foreground mb-6">
-            Obrigado por compartilhar sua avaliação sobre a visita ao imóvel 
+            Obrigado por compartilhar sua avaliação sobre a visita ao imóvel
             <strong> {feedback.imoveis?.titulo}</strong>.
           </p>
           {feedback.pdf_url && (
@@ -320,24 +430,12 @@ export default function FeedbackClientePublico() {
               </a>
             </Button>
           )}
-          {showProposalCTA && (
-            <div className="mt-6 p-4 rounded-lg border bg-card">
-              <h3 className="font-semibold mb-2">📝 Deseja formalizar uma proposta de compra?</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Você indicou interesse no imóvel. Formalize sua proposta com valor, condições de pagamento e assinatura digital.
-              </p>
-              <Button onClick={() => setShowProposalForm(true)} className="w-full" size="lg">
-                <FileText className="mr-2 h-4 w-4" />
-                Formalizar Proposta de Compra
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     );
   }
 
-  // Se já foi preenchido pelo cliente (aguardando corretor ou completo)
+  // Already submitted by client
   if (feedback.status === "aguardando_corretor" && feedback.assinatura_cliente) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-6">
@@ -381,9 +479,7 @@ export default function FeedbackClientePublico() {
             {feedback.imoveis?.endereco && (
               <p className="text-muted-foreground flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                {[feedback.imoveis.endereco, feedback.imoveis.bairro, feedback.imoveis.cidade]
-                  .filter(Boolean)
-                  .join(", ")}
+                {enderecoImovel}
               </p>
             )}
             <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
@@ -399,7 +495,7 @@ export default function FeedbackClientePublico() {
           </CardContent>
         </Card>
 
-        {/* Formulário */}
+        {/* Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* NPS */}
@@ -428,7 +524,7 @@ export default function FeedbackClientePublico() {
               </CardContent>
             </Card>
 
-            {/* Avaliações por Categoria */}
+            {/* Star Ratings */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -437,76 +533,29 @@ export default function FeedbackClientePublico() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="avaliacao_localizacao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <StarRating
-                        label="Localização"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="avaliacao_acabamento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <StarRating
-                        label="Acabamento"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="avaliacao_layout"
-                  render={({ field }) => (
-                    <FormItem>
-                      <StarRating
-                        label="Layout / Distribuição"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="avaliacao_custo_beneficio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <StarRating
-                        label="Custo-Benefício"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="avaliacao_atendimento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <StarRating
-                        label="Atendimento"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {(["avaliacao_localizacao", "avaliacao_acabamento", "avaliacao_layout", "avaliacao_custo_beneficio", "avaliacao_atendimento"] as const).map((name) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <StarRating
+                          label={{
+                            avaliacao_localizacao: "Localização",
+                            avaliacao_acabamento: "Acabamento",
+                            avaliacao_layout: "Layout / Distribuição",
+                            avaliacao_custo_beneficio: "Custo-Benefício",
+                            avaliacao_atendimento: "Atendimento",
+                          }[name]}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
               </CardContent>
             </Card>
 
@@ -698,33 +747,34 @@ export default function FeedbackClientePublico() {
               </CardContent>
             </Card>
 
-            {/* Interesse em Proposta */}
+            {/* ===== INTERESSE E PROPOSTA ===== */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Tem interesse em fazer uma proposta? 🏡</CardTitle>
+                <CardTitle className="text-lg">🏡 Interesse e Proposta</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Nível de interesse - Grid 2x2 */}
                 <FormField
                   control={form.control}
                   name="interesse_compra"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="space-y-2">
-                        {(Object.keys(INTERESSE_LABELS) as Array<keyof typeof INTERESSE_LABELS>).map((key) => (
+                      <FormLabel className="text-base font-semibold">Nível de Interesse</FormLabel>
+                      <div className="grid grid-cols-2 gap-3">
+                        {INTERESSE_OPTIONS.map((opcao) => (
                           <button
-                            key={key}
+                            key={opcao.value}
                             type="button"
-                            onClick={() => field.onChange(key)}
+                            onClick={() => field.onChange(opcao.value)}
                             className={cn(
-                              "w-full p-4 rounded-lg border-2 text-left transition-all",
-                              field.value === key
+                              "p-4 rounded-lg border-2 text-left transition-all",
+                              field.value === opcao.value
                                 ? "border-primary bg-primary/5"
                                 : "border-muted hover:border-muted-foreground/30"
                             )}
                           >
-                            <span className={INTERESSE_LABELS[key].color}>
-                              {INTERESSE_LABELS[key].label}
-                            </span>
+                            <span className="font-medium text-sm">{opcao.label}</span>
+                            <p className="text-xs text-muted-foreground mt-0.5">{opcao.sublabel}</p>
                           </button>
                         ))}
                       </div>
@@ -733,14 +783,15 @@ export default function FeedbackClientePublico() {
                   )}
                 />
 
+                {/* Objeções (se pouco/sem interesse) */}
                 {showObjecoes && (
-                  <>
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="objecoes"
                       render={({ field }) => (
-                    <FormItem>
-                          <FormLabel>Gostaríamos de entender melhor. O que pesou na sua decisão? 🙏</FormLabel>
+                        <FormItem>
+                          <FormLabel>O que pesou na sua decisão? 🙏</FormLabel>
                           <div className="grid grid-cols-2 gap-2">
                             {OBJECOES_OPTIONS.map((opcao) => (
                               <label
@@ -788,7 +839,339 @@ export default function FeedbackClientePublico() {
                         </FormItem>
                       )}
                     />
-                  </>
+                  </div>
+                )}
+
+                {/* Percepção de valor */}
+                <FormField
+                  control={form.control}
+                  name="percepcao_valor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Percepção de Valor</FormLabel>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="space-y-2"
+                      >
+                        {PERCEPCAO_VALOR_OPTIONS.map((opcao) => (
+                          <label
+                            key={opcao.value}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all",
+                              field.value === opcao.value
+                                ? "border-primary bg-primary/5"
+                                : "border-muted hover:border-muted-foreground/30"
+                            )}
+                          >
+                            <RadioGroupItem value={opcao.value} />
+                            <span className="text-sm">{opcao.label}</span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Checkbox proposta */}
+                <FormField
+                  control={form.control}
+                  name="gostaria_fazer_proposta"
+                  render={({ field }) => (
+                    <FormItem className="flex items-start gap-3 p-4 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-base font-semibold cursor-pointer">
+                          📝 Gostaria de fazer uma proposta?
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Preencha os dados abaixo para formalizar sua proposta de compra junto com o feedback.
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {/* ===== INLINE PROPOSAL FIELDS ===== */}
+                {gostariaFazerProposta && (
+                  <div className="space-y-6 border-l-4 border-primary/30 pl-4 ml-2">
+                    {/* Identificação do Proponente */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-base">👤 Identificação do Proponente</h3>
+                      <FormField
+                        control={form.control}
+                        name="prop_nome_completo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome Completo *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nome completo" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="prop_cpf_cnpj"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>CPF / CNPJ *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="000.000.000-00" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="prop_telefone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefone *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="(00) 00000-0000" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="prop_email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-mail</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="email@exemplo.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Identificação do Imóvel */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-base">🏠 Identificação do Imóvel</h3>
+                      <FormField
+                        control={form.control}
+                        name="prop_endereco_resumido"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Endereço</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Endereço do imóvel" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="prop_unidade"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Unidade</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ex: Apto 101, Bloco A" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="prop_matricula"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Matrícula</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nº da matrícula" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Valor e Condições */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-base">💰 Valor Ofertado e Condições de Pagamento</h3>
+                      <FormField
+                        control={form.control}
+                        name="prop_valor_ofertado"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Valor Ofertado (R$) *</FormLabel>
+                            <FormControl>
+                              <CurrencyInput
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                placeholder="R$ 0"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="prop_sinal_entrada"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sinal / Entrada</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: R$ 50.000 na assinatura" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="prop_parcelas"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parcelas</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: 12x de R$ 5.000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="prop_financiamento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Financiamento</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Financiamento CEF em 360 meses" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="prop_outras_condicoes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Outras Condições</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Condições adicionais..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Validade e Aceite */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-base">📅 Validade e Aceite</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="prop_cidade_uf"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cidade / UF</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ex: São Paulo/SP" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="prop_validade_proposta"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Validade da Proposta</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="prop_forma_aceite"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Forma de Aceite</FormLabel>
+                            <RadioGroup
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              className="space-y-2"
+                            >
+                              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer">
+                                <RadioGroupItem value="assinatura" />
+                                <span className="text-sm">Assinatura digital</span>
+                              </label>
+                              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer">
+                                <RadioGroupItem value="email" />
+                                <span className="text-sm">Confirmação por e-mail</span>
+                              </label>
+                              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer">
+                                <RadioGroupItem value="presencial" />
+                                <span className="text-sm">Assinatura presencial</span>
+                              </label>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Cláusula */}
+                    <div className="p-4 rounded-lg bg-muted/50 border">
+                      <h4 className="font-semibold text-sm mb-2">📜 Cláusula de Documento Posterior</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        A presente proposta de compra constitui uma manifestação de interesse formal do proponente,
+                        não configurando contrato definitivo. Os termos aqui expressos serão objeto de instrumento
+                        particular de compromisso de compra e venda, a ser celebrado entre as partes em momento oportuno,
+                        contendo todas as cláusulas e condições necessárias à formalização do negócio.
+                      </p>
+                    </div>
+
+                    {/* CNH Upload + Assinatura do Proponente - side by side */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <CNHUpload
+                        onUpload={handleCNHUpload}
+                        isUploading={isUploadingCNH}
+                      />
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">✍️ Assinatura do Proponente</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <SignaturePad
+                            ref={proposalSignatureRef}
+                            height={120}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -837,7 +1220,7 @@ export default function FeedbackClientePublico() {
               </CardContent>
             </Card>
 
-            {/* Assinatura */}
+            {/* Assinatura do Feedback */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Assinatura Digital</CardTitle>
@@ -886,7 +1269,7 @@ export default function FeedbackClientePublico() {
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-5 w-5" />
-                  Enviar Avaliação
+                  Enviar Feedback
                 </>
               )}
             </Button>
