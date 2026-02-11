@@ -120,7 +120,8 @@ const baseSchema = z.object({
   prop_matricula: z.string().optional(),
   prop_valor_ofertado: z.string().optional(),
   prop_sinal_entrada: z.string().optional(),
-  prop_parcelas: z.string().optional(),
+  prop_parcelas_qtd: z.string().optional(),
+  prop_parcelas_valor: z.string().optional(),
   prop_financiamento: z.string().optional(),
   prop_outras_condicoes: z.string().optional(),
   prop_cidade_uf: z.string().optional(),
@@ -223,7 +224,8 @@ export default function FeedbackClientePublico() {
       prop_matricula: "",
       prop_valor_ofertado: "",
       prop_sinal_entrada: "",
-      prop_parcelas: "",
+      prop_parcelas_qtd: "",
+      prop_parcelas_valor: "",
       prop_financiamento: "",
       prop_outras_condicoes: "",
       prop_cidade_uf: "",
@@ -332,8 +334,12 @@ export default function FeedbackClientePublico() {
             p_unidade: data.prop_unidade || null,
             p_matricula: data.prop_matricula || null,
             p_valor_ofertado: valorNum,
-            p_sinal_entrada: data.prop_sinal_entrada || null,
-            p_parcelas: data.prop_parcelas || null,
+            p_sinal_entrada: data.prop_sinal_entrada
+              ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(parseInt(data.prop_sinal_entrada, 10))
+              : null,
+            p_parcelas: data.prop_parcelas_qtd && data.prop_parcelas_valor
+              ? `${data.prop_parcelas_qtd}x de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(parseInt(data.prop_parcelas_valor, 10))}`
+              : null,
             p_financiamento: data.prop_financiamento || null,
             p_outras_condicoes: data.prop_outras_condicoes || null,
             p_validade_proposta: data.prop_validade_proposta || null,
@@ -1049,25 +1055,53 @@ export default function FeedbackClientePublico() {
                           <FormItem>
                             <FormLabel>Sinal / Entrada</FormLabel>
                             <FormControl>
-                              <Input placeholder="Ex: R$ 50.000 na assinatura" {...field} />
+                              <CurrencyInput
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                placeholder="R$ 0"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="prop_parcelas"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Parcelas</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Ex: 12x de R$ 5.000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={form.control}
+                          name="prop_parcelas_qtd"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nº de Parcelas</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  inputMode="numeric"
+                                  placeholder="Ex: 12"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="prop_parcelas_valor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Valor da Parcela</FormLabel>
+                              <FormControl>
+                                <CurrencyInput
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  placeholder="R$ 0"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={form.control}
                         name="prop_financiamento"
