@@ -730,6 +730,7 @@ export type Database = {
           orcamento_disponivel: number | null
           pdf_gerado_em: string | null
           pdf_url: string | null
+          percepcao_valor: string | null
           poder_decisao: Database["public"]["Enums"]["poder_decisao"] | null
           poder_decisao_detalhes: string | null
           pontos_negativos: string | null
@@ -802,6 +803,7 @@ export type Database = {
           orcamento_disponivel?: number | null
           pdf_gerado_em?: string | null
           pdf_url?: string | null
+          percepcao_valor?: string | null
           poder_decisao?: Database["public"]["Enums"]["poder_decisao"] | null
           poder_decisao_detalhes?: string | null
           pontos_negativos?: string | null
@@ -874,6 +876,7 @@ export type Database = {
           orcamento_disponivel?: number | null
           pdf_gerado_em?: string | null
           pdf_url?: string | null
+          percepcao_valor?: string | null
           poder_decisao?: Database["public"]["Enums"]["poder_decisao"] | null
           poder_decisao_detalhes?: string | null
           pontos_negativos?: string | null
@@ -2328,33 +2331,62 @@ export type Database = {
       }
       imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
       refresh_analytics_views: { Args: never; Returns: undefined }
-      submit_client_feedback: {
-        Args: {
-          p_assinatura_cliente: string
-          p_assinatura_cliente_device: string
-          p_avaliacao_acabamento: number
-          p_avaliacao_atendimento: number
-          p_avaliacao_custo_beneficio: number
-          p_avaliacao_layout: number
-          p_avaliacao_localizacao: number
-          p_efeito_uau: string[]
-          p_efeito_uau_detalhe: string
-          p_forma_pagamento_cliente: string
-          p_interesse_compra: Database["public"]["Enums"]["interesse_compra"]
-          p_nps_cliente: number
-          p_objecoes: Json
-          p_objecoes_detalhes: string
-          p_orcamento_cliente: number
-          p_pontos_negativos: string
-          p_pontos_positivos: string
-          p_prazo_compra_cliente: string
-          p_proximos_passos_cliente: string
-          p_respostas_cliente_customizadas?: Json
-          p_sugestoes: string
-          p_token: string
-        }
-        Returns: string
-      }
+      submit_client_feedback:
+        | {
+            Args: {
+              p_assinatura_cliente: string
+              p_assinatura_cliente_device: string
+              p_avaliacao_acabamento: number
+              p_avaliacao_atendimento: number
+              p_avaliacao_custo_beneficio: number
+              p_avaliacao_layout: number
+              p_avaliacao_localizacao: number
+              p_efeito_uau: string[]
+              p_efeito_uau_detalhe: string
+              p_forma_pagamento_cliente: string
+              p_interesse_compra: Database["public"]["Enums"]["interesse_compra"]
+              p_nps_cliente: number
+              p_objecoes: Json
+              p_objecoes_detalhes: string
+              p_orcamento_cliente: number
+              p_pontos_negativos: string
+              p_pontos_positivos: string
+              p_prazo_compra_cliente: string
+              p_proximos_passos_cliente: string
+              p_respostas_cliente_customizadas?: Json
+              p_sugestoes: string
+              p_token: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_assinatura_cliente: string
+              p_assinatura_cliente_device: string
+              p_avaliacao_acabamento: number
+              p_avaliacao_atendimento: number
+              p_avaliacao_custo_beneficio: number
+              p_avaliacao_layout: number
+              p_avaliacao_localizacao: number
+              p_efeito_uau: string[]
+              p_efeito_uau_detalhe: string
+              p_forma_pagamento_cliente: string
+              p_interesse_compra: Database["public"]["Enums"]["interesse_compra"]
+              p_nps_cliente: number
+              p_objecoes: Json
+              p_objecoes_detalhes: string
+              p_orcamento_cliente: number
+              p_percepcao_valor?: string
+              p_pontos_negativos: string
+              p_pontos_positivos: string
+              p_prazo_compra_cliente: string
+              p_proximos_passos_cliente: string
+              p_respostas_cliente_customizadas?: Json
+              p_sugestoes: string
+              p_token: string
+            }
+            Returns: string
+          }
       submit_proposta_compra: {
         Args: {
           p_assinatura_proponente?: string
