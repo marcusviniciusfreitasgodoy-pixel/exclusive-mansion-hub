@@ -47,6 +47,7 @@ const IntegracoesImobiliariaPage = lazy(() => import("./pages/dashboard/imobilia
 const MinhasMidias = lazy(() => import("./pages/dashboard/imobiliaria/MinhasMidias"));
 const MeusLinks = lazy(() => import("./pages/dashboard/imobiliaria/MeusLinks"));
 const ConfigurarAgenda = lazy(() => import("./pages/dashboard/imobiliaria/ConfigurarAgenda"));
+const FichaVisitaPage = lazy(() => import("./pages/dashboard/imobiliaria/FichaVisitaPage"));
 
 // Lazy load demo pages
 const DemoLanding = lazy(() => import("./pages/demo/DemoLanding"));
@@ -62,6 +63,7 @@ const EmpreendimentosHome = lazy(() => import("./pages/empreendimentos/Home"));
 const EmpreendimentoDetalhe = lazy(() => import("./pages/empreendimentos/EmpreendimentoDetalhe"));
 const Apresentacao = lazy(() => import("./pages/Apresentacao"));
 const Manual = lazy(() => import("./pages/Manual"));
+const AssinaturaVisita = lazy(() => import("./pages/AssinaturaVisita"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -334,12 +336,22 @@ function MainRoutes() {
                   <LazyRoute><ConfigurarAgenda /></LazyRoute>
                 </ProtectedRoute>
               } />
+              <Route path="/dashboard/imobiliaria/ficha/:id" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><FichaVisitaPage /></LazyRoute>
+                </ProtectedRoute>
+              } />
               
               {/* Feedback Público (sem autenticação) */}
               <Route path="/feedback-visita/:token" element={
                 <LazyRoute><FeedbackClientePublico /></LazyRoute>
               } />
               
+              {/* Assinatura Pública de Ficha de Visita (sem autenticação) */}
+              <Route path="/assinatura/:codigo/:tipo" element={
+                <LazyRoute><AssinaturaVisita /></LazyRoute>
+              } />
+
               {/* Proposta Pública (sem autenticação) */}
               <Route path="/proposta/:token" element={
                 <LazyRoute><PropostaPage /></LazyRoute>
