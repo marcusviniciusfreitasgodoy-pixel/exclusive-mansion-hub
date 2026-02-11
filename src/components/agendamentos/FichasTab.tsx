@@ -2,11 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, MapPin, Phone, FileText, AlertCircle } from 'lucide-react';
+import { User, MapPin, Phone, FileText, AlertCircle, Eye } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import { ptBR } from 'date-fns/locale';
 import { useState } from 'react';
 
@@ -19,6 +21,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 export function FichasTab() {
   const { imobiliaria } = useAuth();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { data: fichas, isLoading } = useQuery({
@@ -106,9 +109,18 @@ export function FichasTab() {
                   <FileText className="h-3 w-3" />
                   CPF: {ficha.cpf_visitante}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {formatDistanceToNow(new Date(ficha.created_at), { locale: ptBR, addSuffix: true })}
-                </p>
+                <div className="flex items-center justify-between mt-3">
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(ficha.created_at), { locale: ptBR, addSuffix: true })}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/imobiliaria/ficha/${ficha.id}`)}
+                  >
+                    <Eye className="h-3 w-3 mr-1" /> Ver Ficha
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

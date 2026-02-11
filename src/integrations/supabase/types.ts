@@ -2485,6 +2485,19 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_ficha_for_signature: {
+        Args: { p_codigo: string }
+        Returns: {
+          assinatura_corretor: string
+          assinatura_visitante: string
+          codigo: string
+          corretor_nome: string
+          data_visita: string
+          endereco_imovel: string
+          id: string
+          status: string
+        }[]
+      }
       get_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -2495,6 +2508,10 @@ export type Database = {
       }
       imobiliaria_has_access: { Args: { _imovel_id: string }; Returns: boolean }
       refresh_analytics_views: { Args: never; Returns: undefined }
+      save_ficha_signature: {
+        Args: { p_assinatura: string; p_codigo: string; p_tipo: string }
+        Returns: boolean
+      }
       submit_client_feedback:
         | {
             Args: {
