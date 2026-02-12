@@ -172,14 +172,15 @@ export default function EditarFormulario() {
 
   const handleSaveField = (campo: CampoFormulario) => {
     if (editingField) {
-      // Update existing
       setCampos(prev => prev.map(c => c.id === campo.id ? campo : c));
     } else {
-      // Add new
       setCampos(prev => [...prev, { ...campo, ordem: prev.length + 1 }]);
     }
     setHasChanges(true);
-    setModalOpen(false);
+    // Atrasar fechamento para permitir limpeza dos portais Radix
+    setTimeout(() => {
+      setModalOpen(false);
+    }, 0);
   };
 
   // Função para verificar visibilidade condicional no preview (suporta cascading)

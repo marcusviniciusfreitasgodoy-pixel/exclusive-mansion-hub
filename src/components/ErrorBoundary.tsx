@@ -21,6 +21,11 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // Ignorar erros de desmontagem de portais Radix (não afetam funcionalidade)
+    if (error instanceof DOMException && 
+        (error.message.includes('removeChild') || error.message.includes('replaceChild'))) {
+      return { hasError: false, error: null, errorInfo: null };
+    }
     return { hasError: true, error, errorInfo: null };
   }
 
