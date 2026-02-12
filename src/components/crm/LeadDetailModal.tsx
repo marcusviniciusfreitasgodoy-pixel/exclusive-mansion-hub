@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LeadPipeline, AtividadeLead, Tarefa, NotaLead, getScoreIcon, getScoreColor, formatTimeAgo, getPrioridadeColor, PIPELINE_COLUMNS } from '@/types/crm';
+import { runStageAutomations } from '@/utils/pipelineAutomations';
 import { cn } from '@/lib/utils';
 
 interface LeadDetailModalProps {
@@ -181,6 +182,16 @@ export function LeadDetailModal({ lead, open, onClose, onUpdateLead }: LeadDetai
         descricao: `Estágio alterado de "${lead.estagio_pipeline}" para "${newStage}"`,
         usuario_id: user?.id,
         usuario_nome: user?.email?.split('@')[0] || 'Usuário',
+      });
+
+      // Fire-and-forget automations
+      runStageAutomations({
+        leadId: lead.id,
+        newStage: newStage as any,
+        userId: user?.id,
+        userName: user?.email?.split('@')[0] || 'Usuário',
+        imobiliariaId: lead.imobiliaria_id,
+        construtoraId: lead.construtora_id,
       });
     },
     onSuccess: () => {
