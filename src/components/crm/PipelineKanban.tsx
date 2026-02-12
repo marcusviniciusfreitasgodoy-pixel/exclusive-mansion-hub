@@ -29,6 +29,7 @@ import { PipelineColumnComponent } from './PipelineColumn';
 import { LeadCard } from './LeadCard';
 import { LeadDetailModal } from './LeadDetailModal';
 import { LeadPipeline, PIPELINE_COLUMNS, EstagioPipeline } from '@/types/crm';
+import { runStageAutomations, hasStageAutomation } from '@/utils/pipelineAutomations';
 
 interface PipelineKanbanProps {
   type: 'construtora' | 'imobiliaria';
@@ -129,6 +130,17 @@ export function PipelineKanban({ type }: PipelineKanbanProps) {
         usuario_id: user?.id,
         usuario_nome: user?.email?.split('@')[0] || 'Usuário',
       });
+
+      // Fire-and-forget automations
+      const lead = leads?.find(l => l.id === leadId);
+      runStageAutomations({
+        leadId,
+        newStage,
+        userId: user?.id,
+        userName: user?.email?.split('@')[0] || 'Usuário',
+        imobiliariaId: lead?.imobiliaria_id,
+        construtoraId: lead?.construtora_id,
+      });
     },
     onSuccess: (_, { newStage }) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline-leads'] });
@@ -138,6 +150,8 @@ export function PipelineKanban({ type }: PipelineKanbanProps) {
           title: '🎉 Parabéns!',
           description: 'Lead convertido com sucesso!',
         });
+      } else if (hasStageAutomation(newStage)) {
+        toast({ title: 'Estágio atualizado!', description: 'Tarefa de follow-up criada automaticamente.' });
       } else {
         toast({ title: 'Estágio atualizado!' });
       }
