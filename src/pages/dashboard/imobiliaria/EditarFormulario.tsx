@@ -85,7 +85,12 @@ export default function EditarFormulario() {
 
   useEffect(() => {
     if (config) {
-      setCampos((config.campos as unknown as CampoFormulario[]) || []);
+      const camposSalvos = config.campos as unknown as CampoFormulario[];
+      if (camposSalvos && camposSalvos.length > 0) {
+        setCampos(camposSalvos);
+      } else if (tipo) {
+        setCampos(getDefaultCampos(tipo as TipoFormulario));
+      }
     } else if (tipo) {
       setCampos(getDefaultCampos(tipo as TipoFormulario));
     }
