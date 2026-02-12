@@ -30,6 +30,8 @@ import { LeadCard } from './LeadCard';
 import { LeadDetailModal } from './LeadDetailModal';
 import { LeadPipeline, PIPELINE_COLUMNS, EstagioPipeline } from '@/types/crm';
 import { runStageAutomations, hasStageAutomation } from '@/utils/pipelineAutomations';
+import { PipelineListView } from './PipelineListView';
+import { PipelineTableView } from './PipelineTableView';
 
 interface PipelineKanbanProps {
   type: 'construtora' | 'imobiliaria';
@@ -375,10 +377,38 @@ export function PipelineKanban({ type }: PipelineKanbanProps) {
           </DragOverlay>
         </DndContext>
       ) : (
-        // List/Table view placeholder
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          Visualização em {viewMode === 'list' ? 'lista' : 'tabela'} em breve
-        </div>
+        viewMode === 'list' ? (
+          <PipelineListView
+            leadsByStage={leadsByStage}
+            onViewLead={setSelectedLead}
+            onQuickAction={(lead, action) => {
+              if (action === 'whatsapp' && lead.telefone) {
+                window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
+              } else if (action === 'email') {
+                window.open(`mailto:${lead.email}`, '_blank');
+              } else if (action === 'call' && lead.telefone) {
+                window.open(`tel:${lead.telefone}`, '_blank');
+              }
+            }}
+          />
+        ) : (
+          <PipelineTableView
+            leads={filteredLeads}
+            onViewLead={setSelectedLead}
+            onQuickAction={(lead, action) => {
+              if (action === 'whatsapp' && lead.telefone) {
+                window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
+              } else if (action === 'email') {
+                window.open(`mailto:${lead.email}`, '_blank');
+              } else if (action === 'call' && lead.telefone) {
+                window.open(`tel:${lead.telefone}`, '_blank');
+              }
+            }}
+            onStageChange={(leadId, newStage, oldStage) => {
+              updateStageMutation.mutate({ leadId, newStage, oldStage });
+            }}
+          />
+        )
       )}
 
       {/* Lead Detail Modal */}
