@@ -1,25 +1,45 @@
 
 
-## Adicionar Imagens de Teste nos Imoveis
+## Implementar Visualizacoes Lista e Tabela no Pipeline
 
-### Problema
+### Arquivo a modificar
+`src/components/crm/PipelineKanban.tsx`
 
-Tres dos 6 imoveis ja possuem imagens do Unsplash que funcionam corretamente. Os outros 3 usam URLs de storage ou caminhos locais que podem nao estar carregando:
+### Modo Lista
 
-| Imovel | Imagens atuais |
-|---|---|
-| Apartamento 4 Suites | Unsplash (OK) |
-| Cobertura Duplex Frente-Mar | Unsplash (OK) |
-| Penthouse Vista Mar | Unsplash (OK) |
-| Linda Cobertura Lucio Costa | URLs do storage (podem nao carregar) |
-| GRID Residencial - Unidade 201 | Caminho local `/materiais/...` |
-| Mansao no Condominio Malibu | URLs do storage (podem nao carregar) |
+Cards empilhados verticalmente, agrupados por estagio do pipeline. Cada card mostra numa unica linha horizontal:
+- Badge colorido com nome do estagio
+- Nome do lead
+- Imovel de interesse
+- Telefone / email (com links clicaveis)
+- Score de qualificacao
+- Ultimo contato (tempo relativo)
+- Botao "Ver detalhes"
 
-### O que sera feito
+Cada grupo tera um header com o nome do estagio, icone e contagem de leads.
 
-Atualizar o campo `imagens` (JSONB) dos 3 imoveis que nao usam Unsplash, adicionando 4-5 imagens de teste do Unsplash cada, com temas coerentes (fachada, sala, suite, varanda, piscina). As imagens existentes do storage serao preservadas -- as novas serao adicionadas ao inicio do array para aparecerem como thumbnail no dashboard.
+### Modo Tabela
+
+Tabela completa usando os componentes `Table`, `TableHeader`, `TableRow`, `TableHead`, `TableCell`, `TableBody` ja existentes em `src/components/ui/table.tsx`. Colunas:
+
+| Nome | Email | Telefone | Imovel | Estagio | Score | Origem | Ultimo Contato | Acoes |
+
+Funcionalidades:
+- Badge colorido na coluna Estagio
+- Score com icone visual (fogo/termometro/gelo)
+- Coluna Acoes com botoes de WhatsApp, email, telefone e ver detalhes
+- Select inline na coluna Estagio para alterar o estagio diretamente da tabela (usa a mesma `updateStageMutation` do Kanban)
 
 ### Secao tecnica
 
-Serao executados 3 comandos UPDATE diretamente no banco, um para cada imovel, usando `jsonb_build_array()` para montar o array de imagens com URLs do Unsplash no formato `https://images.unsplash.com/photo-XXXXX?w=1200`. Nenhuma alteracao de codigo necessaria -- apenas dados.
+O placeholder nas linhas 377-381 sera substituido por dois blocos condicionais (`viewMode === 'list'` e `viewMode === 'table'`). Ambos reutilizam:
+- `filteredLeads` para os dados
+- `leadsByStage` para agrupamento (modo lista)
+- `PIPELINE_COLUMNS` para cores e titulos dos estagios
+- `setSelectedLead` para abrir o modal de detalhes
+- `updateStageMutation` para alterar estagio inline (modo tabela)
+- `formatTimeAgo`, `getScoreIcon`, `getScoreColor` de `@/types/crm`
+- `formatCurrency` ja definido no componente
+
+Imports adicionais necessarios: `Table, TableHeader, TableBody, TableRow, TableHead, TableCell` de `@/components/ui/table`.
 
