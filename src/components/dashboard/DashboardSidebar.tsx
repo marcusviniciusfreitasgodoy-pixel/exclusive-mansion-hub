@@ -117,7 +117,7 @@ export function DashboardSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            {role === 'construtora' ? 'Construtora' : 'Imobiliária'}
+            {role === 'construtora' ? 'Construtora' : (imobiliaria as any)?.tipo === 'corretor_autonomo' ? 'Corretor' : 'Imobiliária'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

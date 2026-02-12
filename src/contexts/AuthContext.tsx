@@ -26,6 +26,7 @@ export interface ImobiliariaSignupData {
   creci: string;
   telefone?: string;
   email_contato?: string;
+  tipo?: 'imobiliaria' | 'corretor_autonomo';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 creci: (profileData as ImobiliariaSignupData).creci,
                 telefone: (profileData as ImobiliariaSignupData).telefone,
                 email_contato: (profileData as ImobiliariaSignupData).email_contato,
+                tipo: (profileData as ImobiliariaSignupData).tipo || 'imobiliaria',
               }
         }
       });

@@ -113,7 +113,9 @@ export default function ConfiguracoesImobiliaria() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
           <p className="text-muted-foreground">
-            Gerencie as informações de contato e personalização da sua imobiliária.
+            {(imobiliaria as any)?.tipo === 'corretor_autonomo'
+              ? 'Gerencie suas informações profissionais e personalização.'
+              : 'Gerencie as informações de contato e personalização da sua imobiliária.'}
           </p>
         </div>
 
@@ -162,7 +164,7 @@ export default function ConfiguracoesImobiliaria() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ImageIcon className="h-5 w-5" />
-                  Logo da Imobiliária
+                  {(imobiliaria as any)?.tipo === 'corretor_autonomo' ? 'Sua Logo' : 'Logo da Imobiliária'}
                 </CardTitle>
                 <CardDescription>
                   O logo será exibido nas páginas white-label dos imóveis.
@@ -205,10 +207,10 @@ export default function ConfiguracoesImobiliaria() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Informações da Imobiliária
+                  {(imobiliaria as any)?.tipo === 'corretor_autonomo' ? 'Informações Profissionais' : 'Informações da Imobiliária'}
                 </CardTitle>
                 <CardDescription>
-                  Dados básicos da sua imobiliária.
+                  {(imobiliaria as any)?.tipo === 'corretor_autonomo' ? 'Seus dados profissionais.' : 'Dados básicos da sua imobiliária.'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -217,7 +219,7 @@ export default function ConfiguracoesImobiliaria() {
                   name="nome_empresa"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome da Imobiliária</FormLabel>
+                      <FormLabel>{(imobiliaria as any)?.tipo === 'corretor_autonomo' ? 'Seu Nome Profissional' : 'Nome da Imobiliária'}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Nome da imobiliária" />
                       </FormControl>

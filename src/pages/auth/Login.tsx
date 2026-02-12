@@ -151,7 +151,7 @@ export default function Login() {
               </Link>
               <span>|</span>
               <Link to="/auth/register/imobiliaria" className="font-medium text-primary hover:text-primary/80">
-                Sou Imobiliária
+                Sou Imobiliária / Corretor
               </Link>
             </div>
           </div>
