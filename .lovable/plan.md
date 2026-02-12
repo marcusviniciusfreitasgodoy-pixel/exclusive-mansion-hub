@@ -1,39 +1,27 @@
 
-## Corrigir Campos Vazios nos Formularios de Feedback
+## Corrigir Contagem de Campos nos Formularios de Feedback
 
 ### Problema
-Os formularios de Feedback do Cliente e Feedback do Corretor mostram "Nenhum campo configurado" porque existem registros no banco de dados com `campos: []` (array vazio). O codigo atual so carrega os campos padrao quando nao existe nenhum registro -- mas como existe um registro com array vazio, ele usa o array vazio ao inves de carregar os defaults.
+Na pagina de listagem de formularios, "Feedback do Cliente" e "Feedback do Corretor" mostram "Perguntas configuradas: 0". Isso acontece porque existem registros no banco com `campos: []` (array vazio), e o codigo trata array vazio como valor valido sem usar os campos padrao.
 
-### Causa raiz
-No arquivo `src/pages/dashboard/imobiliaria/EditarFormulario.tsx`, linhas 86-92:
+### Causa
+Arquivo `src/pages/dashboard/imobiliaria/ConfiguracoesFormularios.tsx`, linha 102:
 
-```typescript
-if (config) {
-  setCampos((config.campos as unknown as CampoFormulario[]) || []);
-} else if (tipo) {
-  setCampos(getDefaultCampos(tipo as TipoFormulario));
-}
+```text
+const campos = (config?.campos as unknown as CampoFormulario[]) || getDefaultCampos(tipo);
 ```
 
-`config` existe (nao e null), mas `config.campos` e `[]`. Como `[]` e truthy em JavaScript, o fallback `|| []` nao ajuda, e o sistema nunca chega no `else` que carregaria os campos padrao.
+`[]` e truthy em JavaScript, entao o fallback `getDefaultCampos(tipo)` nunca executa.
 
 ### Solucao
-Alterar a logica para verificar se o array de campos tem conteudo. Se `config` existe mas `campos` esta vazio, carregar os campos padrao:
+Alterar a linha 102 para verificar se o array tem conteudo:
 
 ```typescript
-if (config) {
-  const camposSalvos = config.campos as unknown as CampoFormulario[];
-  if (camposSalvos && camposSalvos.length > 0) {
-    setCampos(camposSalvos);
-  } else if (tipo) {
-    setCampos(getDefaultCampos(tipo as TipoFormulario));
-  }
-} else if (tipo) {
-  setCampos(getDefaultCampos(tipo as TipoFormulario));
-}
+const camposSalvos = config?.campos as unknown as CampoFormulario[];
+const campos = (camposSalvos && camposSalvos.length > 0) ? camposSalvos : getDefaultCampos(tipo);
 ```
 
 ### Arquivo modificado
-- `src/pages/dashboard/imobiliaria/EditarFormulario.tsx` -- correcao no useEffect (linhas 86-92)
+- `src/pages/dashboard/imobiliaria/ConfiguracoesFormularios.tsx` -- linha 102, mesma correcao de array vazio
 
-Apenas uma alteracao de 6 linhas. Nenhum outro arquivo precisa ser modificado.
+Alteracao de 2 linhas. A correcao anterior no `EditarFormulario.tsx` ja esta feita e continua valida.
