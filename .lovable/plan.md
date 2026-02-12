@@ -1,58 +1,73 @@
 
 
-## Automacoes de Pipeline: Tarefas Automaticas por Estagio
+## Seed Completo: Dados para Teste de Todas as Funcionalidades
 
-### Objetivo
+### Situacao Atual do Banco
 
-Criar um sistema de automacoes que dispara tarefas automaticas quando um lead muda de estagio no pipeline. A logica sera centralizada em um utilitario reutilizavel, chamado tanto pelo drag-and-drop do Kanban quanto pelo select no modal de detalhes.
+| Tabela | Registros | Observacao |
+|---|---|---|
+| construtoras | 2 | OK |
+| imobiliarias | 3 | OK |
+| imoveis | 6 | Todos da construtora "Godoy Prime Realty Construtora Teste" |
+| imobiliaria_imovel_access | 6 | Cada imobiliaria tem acesso a apenas 3 imoveis (de 6) |
+| leads | 25 | Distribuidos, com pipeline stages variados |
+| agendamentos_visitas | 23 | OK |
+| feedbacks_visitas | 17 | OK |
+| tarefas | 10 | Existem mas podem precisar de mais variedade |
+| notas_lead | 0 | VAZIO - precisa popular |
+| atividades_lead | 34 | OK |
+| propostas_compra | 0 registros verificados | Precisa popular |
+
+### Contas de Acesso Existentes
+
+| Email | Role | Entidade |
+|---|---|---|
+| marcusviniciusfreitasgodoy@gmail.com | construtora | Godoy Prime Realty Construtora Teste |
+| contato@godoyprime.com.br | imobiliaria | Marcus v F Godoy Assessoria Imobiliaria |
+| marcus@godoyprime.com.br | imobiliaria | Marcus v F Godoy Assessoria Imobiliaria (outra) |
 
 ### O que sera feito
 
-**1. Novo arquivo: `src/utils/pipelineAutomations.ts`**
+**Arquivo a modificar: `src/pages/admin/SeedData.tsx`**
 
-Funcao `runStageAutomations()` com logica centralizada via switch/case:
+O seed existente sera expandido com um segundo botao "Seed Completo" que executa todas as etapas abaixo de uma vez:
 
-| Estagio destino | Tarefa criada | Prioridade | Vencimento |
-|---|---|---|---|
-| `qualificado` | "Follow-up: Contatar lead qualificado" | alta | 24h |
-| `visita_agendada` | "Preparar material para visita" | media | 48h |
-| `proposta_enviada` | "Acompanhar resposta da proposta" | alta | 72h |
+**1. Conceder acesso a TODOS os 6 imoveis para AMBAS as imobiliarias**
+- Inserir registros em `imobiliaria_imovel_access` para os 3 imoveis faltantes de cada imobiliaria
+- Gerar url_slugs unicos para cada combinacao
 
-Cada automacao tambem registra uma atividade na timeline do lead indicando que a tarefa foi criada automaticamente. Execucao "fire-and-forget" -- erros sao capturados silenciosamente para nao bloquear o fluxo principal.
+**2. Popular `notas_lead` (atualmente vazio)**
+- Inserir 10-15 notas distribuidas entre os leads existentes
+- Conteudos variados: observacoes de visita, preferencias do cliente, historico de negociacao
 
-**2. Editar: `src/components/crm/PipelineKanban.tsx`**
+**3. Popular `propostas_compra`**
+- Inserir 3-5 propostas vinculadas a leads em estagios avancados (proposta_enviada, negociacao)
+- Com valores, condicoes de pagamento, status variados (pendente, aceita, rejeitada)
 
-Na `updateStageMutation.mutationFn` (apos o insert de atividade na linha 131), adicionar chamada a `runStageAutomations()` passando leadId, newStage, userId, userName e organizationIds.
+**4. Complementar `tarefas`**
+- Inserir tarefas com variedade de prioridades (alta, media, baixa), status (pendente, em_andamento, concluida) e datas de vencimento (passadas, hoje, futuras)
+- Vincular a leads existentes
 
-Adicionar toast especifico no `onSuccess` quando automacao foi disparada (ex: "Tarefa de follow-up criada automaticamente").
-
-**3. Editar: `src/components/crm/LeadDetailModal.tsx`**
-
-Na `updateStageMutation.mutationFn` (apos o insert de atividade na linha 184), adicionar mesma chamada a `runStageAutomations()`.
+**5. Complementar `atividades_lead`**
+- Inserir atividades de tipos variados (email, ligacao, nota, visita) para leads que tenham poucas
 
 ### Secao Tecnica
 
-**Estrutura da funcao utilitaria:**
+A funcao `seedCompleto()` sera adicionada ao componente `SeedData.tsx`. Ela:
 
-```text
-runStageAutomations(params) {
-  switch (newStage) {
-    case 'qualificado':
-      -> INSERT tarefas (titulo, prioridade='alta', vencimento=+24h, lead_id, responsavel_id, org_ids)
-      -> INSERT atividades_lead (tipo='nota', titulo='Tarefa automatica criada')
-    case 'visita_agendada':
-      -> INSERT tarefas (prioridade='media', vencimento=+48h)
-      -> INSERT atividades_lead
-    case 'proposta_enviada':
-      -> INSERT tarefas (prioridade='alta', vencimento=+72h)
-      -> INSERT atividades_lead
-  }
-}
-```
+1. Busca todos os imoveis da construtora logada
+2. Busca todas as imobiliarias que ja tem algum acesso
+3. Para cada imobiliaria, insere access para imoveis faltantes (com verificacao de duplicidade)
+4. Busca leads existentes e distribui notas, tarefas e atividades
+5. Insere propostas para leads em estagios avancados
+6. Usa `try/catch` por etapa para nao interromper o fluxo em caso de erro parcial
 
-**Parametros recebidos:**
-- `leadId`, `newStage`, `userId`, `userName`
-- `imobiliariaId` (opcional), `construtoraId` (opcional)
+**Queries principais:**
+- `SELECT id FROM imoveis WHERE construtora_id = ?` para listar imoveis
+- `SELECT id FROM imobiliaria_imovel_access WHERE imobiliaria_id = ? AND imovel_id = ?` para evitar duplicatas
+- `INSERT INTO notas_lead` com lead_ids reais
+- `INSERT INTO propostas_compra` com imovel_ids e construtora_id reais
+- `INSERT INTO tarefas` com lead_ids e responsavel_ids reais
 
-**Nenhuma dependencia nova. Nenhuma migracao de banco necessaria.** As tabelas `tarefas` e `atividades_lead` ja existem com os campos necessarios.
+**Nenhuma migracao de banco necessaria.** Todas as tabelas e colunas ja existem.
 
