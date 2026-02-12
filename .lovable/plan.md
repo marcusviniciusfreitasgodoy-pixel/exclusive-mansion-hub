@@ -1,45 +1,53 @@
 
 
-## Implementar Visualizacoes Lista e Tabela no Pipeline
+## Cadastro de Corretores da Imobiliaria
 
-### Arquivo a modificar
-`src/components/crm/PipelineKanban.tsx`
+### Objetivo
+Criar uma seção completa de cadastro de corretores vinculados à imobiliária, com os campos: Nome Completo, WhatsApp, E-mail e CRECI. Os corretores cadastrados ficam disponíveis para serem associados aos imóveis.
 
-### Modo Lista
+### O que será feito
 
-Cards empilhados verticalmente, agrupados por estagio do pipeline. Cada card mostra numa unica linha horizontal:
-- Badge colorido com nome do estagio
-- Nome do lead
-- Imovel de interesse
-- Telefone / email (com links clicaveis)
-- Score de qualificacao
-- Ultimo contato (tempo relativo)
-- Botao "Ver detalhes"
+**1. Nova tabela no banco de dados: `corretores`**
 
-Cada grupo tera um header com o nome do estagio, icone e contagem de leads.
+| Coluna | Tipo | Obrigatório |
+|---|---|---|
+| id | uuid (PK) | sim |
+| imobiliaria_id | uuid (FK -> imobiliarias) | sim |
+| nome_completo | text | sim |
+| whatsapp | text | não |
+| email | text | não |
+| creci | text | não |
+| foto_url | text | não |
+| cargo | text | não |
+| mini_bio | text | não |
+| ativo | boolean (default true) | sim |
+| created_at | timestamptz | sim |
 
-### Modo Tabela
+- RLS habilitado: apenas o usuário dono da imobiliária pode ler/criar/editar/excluir seus corretores.
 
-Tabela completa usando os componentes `Table`, `TableHeader`, `TableRow`, `TableHead`, `TableCell`, `TableBody` ja existentes em `src/components/ui/table.tsx`. Colunas:
+**2. Nova página/seção em Configurações**
 
-| Nome | Email | Telefone | Imovel | Estagio | Score | Origem | Ultimo Contato | Acoes |
+Na página de configurações da imobiliária (`/dashboard/imobiliaria/configuracoes`), será adicionado um card "Corretores" com link para uma sub-rota `/dashboard/imobiliaria/configuracoes/corretores`, contendo:
 
-Funcionalidades:
-- Badge colorido na coluna Estagio
-- Score com icone visual (fogo/termometro/gelo)
-- Coluna Acoes com botoes de WhatsApp, email, telefone e ver detalhes
-- Select inline na coluna Estagio para alterar o estagio diretamente da tabela (usa a mesma `updateStageMutation` do Kanban)
+- Lista dos corretores cadastrados (nome, WhatsApp, email, CRECI, status ativo/inativo)
+- Botão "Adicionar Corretor" que abre um modal/dialog com formulário
+- Ações de editar e excluir em cada corretor
+- Validação de campos (nome obrigatório, email válido, formato WhatsApp)
 
-### Secao tecnica
+**3. Componentes criados**
 
-O placeholder nas linhas 377-381 sera substituido por dois blocos condicionais (`viewMode === 'list'` e `viewMode === 'table'`). Ambos reutilizam:
-- `filteredLeads` para os dados
-- `leadsByStage` para agrupamento (modo lista)
-- `PIPELINE_COLUMNS` para cores e titulos dos estagios
-- `setSelectedLead` para abrir o modal de detalhes
-- `updateStageMutation` para alterar estagio inline (modo tabela)
-- `formatTimeAgo`, `getScoreIcon`, `getScoreColor` de `@/types/crm`
-- `formatCurrency` ja definido no componente
+- `src/pages/dashboard/imobiliaria/Corretores.tsx` -- página de listagem e gestão
+- `src/components/corretores/CorretorFormModal.tsx` -- modal com formulário de criação/edição
+- Rota adicionada em `App.tsx`
 
-Imports adicionais necessarios: `Table, TableHeader, TableBody, TableRow, TableHead, TableCell` de `@/components/ui/table`.
+**4. Link na página de Configurações**
+
+Um novo card será adicionado na seção "Configurações Avançadas", ao lado do link existente de "Formulários Customizáveis", levando à nova página de corretores.
+
+### Seção técnica
+
+- Migração SQL: `CREATE TABLE corretores` com `ENABLE ROW LEVEL SECURITY` e policies para SELECT/INSERT/UPDATE/DELETE baseadas em `auth.uid()` via join com `imobiliarias.user_id`
+- Query com `@tanstack/react-query` para CRUD dos corretores
+- Formulário com `react-hook-form` + `zod` seguindo o padrão já usado na página de configurações
+- Componentes UI existentes: `Dialog`, `Table`, `Button`, `Input`, `Switch` (para ativo/inativo), `Badge`
 
