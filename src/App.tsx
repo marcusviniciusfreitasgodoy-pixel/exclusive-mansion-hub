@@ -41,6 +41,7 @@ const AnalyticsImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/An
 const FeedbacksImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Feedbacks"));
 const ConfiguracoesImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Configuracoes"));
 const ConfiguracoesFormularios = lazy(() => import("./pages/dashboard/imobiliaria/ConfiguracoesFormularios"));
+const CorretoresImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Corretores"));
 const EditarFormulario = lazy(() => import("./pages/dashboard/imobiliaria/EditarFormulario"));
 const PipelineImobiliaria = lazy(() => import("./pages/dashboard/imobiliaria/Pipeline"));
 const IntegracoesImobiliariaPage = lazy(() => import("./pages/dashboard/imobiliaria/Integracoes"));
@@ -294,6 +295,11 @@ function MainRoutes() {
               <Route path="/dashboard/imobiliaria/configuracoes/formularios" element={
                 <ProtectedRoute allowedRoles={['imobiliaria']}>
                   <LazyRoute><ConfiguracoesFormularios /></LazyRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/imobiliaria/configuracoes/corretores" element={
+                <ProtectedRoute allowedRoles={['imobiliaria']}>
+                  <LazyRoute><CorretoresImobiliaria /></LazyRoute>
                 </ProtectedRoute>
               } />
               <Route path="/dashboard/imobiliaria/configuracoes/formularios/:tipo/editar" element={

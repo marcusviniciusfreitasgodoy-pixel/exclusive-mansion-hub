@@ -500,6 +500,63 @@ export type Database = {
           },
         ]
       }
+      corretores: {
+        Row: {
+          ativo: boolean
+          cargo: string | null
+          created_at: string
+          creci: string | null
+          email: string | null
+          foto_url: string | null
+          id: string
+          imobiliaria_id: string
+          mini_bio: string | null
+          nome_completo: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cargo?: string | null
+          created_at?: string
+          creci?: string | null
+          email?: string | null
+          foto_url?: string | null
+          id?: string
+          imobiliaria_id: string
+          mini_bio?: string | null
+          nome_completo: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cargo?: string | null
+          created_at?: string
+          creci?: string | null
+          email?: string | null
+          foto_url?: string | null
+          id?: string
+          imobiliaria_id?: string
+          mini_bio?: string | null
+          nome_completo?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corretores_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "corretores_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_domains: {
         Row: {
           created_at: string
@@ -2499,6 +2556,7 @@ export type Database = {
         }[]
       }
       get_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
+      get_user_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
