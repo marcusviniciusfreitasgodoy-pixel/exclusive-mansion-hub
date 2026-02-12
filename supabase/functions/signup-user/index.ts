@@ -11,6 +11,7 @@ interface SignupRequest {
     creci?: string;
     telefone?: string;
     email_contato?: string;
+    tipo?: 'imobiliaria' | 'corretor_autonomo';
   };
 }
 
@@ -204,6 +205,7 @@ Deno.serve(async (req) => {
         return controlledError("internal_error", "Erro ao criar perfil da construtora");
       }
     } else if (role === 'imobiliaria') {
+      const tipo = profile.tipo === 'corretor_autonomo' ? 'corretor_autonomo' : 'imobiliaria';
       const { data: imobData, error: profileError } = await supabaseAdmin
         .from('imobiliarias')
         .insert({
@@ -212,6 +214,7 @@ Deno.serve(async (req) => {
           creci: sanitizeInput(profile.creci || '', 50),
           telefone: sanitizeInput(profile.telefone || '', 20),
           email_contato: profile.email_contato || null,
+          tipo,
         })
         .select('id')
         .single();

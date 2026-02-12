@@ -1206,6 +1206,7 @@ export type Database = {
           nome_empresa: string
           site_url: string | null
           telefone: string | null
+          tipo: string
           user_id: string
         }
         Insert: {
@@ -1221,6 +1222,7 @@ export type Database = {
           nome_empresa: string
           site_url?: string | null
           telefone?: string | null
+          tipo?: string
           user_id: string
         }
         Update: {
@@ -1236,6 +1238,7 @@ export type Database = {
           nome_empresa?: string
           site_url?: string | null
           telefone?: string | null
+          tipo?: string
           user_id?: string
         }
         Relationships: []

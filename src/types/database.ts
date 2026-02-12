@@ -37,6 +37,8 @@ export interface Construtora {
   created_at: string;
 }
 
+export type ImobiliariaTipo = 'imobiliaria' | 'corretor_autonomo';
+
 export interface Imobiliaria {
   id: string;
   user_id: string;
@@ -46,6 +48,7 @@ export interface Imobiliaria {
   cor_primaria: string;
   telefone: string | null;
   email_contato: string | null;
+  tipo: ImobiliariaTipo;
   created_at: string;
 }
 

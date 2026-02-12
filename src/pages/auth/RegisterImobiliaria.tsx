@@ -9,11 +9,13 @@ import { z } from 'zod';
 import logo from '@/assets/logo-principal.png';
 import authBackground from '@/assets/auth-background.jpg';
 
+type TipoConta = 'imobiliaria' | 'corretor_autonomo';
+
 const registerSchema = z.object({
   email: z.string().email('E-mail inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string(),
-  nome_empresa: z.string().min(2, 'Nome da empresa é obrigatório'),
+  nome_empresa: z.string().min(2, 'Campo obrigatório'),
   creci: z.string().min(4, 'CRECI inválido'),
   telefone: z.string().optional(),
   email_contato: z.string().email('E-mail de contato inválido').optional().or(z.literal('')),
@@ -23,6 +25,7 @@ const registerSchema = z.object({
 });
 
 export default function RegisterImobiliaria() {
+  const [tipoConta, setTipoConta] = useState<TipoConta>('imobiliaria');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -36,6 +39,8 @@ export default function RegisterImobiliaria() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const isCorretor = tipoConta === 'corretor_autonomo';
 
   const formatPhone = (value: string) => {
     return value
@@ -75,6 +80,7 @@ export default function RegisterImobiliaria() {
         creci: formData.creci,
         telefone: formData.telefone.replace(/\D/g, '') || undefined,
         email_contato: formData.email_contato || undefined,
+        tipo: tipoConta,
       });
 
       if (error) {
@@ -119,22 +125,54 @@ export default function RegisterImobiliaria() {
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center">
           <img src={logo} alt="Logo" className="mx-auto h-16" />
-          <h1 className="mt-6 text-3xl font-bold text-primary">Cadastro Imobiliária</h1>
+          <h1 className="mt-6 text-3xl font-bold text-primary">
+            {isCorretor ? 'Cadastro Corretor' : 'Cadastro Imobiliária'}
+          </h1>
           <p className="mt-2 text-muted-foreground">
-            Cadastre sua imobiliária para divulgar imóveis
+            {isCorretor 
+              ? 'Cadastre-se como corretor autônomo' 
+              : 'Cadastre sua imobiliária para divulgar imóveis'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6 rounded-xl bg-white p-8 shadow-elegant">
+          {/* Tipo de conta selector */}
+          <div className="flex rounded-lg border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setTipoConta('imobiliaria')}
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                !isCorretor 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Sou Imobiliária
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipoConta('corretor_autonomo')}
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                isCorretor 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Sou Corretor Autônomo
+            </button>
+          </div>
+
           <div className="space-y-4">
             <div>
-              <Label htmlFor="nome_empresa">Nome da Imobiliária</Label>
+              <Label htmlFor="nome_empresa">
+                {isCorretor ? 'Nome Completo' : 'Nome da Imobiliária'}
+              </Label>
               <Input
                 id="nome_empresa"
                 name="nome_empresa"
                 value={formData.nome_empresa}
                 onChange={handleChange}
-                placeholder="Imobiliária XYZ"
+                placeholder={isCorretor ? 'João da Silva' : 'Imobiliária XYZ'}
                 required
                 className="mt-1"
               />
@@ -170,7 +208,7 @@ export default function RegisterImobiliaria() {
                 type="email"
                 value={formData.email_contato}
                 onChange={handleChange}
-                placeholder="contato@imobiliaria.com"
+                placeholder={isCorretor ? 'contato@corretor.com' : 'contato@imobiliaria.com'}
                 className="mt-1"
               />
             </div>
