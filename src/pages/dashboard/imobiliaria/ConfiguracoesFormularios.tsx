@@ -99,7 +99,8 @@ export default function ConfiguracoesFormularios() {
               const config = getConfig(tipo);
               const Icon = ICONS[tipo];
               const { nome, descricao } = TIPO_FORMULARIO_LABELS[tipo];
-              const campos = (config?.campos as unknown as CampoFormulario[]) || getDefaultCampos(tipo);
+              const camposSalvos = config?.campos as unknown as CampoFormulario[];
+              const campos = (camposSalvos && camposSalvos.length > 0) ? camposSalvos : getDefaultCampos(tipo);
               const numCampos = campos.length;
 
               return (
