@@ -126,18 +126,32 @@ export default function ConfiguracoesImobiliaria() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Link 
-              to="/dashboard/imobiliaria/configuracoes/formularios"
-              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-            >
-              <div>
-                <h4 className="font-medium">Formulários Customizáveis</h4>
-                <p className="text-sm text-muted-foreground">
-                  Personalize os formulários de agendamento e feedback
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </Link>
+            <div className="space-y-3">
+              <Link 
+                to="/dashboard/imobiliaria/configuracoes/formularios"
+                className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <h4 className="font-medium">Formulários Customizáveis</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Personalize os formulários de agendamento e feedback
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Link>
+              <Link 
+                to="/dashboard/imobiliaria/configuracoes/corretores"
+                className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <h4 className="font-medium">Corretores</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Cadastre e gerencie os corretores da imobiliária
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
