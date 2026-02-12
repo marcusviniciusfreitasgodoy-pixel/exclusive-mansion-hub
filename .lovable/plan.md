@@ -1,53 +1,74 @@
 
 
-## Cadastro de Corretores da Imobiliaria
+## Adaptar o Sistema para Corretor Autonomo e Imobiliaria
 
-### Objetivo
-Criar uma seção completa de cadastro de corretores vinculados à imobiliária, com os campos: Nome Completo, WhatsApp, E-mail e CRECI. Os corretores cadastrados ficam disponíveis para serem associados aos imóveis.
+### Contexto
+Atualmente o sistema usa o termo "Imobiliaria" em todas as telas (cadastro, sidebar, configuracoes). Um corretor autonomo tambem precisa usar o sistema, mas com terminologia e experiencia adaptadas.
 
-### O que será feito
+### Abordagem
+A estrategia mais simples e eficiente: reutilizar a mesma tabela `imobiliarias` adicionando um campo `tipo` para diferenciar. Um corretor autonomo e, na pratica, uma "imobiliaria de um" -- usa as mesmas funcionalidades (links, leads, pipeline, agendamentos). A diferenca e apenas na experiencia visual e nos labels.
 
-**1. Nova tabela no banco de dados: `corretores`**
+### O que sera feito
 
-| Coluna | Tipo | Obrigatório |
-|---|---|---|
-| id | uuid (PK) | sim |
-| imobiliaria_id | uuid (FK -> imobiliarias) | sim |
-| nome_completo | text | sim |
-| whatsapp | text | não |
-| email | text | não |
-| creci | text | não |
-| foto_url | text | não |
-| cargo | text | não |
-| mini_bio | text | não |
-| ativo | boolean (default true) | sim |
-| created_at | timestamptz | sim |
+**1. Nova coluna no banco de dados**
 
-- RLS habilitado: apenas o usuário dono da imobiliária pode ler/criar/editar/excluir seus corretores.
+Adicionar `tipo` na tabela `imobiliarias` com valores `'imobiliaria'` ou `'corretor_autonomo'`, default `'imobiliaria'` para manter compatibilidade com dados existentes.
 
-**2. Nova página/seção em Configurações**
+**2. Tela de Cadastro (RegisterImobiliaria.tsx)**
 
-Na página de configurações da imobiliária (`/dashboard/imobiliaria/configuracoes`), será adicionado um card "Corretores" com link para uma sub-rota `/dashboard/imobiliaria/configuracoes/corretores`, contendo:
+- Adicionar um seletor no topo: "Sou Imobiliaria" / "Sou Corretor Autonomo"
+- Labels adaptaveis conforme selecao:
+  - Imobiliaria: "Nome da Imobiliaria", "CRECI da Imobiliaria"
+  - Corretor: "Nome Completo", "CRECI"
+- O campo `tipo` sera enviado junto com o cadastro
 
-- Lista dos corretores cadastrados (nome, WhatsApp, email, CRECI, status ativo/inativo)
-- Botão "Adicionar Corretor" que abre um modal/dialog com formulário
-- Ações de editar e excluir em cada corretor
-- Validação de campos (nome obrigatório, email válido, formato WhatsApp)
+**3. Tela de Login (Login.tsx)**
 
-**3. Componentes criados**
+- Link de registro: trocar "Sou Imobiliaria" por "Sou Imobiliaria / Corretor" ou adicionar uma terceira opcao
 
-- `src/pages/dashboard/imobiliaria/Corretores.tsx` -- página de listagem e gestão
-- `src/components/corretores/CorretorFormModal.tsx` -- modal com formulário de criação/edição
-- Rota adicionada em `App.tsx`
+**4. Sidebar (DashboardSidebar.tsx)**
 
-**4. Link na página de Configurações**
+- O label do grupo muda conforme o tipo:
+  - `imobiliaria` -> "Imobiliaria"
+  - `corretor_autonomo` -> "Corretor"
+- Para corretor autonomo, o link "Corretores" no menu de configuracoes pode ser ocultado ou mantido (para cadastrar assistentes)
 
-Um novo card será adicionado na seção "Configurações Avançadas", ao lado do link existente de "Formulários Customizáveis", levando à nova página de corretores.
+**5. Configuracoes (Configuracoes.tsx)**
 
-### Seção técnica
+- Labels adaptativos:
+  - "Nome da Imobiliaria" / "Seu Nome Profissional"
+  - "Logo da Imobiliaria" / "Sua Logo"
 
-- Migração SQL: `CREATE TABLE corretores` com `ENABLE ROW LEVEL SECURITY` e policies para SELECT/INSERT/UPDATE/DELETE baseadas em `auth.uid()` via join com `imobiliarias.user_id`
-- Query com `@tanstack/react-query` para CRUD dos corretores
-- Formulário com `react-hook-form` + `zod` seguindo o padrão já usado na página de configurações
-- Componentes UI existentes: `Dialog`, `Table`, `Button`, `Input`, `Switch` (para ativo/inativo), `Badge`
+**6. AuthContext**
 
+- Expor o `tipo` da imobiliaria no contexto para uso em toda a aplicacao
+- Tipo disponivel via `imobiliaria.tipo`
+
+**7. Edge function signup-user**
+
+- Aceitar o campo `tipo` no payload e gravar na tabela `imobiliarias`
+
+### Secao tecnica
+
+**Migracao SQL:**
+```sql
+ALTER TABLE public.imobiliarias 
+ADD COLUMN tipo text NOT NULL DEFAULT 'imobiliaria' 
+CHECK (tipo IN ('imobiliaria', 'corretor_autonomo'));
+```
+
+**Arquivos modificados:**
+- `supabase/functions/signup-user/index.ts` -- aceitar campo `tipo`
+- `src/pages/auth/RegisterImobiliaria.tsx` -- seletor de tipo + labels dinamicos
+- `src/pages/auth/Login.tsx` -- ajustar texto do link de registro
+- `src/components/dashboard/DashboardSidebar.tsx` -- label do grupo dinamico
+- `src/pages/dashboard/imobiliaria/Configuracoes.tsx` -- labels adaptativos
+- `src/types/database.ts` -- adicionar `tipo` ao type `Imobiliaria`
+
+**Logica de labels (helper reutilizavel):**
+```typescript
+const isCorretor = imobiliaria?.tipo === 'corretor_autonomo';
+const labelEmpresa = isCorretor ? 'Seu Nome Profissional' : 'Nome da Imobiliária';
+```
+
+Nenhuma alteracao de rotas, tabelas adicionais ou fluxos de autenticacao -- apenas adaptacao de labels e um novo campo na tabela existente.
