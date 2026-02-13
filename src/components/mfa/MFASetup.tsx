@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, ShieldOff, Loader2, Copy, Check } from 'lucide-react';
+import { ShieldCheck, ShieldOff, Loader2, Copy, Check, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useOTPBruteForceProtection } from '@/hooks/useOTPBruteForceProtection';
 
 type MFAStatus = 'loading' | 'inactive' | 'enrolling' | 'active';
 
@@ -23,6 +24,9 @@ export function MFASetup() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+
+  const { isLocked, remainingSeconds, registerFailedAttempt, reset, getDelay } =
+    useOTPBruteForceProtection();
 
   useEffect(() => {
     checkMFAStatus();
@@ -46,7 +50,6 @@ export function MFASetup() {
   const handleEnroll = async () => {
     setIsProcessing(true);
     try {
-      // Clean up any unverified factors first
       const { data: existing } = await supabase.auth.mfa.listFactors();
       const unverified = existing?.totp?.filter(f => (f as any).status === 'unverified') || [];
       for (const factor of unverified) {
@@ -70,7 +73,14 @@ export function MFASetup() {
   };
 
   const handleConfirmEnroll = async () => {
-    if (!enrollment || code.length !== 6) return;
+    if (!enrollment || code.length !== 6 || isLocked) return;
+
+    const delay = getDelay();
+    if (delay > 0) {
+      setIsProcessing(true);
+      await new Promise(r => setTimeout(r, delay));
+    }
+
     setIsProcessing(true);
     try {
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
@@ -84,17 +94,20 @@ export function MFASetup() {
         code,
       });
       if (verifyError) {
+        registerFailedAttempt();
         toast({ title: 'Código inválido', description: 'Verifique o código e tente novamente.', variant: 'destructive' });
         setCode('');
         return;
       }
 
+      reset();
       setActiveFactorId(enrollment.factorId);
       setEnrollment(null);
       setCode('');
       setStatus('active');
       toast({ title: '2FA Ativado!', description: 'Autenticação de dois fatores configurada com sucesso.' });
     } catch (err: any) {
+      registerFailedAttempt();
       toast({ title: 'Erro', description: err.message || 'Erro ao confirmar.', variant: 'destructive' });
       setCode('');
     } finally {
@@ -131,6 +144,7 @@ export function MFASetup() {
     if (enrollment) {
       await supabase.auth.mfa.unenroll({ factorId: enrollment.factorId });
     }
+    reset();
     setEnrollment(null);
     setCode('');
     setStatus('inactive');
@@ -196,12 +210,25 @@ export function MFASetup() {
               </div>
             </div>
 
+            {isLocked && (
+              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>Muitas tentativas. Tente novamente em <strong>{remainingSeconds}s</strong></span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 2. Digite o código de 6 dígitos gerado pelo app:
               </p>
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={code} onChange={setCode} onComplete={handleConfirmEnroll}>
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={setCode}
+                  onComplete={handleConfirmEnroll}
+                  disabled={isLocked}
+                >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -215,7 +242,7 @@ export function MFASetup() {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleConfirmEnroll} disabled={code.length !== 6 || isProcessing}>
+              <Button onClick={handleConfirmEnroll} disabled={code.length !== 6 || isProcessing || isLocked}>
                 {isProcessing ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...</>
                 ) : (
