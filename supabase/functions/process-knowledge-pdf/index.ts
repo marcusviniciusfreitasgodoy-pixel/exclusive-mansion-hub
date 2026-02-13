@@ -1,17 +1,74 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, errorResponse, isValidUUID } from "../_shared/security.ts";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+function isAllowedUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const allowed = [
+      `${new URL(supabaseUrl).hostname}`,
+      "supabase.co",
+      "supabase.in",
+    ];
+    return allowed.some(d => parsed.hostname === d || parsed.hostname.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
+async function fetchWithSizeLimit(url: string): Promise<Uint8Array> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Não foi possível baixar o PDF");
+  }
+
+  const contentLength = response.headers.get("content-length");
+  if (contentLength && parseInt(contentLength) > MAX_PDF_SIZE) {
+    response.body?.cancel();
+    throw new Error("PAYLOAD_TOO_LARGE");
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("No response body");
+
+  const chunks: Uint8Array[] = [];
+  let totalSize = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalSize += value.byteLength;
+    if (totalSize > MAX_PDF_SIZE) {
+      reader.cancel();
+      throw new Error("PAYLOAD_TOO_LARGE");
+    }
+    chunks.push(value);
+  }
+
+  const result = new Uint8Array(totalSize);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
 interface ExtractedEntry {
   categoria: string;
@@ -26,24 +83,77 @@ serve(async (req) => {
   }
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return errorResponse("Não autorizado", 401);
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return errorResponse("Token inválido", 401);
+    }
+    const userId = claimsData.claims.sub as string;
+
+    // Role check
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "construtora")
+      .maybeSingle();
+
+    if (!roleData) {
+      return errorResponse("Acesso restrito a construtoras", 403);
+    }
+
+    // Rate limiting
+    const clientId = getClientIdentifier(req);
+    const rateResult = await checkRateLimit(supabase, clientId, "process-knowledge-pdf", {
+      maxRequests: 5,
+      windowSeconds: 60,
+    });
+    if (!rateResult.allowed) {
+      return rateLimitResponse(rateResult.resetAt);
+    }
+
     const { pdf_url, imovel_id, file_name } = await req.json();
 
     if (!pdf_url) {
-      throw new Error("PDF URL é obrigatório");
+      return errorResponse("PDF URL é obrigatório", 400);
+    }
+
+    // URL validation
+    if (!isAllowedUrl(pdf_url)) {
+      return errorResponse("URL não permitida. Use arquivos do storage do projeto.", 400);
+    }
+
+    // Validate imovel_id if provided
+    if (imovel_id && !isValidUUID(imovel_id)) {
+      return errorResponse("imovel_id inválido", 400);
     }
 
     console.log(`[process-knowledge-pdf] Processing PDF: ${file_name || pdf_url}`);
 
-    // Fetch PDF content
-    const pdfResponse = await fetch(pdf_url);
-    if (!pdfResponse.ok) {
-      throw new Error("Não foi possível baixar o PDF");
+    // Fetch with size limit
+    let pdfBytes: Uint8Array;
+    try {
+      pdfBytes = await fetchWithSizeLimit(pdf_url);
+    } catch (e: any) {
+      if (e.message === "PAYLOAD_TOO_LARGE") {
+        return errorResponse("PDF excede o limite de 10MB", 413);
+      }
+      throw e;
     }
 
-    const pdfBlob = await pdfResponse.blob();
-    const pdfBase64 = await blobToBase64(pdfBlob);
+    const pdfBase64 = bytesToBase64(pdfBytes);
 
-    // Call Gemini Vision to extract content
     const extractionPrompt = `Analise este documento PDF sobre um imóvel/empreendimento imobiliário e extraia as informações mais relevantes que seriam úteis para um chatbot de vendas responder perguntas de clientes.
 
 Para cada informação importante encontrada, retorne EXATAMENTE no formato JSON abaixo (sem markdown, apenas o array JSON puro):
@@ -88,15 +198,10 @@ REGRAS:
             {
               role: "user",
               content: [
-                {
-                  type: "text",
-                  text: extractionPrompt,
-                },
+                { type: "text", text: extractionPrompt },
                 {
                   type: "image_url",
-                  image_url: {
-                    url: `data:application/pdf;base64,${pdfBase64}`,
-                  },
+                  image_url: { url: `data:application/pdf;base64,${pdfBase64}` },
                 },
               ],
             },
@@ -118,46 +223,28 @@ REGRAS:
 
     console.log("[process-knowledge-pdf] AI response length:", responseContent.length);
 
-    // Parse JSON response
     let extractedEntries: ExtractedEntry[] = [];
     try {
-      // Try to extract JSON from the response (handle markdown code blocks)
       let jsonStr = responseContent.trim();
-      
-      // Remove markdown code blocks if present
-      if (jsonStr.startsWith("```json")) {
-        jsonStr = jsonStr.slice(7);
-      } else if (jsonStr.startsWith("```")) {
-        jsonStr = jsonStr.slice(3);
-      }
-      if (jsonStr.endsWith("```")) {
-        jsonStr = jsonStr.slice(0, -3);
-      }
-      
+      if (jsonStr.startsWith("```json")) jsonStr = jsonStr.slice(7);
+      else if (jsonStr.startsWith("```")) jsonStr = jsonStr.slice(3);
+      if (jsonStr.endsWith("```")) jsonStr = jsonStr.slice(0, -3);
       jsonStr = jsonStr.trim();
-      
+
       if (jsonStr.startsWith("[")) {
         extractedEntries = JSON.parse(jsonStr);
       } else {
-        // Try to find array in the response
         const arrayMatch = jsonStr.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
-          extractedEntries = JSON.parse(arrayMatch[0]);
-        }
+        if (arrayMatch) extractedEntries = JSON.parse(arrayMatch[0]);
       }
     } catch (parseError) {
       console.error("Error parsing AI response:", parseError);
       console.log("Raw response:", responseContent.slice(0, 500));
     }
 
-    // Validate and clean entries
     const validCategories = ["FAQ", "Especificacao", "Financiamento", "Documentacao", "Outros"];
     const validEntries = extractedEntries
-      .filter(entry => 
-        entry.titulo && 
-        entry.conteudo && 
-        validCategories.includes(entry.categoria)
-      )
+      .filter(entry => entry.titulo && entry.conteudo && validCategories.includes(entry.categoria))
       .map(entry => ({
         categoria: entry.categoria,
         titulo: entry.titulo.slice(0, 200),
@@ -167,7 +254,6 @@ REGRAS:
 
     console.log(`[process-knowledge-pdf] Extracted ${validEntries.length} valid entries`);
 
-    // If we have an imovel_id, save entries to database
     if (imovel_id && validEntries.length > 0) {
       const entriesWithMetadata = validEntries.map((entry, idx) => ({
         imovel_id,
@@ -179,7 +265,7 @@ REGRAS:
         fonte_arquivo_nome: file_name || "uploaded.pdf",
         tags: entry.tags,
         ativo: true,
-        prioridade: validEntries.length - idx, // Higher priority for earlier entries
+        prioridade: validEntries.length - idx,
       }));
 
       const { error: insertError } = await supabase
@@ -188,9 +274,8 @@ REGRAS:
 
       if (insertError) {
         console.error("Error saving entries:", insertError);
-        // Don't throw - still return the entries for preview
       } else {
-        console.log(`[process-knowledge-pdf] Saved ${entriesWithMetadata.length} entries to database`);
+        console.log(`[process-knowledge-pdf] Saved ${entriesWithMetadata.length} entries`);
       }
     }
 
@@ -200,9 +285,7 @@ REGRAS:
         entries: validEntries,
         total_extracted: validEntries.length,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("[process-knowledge-pdf] Error:", error);
@@ -211,20 +294,7 @@ REGRAS:
         success: false,
         error: error.message || "Erro ao processar PDF",
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-async function blobToBase64(blob: Blob): Promise<string> {
-  const arrayBuffer = await blob.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
