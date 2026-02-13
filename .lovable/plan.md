@@ -1,31 +1,33 @@
 
 
-## Plano: Desabilitar Signup Publico do Auth
+## Plano: Desabilitar Exposicao do Schema OpenAPI (PostgREST)
 
 ### Problema
 
-O endpoint padrao `/auth/v1/signup` do Supabase Auth esta aberto, permitindo criacao de contas sem passar pela edge function customizada `signup-user`. Isso significa que um atacante pode criar contas diretamente via API, sem fornecer CNPJ, CRECI ou qualquer dado de perfil obrigatorio.
-
-### Por que e seguro desabilitar
-
-O projeto ja usa `supabaseAdmin.auth.admin.createUser()` na edge function `signup-user` (linha 154). Essa chamada utiliza a **service role key** e funciona independentemente da configuracao de signup publico. Portanto, desabilitar o signup publico **nao quebra nada** -- apenas bloqueia o endpoint padrao que nao deveria estar sendo usado.
+O endpoint raiz da API REST (`/rest/v1/`) expoe a estrutura completa do banco de dados -- nomes de tabelas, colunas, tipos e relacionamentos. Qualquer pessoa com a chave anonima (publica) pode ver esse "mapa" e planejar ataques direcionados.
 
 ### Correcao
 
-**Etapa unica -- Desabilitar signup publico via configure-auth**
+**Etapa unica -- Migracao SQL**
 
-Usar a ferramenta de configuracao de autenticacao para definir `disable_signup = true`. Isso bloqueia o endpoint `/auth/v1/signup` enquanto mantem o `admin.createUser()` da edge function funcionando normalmente.
+Executar a seguinte migracao para desabilitar o modo OpenAPI do PostgREST:
 
-### Verificacao
+```sql
+ALTER ROLE authenticator SET pgrst.openapi_mode = 'disabled';
+NOTIFY pgrst, 'reload config';
+```
 
-Apos a correcao:
-- Cadastro via formularios do app (RegisterConstrutora / RegisterImobiliaria) continua funcionando normalmente (usa edge function)
-- Chamadas diretas a `/auth/v1/signup` retornam erro
-- Login, reset de senha e MFA nao sao afetados
+Isso faz com que o endpoint `/rest/v1/` retorne uma resposta vazia em vez do schema completo. Todas as operacoes normais de CRUD via Supabase client continuam funcionando normalmente -- apenas a auto-documentacao e desabilitada.
+
+### Impacto
+
+- **Sem impacto no app**: O codigo do projeto usa apenas o Supabase JS client para queries tipadas. Nenhum componente depende do endpoint OpenAPI.
+- **Sem impacto em Edge Functions**: As funcoes usam o client Supabase, nao o endpoint de schema.
+- **Reversivel**: Caso necessario, basta executar `ALTER ROLE authenticator SET pgrst.openapi_mode = 'follow-privileges';` para restaurar.
 
 ### Detalhes Tecnicos
 
-**Nenhum arquivo modificado** -- apenas configuracao de autenticacao.
+**Nenhum arquivo de codigo modificado.**
 
-**Nenhuma migracao SQL necessaria.**
+**Uma migracao SQL necessaria** com os dois comandos acima.
 
