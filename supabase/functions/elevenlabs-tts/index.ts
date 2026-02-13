@@ -14,7 +14,6 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // Voice IDs - using a Brazilian Portuguese friendly female voice
-// Laura voice - warm, professional female voice that works well with Portuguese
 const VOICE_ID = "FGY2WhTYpPnrIDTdsKH5";
 
 serve(async (req) => {
@@ -23,8 +22,27 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting check
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Token inválido ou expirado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limiting check (keep as secondary defense)
     const clientId = getClientIdentifier(req);
     const rateLimitResult = await checkRateLimit(supabase, clientId, "elevenlabs-tts");
     
@@ -55,7 +73,7 @@ serve(async (req) => {
       ? text.substring(0, maxLength) + "..."
       : text;
 
-    console.log(`Generating TTS for ${truncatedText.length} characters`);
+    console.log(`Generating TTS for ${truncatedText.length} characters, user: ${user.id}`);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,
