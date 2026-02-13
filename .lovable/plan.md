@@ -1,110 +1,64 @@
 
 
-## Plano: Implementar MFA/2FA Opcional com TOTP
+## Plano: Protecao contra Brute Force em OTP/MFA
 
-### Visao Geral
+### Problema
 
-Adicionar autenticacao de dois fatores (2FA) opcional usando TOTP (Google Authenticator, Authy, etc.) para usuarios com role `construtora` e `admin`. O recurso sera opcional -- o usuario ativa nas configuracoes e, a partir dai, o login exige o codigo TOTP alem da senha.
+As telas de verificacao MFA (`MFAVerify.tsx`) e ativacao (`MFASetup.tsx`) permitem tentativas ilimitadas de codigo OTP no lado do cliente. Um atacante pode tentar codigos repetidamente sem nenhum bloqueio visual ou atraso.
 
-### Arquitetura
+### Solucao
 
-O Supabase Auth ja possui suporte nativo a MFA/TOTP via as APIs `auth.mfa.enroll()`, `auth.mfa.challenge()` e `auth.mfa.verify()`. Nao e necessario criar tabelas extras -- o estado dos fatores fica gerenciado internamente pelo Supabase Auth.
+Adicionar protecao client-side em camadas:
 
-O fluxo se divide em duas partes:
+1. **Contador de tentativas com lockout temporario** -- Apos 5 tentativas falhas, bloquear o formulario por 60 segundos (com timer regressivo visivel)
+2. **Delay progressivo** -- Cada tentativa falha adiciona um delay crescente antes de permitir nova tentativa (1s, 2s, 4s...)
+3. **Logout automatico** -- Apos 10 tentativas falhas totais, fazer logout e redirecionar para login
 
-**1. Ativacao (Configuracoes)**
-- Usuario acessa a pagina de configuracoes
-- Clica em "Ativar 2FA"
-- Sistema gera QR Code via `supabase.auth.mfa.enroll({ factorType: 'totp' })`
-- Usuario escaneia com o app autenticador
-- Usuario digita o codigo de 6 digitos para confirmar
-- Sistema verifica via `supabase.auth.mfa.challengeAndVerify()`
-- Fator fica ativo
+### Etapas
 
-**2. Verificacao (Login)**
-- Usuario faz login normalmente com email/senha
-- Sistema verifica o AAL (Assurance Level) da sessao
-- Se o usuario tem fator TOTP ativo mas AAL e `aal1`, redireciona para tela de verificacao
-- Usuario digita o codigo de 6 digitos
-- Sistema verifica via `supabase.auth.mfa.challenge()` + `supabase.auth.mfa.verify()`
-- Sessao sobe para `aal2`, usuario segue para o dashboard
+**Etapa 1 -- Criar hook `useOTPBruteForceProtection`**
 
-### Etapas de Implementacao
+Novo arquivo: `src/hooks/useOTPBruteForceProtection.ts`
 
-**Etapa 1 -- Pagina de verificacao TOTP no login**
+Funcionalidades:
+- Rastreia numero de tentativas falhas
+- Calcula tempo de lockout (60s apos 5 falhas, 120s apos 10)
+- Exibe timer regressivo durante lockout
+- Retorna `{ isLocked, remainingSeconds, failedAttempts, registerFailedAttempt, reset }`
+- Persiste contagem em `sessionStorage` para evitar bypass por refresh
 
-Criar `src/pages/auth/MFAVerify.tsx`:
-- Input de 6 digitos usando o componente `InputOTP` ja existente
-- Ao submeter, chama `supabase.auth.mfa.challenge()` e depois `supabase.auth.mfa.verify()`
-- Botao de "Voltar" que faz logout
-- Visual consistente com a pagina de login (mesma imagem de fundo, logo)
+**Etapa 2 -- Aplicar protecao em `MFAVerify.tsx`**
 
-**Etapa 2 -- Atualizar fluxo de login para detectar MFA**
+Modificar a pagina de verificacao no login:
+- Integrar o hook de protecao
+- Desabilitar o botao "Verificar" e o input durante lockout
+- Mostrar mensagem com timer regressivo: "Muitas tentativas. Tente novamente em XXs"
+- Apos 10 tentativas falhas, fazer logout automatico com toast explicativo
+- Limpar contagem apos verificacao bem-sucedida
 
-Modificar `src/contexts/AuthContext.tsx`:
-- Adicionar estado `mfaRequired: boolean` ao contexto
-- Apos login com sucesso, verificar `supabase.auth.mfa.getAuthenticatorAssuranceLevel()`
-- Se `currentLevel === 'aal1'` e `nextLevel === 'aal2'`, setar `mfaRequired = true`
-- Expor funcao `completeMFA()` que limpa o flag apos verificacao
+**Etapa 3 -- Aplicar protecao em `MFASetup.tsx`**
 
-Modificar `src/pages/auth/Login.tsx`:
-- Apos login bem-sucedido, se `mfaRequired === true`, redirecionar para `/auth/mfa-verify` em vez do dashboard
-
-**Etapa 3 -- Proteger rotas com verificacao de AAL**
-
-Modificar `src/components/auth/ProtectedRoute.tsx`:
-- Verificar se o usuario tem MFA ativo mas sessao `aal1`
-- Se sim, redirecionar para `/auth/mfa-verify`
-
-**Etapa 4 -- Componente de ativacao/desativacao do MFA**
-
-Criar `src/components/mfa/MFASetup.tsx`:
-- Mostra status atual (ativo/inativo)
-- Botao "Ativar 2FA" que chama `supabase.auth.mfa.enroll({ factorType: 'totp' })`
-- Exibe QR Code retornado pela API (campo `totp.qr_code` -- ja vem como data URI SVG)
-- Exibe o secret em texto para entrada manual
-- Input de 6 digitos para confirmar a ativacao
-- Botao "Desativar 2FA" que chama `supabase.auth.mfa.unenroll({ factorId })`
-
-**Etapa 5 -- Integrar nas paginas de configuracoes**
-
-Adicionar o componente `MFASetup` como um novo Card em:
-- `src/pages/dashboard/construtora/Configuracoes.tsx`
-- (Futuramente em admin, quando a pagina de configuracoes admin existir)
-
-**Etapa 6 -- Rota no App.tsx**
-
-Adicionar rota `/auth/mfa-verify` apontando para `MFAVerify.tsx` (sem ProtectedRoute, pois o usuario esta parcialmente autenticado).
+Modificar o componente de ativacao:
+- Mesma logica de lockout na etapa de confirmacao do codigo
+- Desabilitar input e botao durante lockout
+- Limpar contagem apos ativacao bem-sucedida
 
 ### Detalhes Tecnicos
 
-**APIs Supabase utilizadas (todas nativas, sem tabelas extras):**
-
-```text
-supabase.auth.mfa.enroll({ factorType: 'totp' })
-supabase.auth.mfa.challenge({ factorId })
-supabase.auth.mfa.verify({ factorId, challengeId, code })
-supabase.auth.mfa.unenroll({ factorId })
-supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-supabase.auth.mfa.listFactors()
-```
-
 **Arquivos novos:**
-- `src/pages/auth/MFAVerify.tsx` -- Pagina de verificacao do codigo TOTP
-- `src/components/mfa/MFASetup.tsx` -- Componente de ativacao/desativacao
+- `src/hooks/useOTPBruteForceProtection.ts`
 
 **Arquivos modificados:**
-- `src/contexts/AuthContext.tsx` -- Adicionar deteccao de MFA pendente
-- `src/components/auth/ProtectedRoute.tsx` -- Verificar AAL antes de liberar acesso
-- `src/pages/auth/Login.tsx` -- Redirecionar para MFA quando necessario
-- `src/pages/dashboard/construtora/Configuracoes.tsx` -- Adicionar card de MFA
-- `src/App.tsx` -- Adicionar rota `/auth/mfa-verify`
+- `src/pages/auth/MFAVerify.tsx` -- Integrar hook + UI de lockout
+- `src/components/mfa/MFASetup.tsx` -- Integrar hook + UI de lockout
 
-**Nenhuma migracao SQL necessaria** -- o Supabase Auth gerencia os fatores internamente.
+**Nenhuma migracao SQL necessaria** -- protecao puramente client-side complementando o rate limiting server-side do Supabase Auth.
 
-### Experiencia do Usuario
+**Logica do hook:**
 
-1. **Ativacao**: Configuracoes -> Card "Autenticacao em Dois Fatores" -> "Ativar" -> QR Code -> Digitar codigo -> Confirmado
-2. **Login com MFA**: Email + Senha -> Tela de codigo TOTP -> Dashboard
-3. **Desativacao**: Configuracoes -> "Desativar 2FA" -> Confirmacao -> Removido
+```text
+tentativas 1-4: delay progressivo (1s, 2s, 4s, 8s)
+tentativas 5-9: lockout de 60 segundos
+tentativas 10+: logout automatico
+```
 
