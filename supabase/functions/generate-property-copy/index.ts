@@ -47,8 +47,41 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting check
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Token inválido ou expirado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify user has construtora role
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'construtora') {
+      return new Response(
+        JSON.stringify({ error: "Acesso restrito a construtoras" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limiting check (keep as secondary defense)
     const clientId = getClientIdentifier(req);
     const rateLimitResult = await checkRateLimit(supabase, clientId, "generate-property-copy");
     
@@ -146,7 +179,7 @@ LEMBRETES CRÍTICOS:
 - Se o título diz "Cobertura", NÃO descreva como "apartamento" ou "casa".
 - NÃO mencione características que não estão nos diferenciais listados.`;
 
-    console.log("[generate-property-copy] Calling Lovable AI with tipo:", tipo);
+    console.log("[generate-property-copy] Calling Lovable AI with tipo:", tipo, "user:", user.id);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
