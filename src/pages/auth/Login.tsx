@@ -21,12 +21,16 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const loginSuccessRef = useRef(false);
-  const { signIn, user, role, loading } = useAuth();
+  const { signIn, user, role, loading, mfaRequired } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Redirect authenticated users when role is loaded
   useEffect(() => {
+    if (!loading && user && mfaRequired) {
+      navigate('/auth/mfa-verify', { replace: true });
+      return;
+    }
     if (!loading && user && role) {
       if (role === 'construtora') {
         navigate('/dashboard/construtora', { replace: true });
@@ -34,7 +38,7 @@ export default function Login() {
         navigate('/dashboard/imobiliaria', { replace: true });
       }
     }
-  }, [user, role, loading, navigate]);
+  }, [user, role, loading, navigate, mfaRequired]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

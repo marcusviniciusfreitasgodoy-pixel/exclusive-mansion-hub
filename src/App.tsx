@@ -17,6 +17,7 @@ import RegisterConstrutora from "./pages/auth/RegisterConstrutora";
 import RegisterImobiliaria from "./pages/auth/RegisterImobiliaria";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import MFAVerify from "./pages/auth/MFAVerify";
 
 // Lazy load dashboard pages (code splitting)
 const ConstrutoraDashboard = lazy(() => import("./pages/dashboard/construtora"));
@@ -187,6 +188,7 @@ function MainRoutes() {
               <Route path="/auth/register/construtora" element={<RegisterConstrutora />} />
               <Route path="/auth/register/imobiliaria" element={<RegisterImobiliaria />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/mfa-verify" element={<MFAVerify />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
               
               {/* Dynamic Property Page (White Label) */}

@@ -10,10 +10,12 @@ interface AuthContextType {
   construtora: Construtora | null;
   imobiliaria: Imobiliaria | null;
   loading: boolean;
+  mfaRequired: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, role: AppRole, profileData: ConstrutorSignupData | ImobiliariaSignupData) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  completeMFA: () => void;
 }
 
 export interface ConstrutorSignupData {
@@ -38,6 +40,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [construtora, setConstrutora] = useState<Construtora | null>(null);
   const [imobiliaria, setImobiliaria] = useState<Imobiliaria | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mfaRequired, setMfaRequired] = useState(false);
+
+  const checkMFARequired = async () => {
+    try {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (data && data.currentLevel === 'aal1' && data.nextLevel === 'aal2') {
+        setMfaRequired(true);
+      } else {
+        setMfaRequired(false);
+      }
+    } catch {
+      setMfaRequired(false);
+    }
+  };
+
+  const completeMFA = () => {
+    setMfaRequired(false);
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -111,6 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      await checkMFARequired();
+    }
     return { error: error as Error | null };
   };
 
@@ -188,10 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       construtora,
       imobiliaria,
       loading,
+      mfaRequired,
       signIn,
       signUp,
       signOut,
-      refreshProfile
+      refreshProfile,
+      completeMFA,
     }}>
       {children}
     </AuthContext.Provider>
