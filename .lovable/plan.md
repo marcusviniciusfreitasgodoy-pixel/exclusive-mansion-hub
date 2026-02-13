@@ -1,70 +1,31 @@
 
 
-## Plano: Protecao contra Abuso de Reset de Senha
+## Plano: Desabilitar Signup Publico do Auth
 
-### Problema Identificado
+### Problema
 
-A pagina `ForgotPassword.tsx` permite enviar solicitacoes ilimitadas de reset de senha sem nenhum controle client-side. Um atacante pode:
+O endpoint padrao `/auth/v1/signup` do Supabase Auth esta aberto, permitindo criacao de contas sem passar pela edge function customizada `signup-user`. Isso significa que um atacante pode criar contas diretamente via API, sem fornecer CNPJ, CRECI ou qualquer dado de perfil obrigatorio.
 
-1. **Flood de e-mails**: Enviar centenas de e-mails de reset para um mesmo usuario, causando spam na caixa de entrada
-2. **Enumeracao de e-mails**: Testar e-mails em massa para descobrir quais estao cadastrados (embora o Supabase retorne sucesso para ambos os casos por padrao)
-3. **Abuso de recursos**: Sobrecarregar o servico de e-mail do projeto
+### Por que e seguro desabilitar
 
-### Protecoes Existentes
+O projeto ja usa `supabaseAdmin.auth.admin.createUser()` na edge function `signup-user` (linha 154). Essa chamada utiliza a **service role key** e funciona independentemente da configuracao de signup publico. Portanto, desabilitar o signup publico **nao quebra nada** -- apenas bloqueia o endpoint padrao que nao deveria estar sendo usado.
 
-- O Supabase tem rate limiting nativo no endpoint `/auth/v1/recover` (padrao: 60 req/hora por IP)
-- A resposta generica ("E-mail enviado") nao revela se o e-mail existe -- isso ja esta correto
+### Correcao
 
-### Correcoes Planejadas
+**Etapa unica -- Desabilitar signup publico via configure-auth**
 
-**Etapa 1 -- Rate limiting client-side no ForgotPassword**
+Usar a ferramenta de configuracao de autenticacao para definir `disable_signup = true`. Isso bloqueia o endpoint `/auth/v1/signup` enquanto mantem o `admin.createUser()` da edge function funcionando normalmente.
 
-Adicionar controles diretamente em `src/pages/auth/ForgotPassword.tsx`:
+### Verificacao
 
-- **Cooldown de 60 segundos** entre solicitacoes: apos enviar um reset, o botao fica desabilitado com timer regressivo
-- **Limite de 3 tentativas por sessao**: apos 3 envios, bloquear por 5 minutos com mensagem explicativa
-- Persistir contagem em `sessionStorage` para evitar bypass via refresh
-- Desabilitar o botao "Enviar para outro e-mail" durante o cooldown
-
-**Etapa 2 -- Fortalecer validacao na ResetPassword**
-
-Melhorias em `src/pages/auth/ResetPassword.tsx`:
-
-- Politica de senha mais forte: minimo 8 caracteres, exigir pelo menos 1 numero e 1 letra maiuscula
-- Fazer sign-out apos atualizar a senha (forcar re-autenticacao limpa)
-- Limpar a sessao antes do redirect ao login
-
-**Etapa 3 -- Rate limiting no Login (bonus)**
-
-Adicionar protecao similar em `src/pages/auth/Login.tsx`:
-
-- Lockout progressivo apos 5 tentativas falhas de login (30s, 60s, 120s)
-- Persistir em `sessionStorage`
-- Reutilizar o padrao do hook `useOTPBruteForceProtection` adaptado
+Apos a correcao:
+- Cadastro via formularios do app (RegisterConstrutora / RegisterImobiliaria) continua funcionando normalmente (usa edge function)
+- Chamadas diretas a `/auth/v1/signup` retornam erro
+- Login, reset de senha e MFA nao sao afetados
 
 ### Detalhes Tecnicos
 
-**Arquivos modificados:**
-- `src/pages/auth/ForgotPassword.tsx` -- Cooldown de 60s + limite de 3 tentativas/sessao
-- `src/pages/auth/ResetPassword.tsx` -- Politica de senha forte + sign-out pos-reset
-
-**Nenhum arquivo novo necessario** -- a logica de rate limiting sera implementada inline com `sessionStorage` e `useState`/`useEffect`, seguindo o mesmo padrao do hook OTP existente.
+**Nenhum arquivo modificado** -- apenas configuracao de autenticacao.
 
 **Nenhuma migracao SQL necessaria.**
-
-### Logica do Rate Limiting (ForgotPassword)
-
-```text
-Envio 1: Sucesso + cooldown 60s (botao desabilitado com timer)
-Envio 2: Sucesso + cooldown 60s
-Envio 3: Sucesso + bloqueio de 5 minutos
-Apos 5 min: Contador reseta, permite novas tentativas
-```
-
-### Politica de Senha (ResetPassword)
-
-```text
-Atual:  min 6 caracteres
-Nova:   min 8 caracteres + 1 maiuscula + 1 numero
-```
 
