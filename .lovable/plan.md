@@ -1,76 +1,70 @@
 
 
-## Plano: Corrigir Vulnerabilidade de Exaustao de Memoria em Edge Functions
+## Plano: Protecao contra Abuso de Reset de Senha
 
 ### Problema Identificado
 
-Duas funcoes fazem download de PDFs de URLs arbitrarias e carregam o conteudo inteiro na memoria como base64, sem limite de tamanho e sem autenticacao:
+A pagina `ForgotPassword.tsx` permite enviar solicitacoes ilimitadas de reset de senha sem nenhum controle client-side. Um atacante pode:
 
-1. **`extract-pdf-images`** -- Baixa PDF de qualquer URL, converte para base64 em memoria. Sem autenticacao, sem limite de tamanho, sem rate limiting.
-2. **`process-knowledge-pdf`** -- Mesmo padrao: baixa PDF de URL, converte para base64. Sem autenticacao, sem rate limiting.
+1. **Flood de e-mails**: Enviar centenas de e-mails de reset para um mesmo usuario, causando spam na caixa de entrada
+2. **Enumeracao de e-mails**: Testar e-mails em massa para descobrir quais estao cadastrados (embora o Supabase retorne sucesso para ambos os casos por padrao)
+3. **Abuso de recursos**: Sobrecarregar o servico de e-mail do projeto
 
-Um atacante pode enviar uma URL apontando para um arquivo de centenas de MB, causando crash da funcao por exceder o limite de 150MB de memoria do Edge Runtime.
+### Protecoes Existentes
 
-### Funcoes Seguras (sem acao necessaria)
-
-- `chatbot-message` -- Tem rate limiting e limita historico a 10 mensagens
-- `elevenlabs-tts` -- Tem autenticacao, rate limiting e texto limitado a 1000 chars
-- `generate-property-copy` -- Tem autenticacao, verificacao de role e rate limiting
-- `send-whatsapp-message` -- Tem autenticacao e validacao de usuario
-- Demais funcoes de notificacao -- Processam apenas dados pequenos do banco
+- O Supabase tem rate limiting nativo no endpoint `/auth/v1/recover` (padrao: 60 req/hora por IP)
+- A resposta generica ("E-mail enviado") nao revela se o e-mail existe -- isso ja esta correto
 
 ### Correcoes Planejadas
 
-**Etapa 1 -- `extract-pdf-images/index.ts`**
+**Etapa 1 -- Rate limiting client-side no ForgotPassword**
 
-Adicionar as seguintes protecoes:
-- Autenticacao obrigatoria (verificar JWT via `supabase.auth.getUser()`)
-- Verificacao de role (`construtora`)
-- Limite de tamanho do PDF: maximo 10MB (verificar via `Content-Length` do fetch antes de baixar)
-- Rate limiting usando o modulo compartilhado existente
-- Validacao de URL (aceitar apenas URLs do proprio storage do projeto ou dominios confiavel)
-- Atualizar CORS headers para o padrao completo do projeto
+Adicionar controles diretamente em `src/pages/auth/ForgotPassword.tsx`:
 
-**Etapa 2 -- `process-knowledge-pdf/index.ts`**
+- **Cooldown de 60 segundos** entre solicitacoes: apos enviar um reset, o botao fica desabilitado com timer regressivo
+- **Limite de 3 tentativas por sessao**: apos 3 envios, bloquear por 5 minutos com mensagem explicativa
+- Persistir contagem em `sessionStorage` para evitar bypass via refresh
+- Desabilitar o botao "Enviar para outro e-mail" durante o cooldown
 
-Adicionar as seguintes protecoes:
-- Autenticacao obrigatoria (verificar JWT)
-- Verificacao de role (`construtora`)
-- Limite de tamanho do PDF: maximo 10MB
-- Rate limiting usando o modulo compartilhado
-- Validacao de `imovel_id` como UUID valido
-- Validacao de URL
+**Etapa 2 -- Fortalecer validacao na ResetPassword**
 
-**Etapa 3 -- Validacao de tamanho com streaming parcial**
+Melhorias em `src/pages/auth/ResetPassword.tsx`:
 
-Em ambas as funcoes, antes de carregar o arquivo inteiro, verificar o tamanho:
+- Politica de senha mais forte: minimo 8 caracteres, exigir pelo menos 1 numero e 1 letra maiuscula
+- Fazer sign-out apos atualizar a senha (forcar re-autenticacao limpa)
+- Limpar a sessao antes do redirect ao login
 
-```text
-1. Fazer fetch da URL
-2. Verificar header Content-Length
-3. Se > 10MB, rejeitar com erro 413 (Payload Too Large)
-4. Se Content-Length nao disponivel, ler com limite: abortar se ultrapassar 10MB durante a leitura
-5. Converter para base64 apenas apos validacao
-```
+**Etapa 3 -- Rate limiting no Login (bonus)**
+
+Adicionar protecao similar em `src/pages/auth/Login.tsx`:
+
+- Lockout progressivo apos 5 tentativas falhas de login (30s, 60s, 120s)
+- Persistir em `sessionStorage`
+- Reutilizar o padrao do hook `useOTPBruteForceProtection` adaptado
 
 ### Detalhes Tecnicos
 
 **Arquivos modificados:**
-- `supabase/functions/extract-pdf-images/index.ts`
-- `supabase/functions/process-knowledge-pdf/index.ts`
+- `src/pages/auth/ForgotPassword.tsx` -- Cooldown de 60s + limite de 3 tentativas/sessao
+- `src/pages/auth/ResetPassword.tsx` -- Politica de senha forte + sign-out pos-reset
 
-**Nenhum arquivo novo necessario** -- reutiliza os modulos compartilhados `_shared/rate-limiter.ts` e `_shared/security.ts` ja existentes.
+**Nenhum arquivo novo necessario** -- a logica de rate limiting sera implementada inline com `sessionStorage` e `useState`/`useEffect`, seguindo o mesmo padrao do hook OTP existente.
 
 **Nenhuma migracao SQL necessaria.**
 
-### Resumo das Protecoes por Funcao
+### Logica do Rate Limiting (ForgotPassword)
 
 ```text
-Funcao                   | Auth | Role  | Rate Limit | Max Size | URL Check
--------------------------|------|-------|------------|----------|----------
-extract-pdf-images       | +    | +     | +          | 10MB     | +
-process-knowledge-pdf    | +    | +     | +          | 10MB     | +
+Envio 1: Sucesso + cooldown 60s (botao desabilitado com timer)
+Envio 2: Sucesso + cooldown 60s
+Envio 3: Sucesso + bloqueio de 5 minutos
+Apos 5 min: Contador reseta, permite novas tentativas
 ```
 
-Legenda: (+) sera adicionado nesta correcao
+### Politica de Senha (ResetPassword)
+
+```text
+Atual:  min 6 caracteres
+Nova:   min 8 caracteres + 1 maiuscula + 1 numero
+```
 
