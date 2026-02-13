@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload } from "@/components/dashboard/LogoUpload";
 import { FaviconUpload } from "@/components/dashboard/FaviconUpload";
 import { DomainConfigCard } from "@/components/dashboard/DomainConfigCard";
+import { MFASetup } from "@/components/mfa/MFASetup";
 
 const configSchema = z.object({
   nome_empresa: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -389,6 +390,9 @@ export default function ConfiguracoesConstrutora() {
             {construtora?.id && (
               <DomainConfigCard entityType="construtora" entityId={construtora.id} />
             )}
+
+            {/* Segurança - 2FA */}
+            <MFASetup />
 
             {/* Botão Salvar */}
             <div className="flex justify-end">

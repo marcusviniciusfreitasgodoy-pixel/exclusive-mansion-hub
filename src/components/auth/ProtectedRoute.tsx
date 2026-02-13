@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, mfaRequired } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -23,8 +23,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
+  if (mfaRequired) {
+    return <Navigate to="/auth/mfa-verify" replace />;
+  }
+
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to appropriate dashboard based on role
     if (role === 'construtora') {
       return <Navigate to="/dashboard/construtora" replace />;
     } else if (role === 'imobiliaria') {
