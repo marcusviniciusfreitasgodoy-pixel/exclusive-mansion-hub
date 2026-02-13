@@ -1,5 +1,11 @@
 project_id = "afntqukanvgcwobwvwuo"
 
+[functions.extract-pdf-images]
+verify_jwt = false
+
+[functions.process-knowledge-pdf]
+verify_jwt = false
+
 [functions.send-lead-notification]
 verify_jwt = false
 
