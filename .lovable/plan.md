@@ -1,70 +1,29 @@
 
 
-## Plano: Corrigir 3 Itens de Seguranca Pendentes
+## Plano: Resolver Findings de Seguranca Nivel "Error"
 
----
+### Diagnostico
 
-### 1. `propostas_compra` -- Remover INSERT publico irrestrito (ERROR)
+Os 2 findings de nivel "error" do scanner `supabase_lov` sao **falsos positivos**:
 
-**Problema:** A policy `"Permitir insert publico propostas"` usa `WITH CHECK (true)`, permitindo que qualquer pessoa insira qualquer dado diretamente na tabela -- incluindo CPF/CNPJ, assinatura e dados financeiros falsos vinculados a qualquer construtora ou imobiliaria.
-
-**Situacao atual:** O formulario de proposta ja usa a funcao RPC `submit_proposta_compra` (SECURITY DEFINER), que valida o token do feedback antes de inserir. Portanto, a policy de INSERT publico e **completamente desnecessaria** e so cria uma brecha.
-
-**Correcao:** Remover a policy `"Permitir insert publico propostas"` da tabela `propostas_compra`. Os inserts continuam funcionando normalmente via RPC.
-
-```sql
-DROP POLICY IF EXISTS "Permitir insert publico propostas" ON public.propostas_compra;
-```
-
-**Impacto:** Nenhum. O formulario publico usa RPC, nao INSERT direto.
-
----
-
-### 2. `leads` -- Validar que INSERT publico e seguro (ERROR)
-
-**Problema identificado no scan:** Exposicao potencial de PII (email, telefone, orcamento).
-
-**Analise:** A policy de INSERT ja valida que o imovel existe e esta ativo, e que a imobiliaria tem acesso ao imovel. As policies de SELECT sao restritas a construtoras e imobiliarias autenticadas. Nao ha SELECT publico.
-
-**Correcao:** Nenhuma alteracao na tabela. Apenas registrar o finding como verificado e seguro no scan, com justificativa detalhada.
-
----
-
-### 3. `whatsapp_messages` -- Verificar e adicionar policy de UPDATE para webhook (WARN)
-
-**Problema:** O webhook do WhatsApp (`whatsapp-webhook/index.ts`) usa service role para atualizar status de mensagens (entregue, lido, falhou). As policies de INSERT sao restritas a usuarios autenticados. SELECT tambem e restrito. Nao ha policy de UPDATE nem DELETE.
-
-**Analise:**
-- INSERT: Restrito a construtoras/imobiliarias autenticadas (correto)
-- SELECT: Restrito a construtoras/imobiliarias autenticadas (correto)
-- UPDATE: Nao existe policy, mas o webhook usa service role (bypassa RLS) -- ok
-- DELETE: Nao existe policy (correto -- mensagens nao devem ser excluidas)
-
-**Correcao:** A tabela ja esta segura. Registrar como verificado no scan. O service role do webhook bypassa RLS por design.
-
----
-
-### Resumo das Alteracoes
-
-| Tabela | Acao | Risco Atual |
+| Tabela | Finding | Realidade |
 |---|---|---|
-| `propostas_compra` | Remover policy INSERT publica | Alto -- qualquer pessoa pode inserir dados falsos |
-| `leads` | Marcar como seguro no scan | Baixo -- INSERT validado, SELECT restrito |
-| `whatsapp_messages` | Marcar como seguro no scan | Nenhum -- todas as policies estao corretas |
+| `agendamentos_visitas` | "Publicly readable" | SELECT restrito a `authenticated` com filtro por `construtora_id` ou `imobiliaria_id` |
+| `conversas_chatbot` | "Publicly readable" | SELECT restrito a `authenticated` com filtro por `construtora_id` ou `imobiliaria_id` |
+
+Ambas as tabelas permitem INSERT publico (necessario para formularios e chatbot), mas **nenhum usuario anonimo consegue ler os dados**. O scanner provavelmente confundiu o INSERT publico com acesso de leitura.
+
+### Acao
+
+Como as policies ja estao corretas, a unica acao necessaria e **marcar os findings como falsos positivos verificados** no sistema de scan, com justificativa tecnica detalhada. Isso evita que aparecam novamente como pendencias.
+
+Nenhuma migracao SQL ou alteracao de codigo sera necessaria.
 
 ### Detalhes Tecnicos
 
-**Arquivo alterado:** Nenhum arquivo de codigo. Apenas uma migracao SQL para remover a policy perigosa e atualizar os findings do scan.
+Sera utilizada a ferramenta de gestao de findings para atualizar os 2 registros:
 
-**Migracao SQL:**
-```sql
--- Remove the overly permissive INSERT policy on propostas_compra
--- Inserts are handled securely via the submit_proposta_compra RPC (SECURITY DEFINER)
-DROP POLICY IF EXISTS "Permitir insert publico propostas" ON public.propostas_compra;
-```
+1. **`agendamentos_visitas_public_exposure`** -- Marcar com `ignore: true` e justificativa: SELECT e exclusivamente para `authenticated` com validacao de ownership via `get_construtora_id()` / `get_imobiliaria_id()`.
 
-**Atualizacao dos findings:**
-- `propostas_compra`: Deletar o finding apos correcao
-- `leads`: Atualizar finding existente confirmando que as policies estao corretas
-- `whatsapp_messages`: Atualizar finding confirmando seguranca
+2. **`conversas_chatbot_public_exposure`** -- Marcar com `ignore: true` e justificativa: SELECT e exclusivamente para `authenticated` com validacao de ownership.
 
