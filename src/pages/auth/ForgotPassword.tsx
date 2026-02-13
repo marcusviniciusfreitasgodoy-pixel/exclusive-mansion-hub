@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
-import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, CheckCircle, Clock } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 import authBackground from '@/assets/auth-background.jpg';
 
@@ -14,14 +14,114 @@ const emailSchema = z.object({
   email: z.string().email('E-mail inválido')
 });
 
+const STORAGE_KEY = 'pwd_reset_rate';
+const MAX_ATTEMPTS = 3;
+const COOLDOWN_SECONDS = 60;
+const LOCKOUT_SECONDS = 300; // 5 minutes
+
+interface RateLimitState {
+  attempts: number;
+  cooldownUntil: number | null;
+  lockedUntil: number | null;
+}
+
+function getStoredState(): RateLimitState {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { attempts: 0, cooldownUntil: null, lockedUntil: null };
+}
+
+function saveState(state: RateLimitState) {
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [isLockedOut, setIsLockedOut] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
+
+  // Check for existing cooldown/lockout on mount
+  useEffect(() => {
+    const stored = getStoredState();
+    const now = Date.now();
+    if (stored.lockedUntil && stored.lockedUntil > now) {
+      setIsLockedOut(true);
+      setRemainingSeconds(Math.ceil((stored.lockedUntil - now) / 1000));
+    } else if (stored.cooldownUntil && stored.cooldownUntil > now) {
+      setRemainingSeconds(Math.ceil((stored.cooldownUntil - now) / 1000));
+    } else {
+      // Clear expired states
+      if (stored.lockedUntil && stored.lockedUntil <= now) {
+        saveState({ attempts: 0, cooldownUntil: null, lockedUntil: null });
+      }
+    }
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    if (remainingSeconds <= 0) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (isLockedOut) {
+        setIsLockedOut(false);
+        saveState({ attempts: 0, cooldownUntil: null, lockedUntil: null });
+      }
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setRemainingSeconds(prev => {
+        if (prev <= 1) {
+          const stored = getStoredState();
+          if (stored.lockedUntil) {
+            saveState({ attempts: 0, cooldownUntil: null, lockedUntil: null });
+            setIsLockedOut(false);
+          } else {
+            saveState({ ...stored, cooldownUntil: null });
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [remainingSeconds > 0, isLockedOut]);
+
+  const formatTime = useCallback((seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `${s}s`;
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check lockout
+    const stored = getStoredState();
+    const now = Date.now();
+    if (stored.lockedUntil && stored.lockedUntil > now) {
+      toast({
+        title: 'Muitas tentativas',
+        description: 'Aguarde antes de tentar novamente.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check cooldown
+    if (stored.cooldownUntil && stored.cooldownUntil > now) {
+      toast({
+        title: 'Aguarde',
+        description: 'Espere o cooldown antes de enviar novamente.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -47,6 +147,21 @@ export default function ForgotPassword() {
           variant: 'destructive'
         });
       } else {
+        const newAttempts = stored.attempts + 1;
+
+        if (newAttempts >= MAX_ATTEMPTS) {
+          // Lock out for 5 minutes
+          const lockedUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+          saveState({ attempts: newAttempts, cooldownUntil: null, lockedUntil });
+          setIsLockedOut(true);
+          setRemainingSeconds(LOCKOUT_SECONDS);
+        } else {
+          // Apply 60s cooldown
+          const cooldownUntil = Date.now() + COOLDOWN_SECONDS * 1000;
+          saveState({ attempts: newAttempts, cooldownUntil, lockedUntil: null });
+          setRemainingSeconds(COOLDOWN_SECONDS);
+        }
+
         setIsSuccess(true);
         toast({
           title: 'E-mail enviado!',
@@ -63,6 +178,8 @@ export default function ForgotPassword() {
       setIsLoading(false);
     }
   };
+
+  const isDisabled = isLoading || remainingSeconds > 0 || isLockedOut;
 
   return (
     <div 
@@ -91,7 +208,27 @@ export default function ForgotPassword() {
         </div>
 
         <div className="mt-8 rounded-xl bg-white p-8 shadow-elegant">
-          {isSuccess ? (
+          {isLockedOut ? (
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+                <Clock className="h-8 w-8 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Muitas tentativas</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Você atingiu o limite de tentativas. Aguarde <strong>{formatTime(remainingSeconds)}</strong> antes de tentar novamente.
+                </p>
+              </div>
+              <div className="pt-4">
+                <Link to="/auth/login" className="block">
+                  <Button variant="ghost" className="w-full">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Voltar para o login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : isSuccess ? (
             <div className="text-center space-y-4">
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-600" />
@@ -103,11 +240,18 @@ export default function ForgotPassword() {
                   Verifique sua caixa de entrada e spam.
                 </p>
               </div>
+              {remainingSeconds > 0 && (
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Aguarde {formatTime(remainingSeconds)} para reenviar
+                </p>
+              )}
               <div className="pt-4 space-y-3">
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full"
+                  disabled={isDisabled}
                   onClick={() => {
                     setIsSuccess(false);
                     setEmail('');
@@ -141,8 +285,15 @@ export default function ForgotPassword() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Enviando...' : 'Enviar link de recuperação'}
+              {remainingSeconds > 0 && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Aguarde {formatTime(remainingSeconds)} para enviar
+                </p>
+              )}
+
+              <Button type="submit" className="w-full" disabled={isDisabled}>
+                {isLoading ? 'Enviando...' : remainingSeconds > 0 ? `Aguarde ${formatTime(remainingSeconds)}` : 'Enviar link de recuperação'}
               </Button>
 
               <div className="text-center">

@@ -11,7 +11,10 @@ import logo from '@/assets/logo-principal.png';
 import authBackground from '@/assets/auth-background.jpg';
 
 const passwordSchema = z.object({
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  password: z.string()
+    .min(8, 'Senha deve ter pelo menos 8 caracteres')
+    .regex(/[A-Z]/, 'Senha deve conter pelo menos 1 letra maiúscula')
+    .regex(/[0-9]/, 'Senha deve conter pelo menos 1 número'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não coincidem',
@@ -30,12 +33,8 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase handles the token automatically via the URL fragment
-    // Check if we have a valid session after the redirect
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      // Check URL for error or access_token
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const error = hashParams.get('error');
       const accessToken = hashParams.get('access_token');
@@ -48,11 +47,9 @@ export default function ResetPassword() {
           variant: 'destructive'
         });
       } else if (!accessToken && !session) {
-        // No token in URL and no session - likely direct access
         setIsValidToken(false);
       }
     };
-
     checkSession();
   }, [toast]);
 
@@ -72,9 +69,7 @@ export default function ResetPassword() {
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
+      const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
         toast({
@@ -86,12 +81,14 @@ export default function ResetPassword() {
         setIsSuccess(true);
         toast({
           title: 'Senha atualizada!',
-          description: 'Sua senha foi alterada com sucesso.'
+          description: 'Sua senha foi alterada com sucesso. Faça login novamente.'
         });
-        
-        // Redirect to login after 3 seconds
+
+        // Sign out to force clean re-authentication
+        await supabase.auth.signOut();
+
         setTimeout(() => {
-          navigate('/auth/login');
+          navigate('/auth/login', { replace: true });
         }, 3000);
       }
     } catch (err) {
@@ -104,6 +101,11 @@ export default function ResetPassword() {
       setIsLoading(false);
     }
   };
+
+  // Password strength indicators
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
 
   return (
     <div 
@@ -145,9 +147,7 @@ export default function ResetPassword() {
               </div>
               <div className="pt-4">
                 <Link to="/auth/forgot-password">
-                  <Button className="w-full">
-                    Solicitar novo link
-                  </Button>
+                  <Button className="w-full">Solicitar novo link</Button>
                 </Link>
                 <Link to="/auth/login" className="block mt-3">
                   <Button variant="ghost" className="w-full">
@@ -170,9 +170,7 @@ export default function ResetPassword() {
               </div>
               <div className="pt-4">
                 <Link to="/auth/login">
-                  <Button className="w-full">
-                    Ir para o login agora
-                  </Button>
+                  <Button className="w-full">Ir para o login agora</Button>
                 </Link>
               </div>
             </div>
@@ -199,6 +197,20 @@ export default function ResetPassword() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {/* Password strength hints */}
+                  {password.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-xs">
+                      <li className={hasMinLength ? 'text-green-600' : 'text-muted-foreground'}>
+                        {hasMinLength ? '✓' : '○'} Mínimo 8 caracteres
+                      </li>
+                      <li className={hasUppercase ? 'text-green-600' : 'text-muted-foreground'}>
+                        {hasUppercase ? '✓' : '○'} 1 letra maiúscula
+                      </li>
+                      <li className={hasNumber ? 'text-green-600' : 'text-muted-foreground'}>
+                        {hasNumber ? '✓' : '○'} 1 número
+                      </li>
+                    </ul>
+                  )}
                 </div>
                 
                 <div>
