@@ -1,64 +1,76 @@
 
 
-## Plano: Protecao contra Brute Force em OTP/MFA
+## Plano: Corrigir Vulnerabilidade de Exaustao de Memoria em Edge Functions
 
-### Problema
+### Problema Identificado
 
-As telas de verificacao MFA (`MFAVerify.tsx`) e ativacao (`MFASetup.tsx`) permitem tentativas ilimitadas de codigo OTP no lado do cliente. Um atacante pode tentar codigos repetidamente sem nenhum bloqueio visual ou atraso.
+Duas funcoes fazem download de PDFs de URLs arbitrarias e carregam o conteudo inteiro na memoria como base64, sem limite de tamanho e sem autenticacao:
 
-### Solucao
+1. **`extract-pdf-images`** -- Baixa PDF de qualquer URL, converte para base64 em memoria. Sem autenticacao, sem limite de tamanho, sem rate limiting.
+2. **`process-knowledge-pdf`** -- Mesmo padrao: baixa PDF de URL, converte para base64. Sem autenticacao, sem rate limiting.
 
-Adicionar protecao client-side em camadas:
+Um atacante pode enviar uma URL apontando para um arquivo de centenas de MB, causando crash da funcao por exceder o limite de 150MB de memoria do Edge Runtime.
 
-1. **Contador de tentativas com lockout temporario** -- Apos 5 tentativas falhas, bloquear o formulario por 60 segundos (com timer regressivo visivel)
-2. **Delay progressivo** -- Cada tentativa falha adiciona um delay crescente antes de permitir nova tentativa (1s, 2s, 4s...)
-3. **Logout automatico** -- Apos 10 tentativas falhas totais, fazer logout e redirecionar para login
+### Funcoes Seguras (sem acao necessaria)
 
-### Etapas
+- `chatbot-message` -- Tem rate limiting e limita historico a 10 mensagens
+- `elevenlabs-tts` -- Tem autenticacao, rate limiting e texto limitado a 1000 chars
+- `generate-property-copy` -- Tem autenticacao, verificacao de role e rate limiting
+- `send-whatsapp-message` -- Tem autenticacao e validacao de usuario
+- Demais funcoes de notificacao -- Processam apenas dados pequenos do banco
 
-**Etapa 1 -- Criar hook `useOTPBruteForceProtection`**
+### Correcoes Planejadas
 
-Novo arquivo: `src/hooks/useOTPBruteForceProtection.ts`
+**Etapa 1 -- `extract-pdf-images/index.ts`**
 
-Funcionalidades:
-- Rastreia numero de tentativas falhas
-- Calcula tempo de lockout (60s apos 5 falhas, 120s apos 10)
-- Exibe timer regressivo durante lockout
-- Retorna `{ isLocked, remainingSeconds, failedAttempts, registerFailedAttempt, reset }`
-- Persiste contagem em `sessionStorage` para evitar bypass por refresh
+Adicionar as seguintes protecoes:
+- Autenticacao obrigatoria (verificar JWT via `supabase.auth.getUser()`)
+- Verificacao de role (`construtora`)
+- Limite de tamanho do PDF: maximo 10MB (verificar via `Content-Length` do fetch antes de baixar)
+- Rate limiting usando o modulo compartilhado existente
+- Validacao de URL (aceitar apenas URLs do proprio storage do projeto ou dominios confiavel)
+- Atualizar CORS headers para o padrao completo do projeto
 
-**Etapa 2 -- Aplicar protecao em `MFAVerify.tsx`**
+**Etapa 2 -- `process-knowledge-pdf/index.ts`**
 
-Modificar a pagina de verificacao no login:
-- Integrar o hook de protecao
-- Desabilitar o botao "Verificar" e o input durante lockout
-- Mostrar mensagem com timer regressivo: "Muitas tentativas. Tente novamente em XXs"
-- Apos 10 tentativas falhas, fazer logout automatico com toast explicativo
-- Limpar contagem apos verificacao bem-sucedida
+Adicionar as seguintes protecoes:
+- Autenticacao obrigatoria (verificar JWT)
+- Verificacao de role (`construtora`)
+- Limite de tamanho do PDF: maximo 10MB
+- Rate limiting usando o modulo compartilhado
+- Validacao de `imovel_id` como UUID valido
+- Validacao de URL
 
-**Etapa 3 -- Aplicar protecao em `MFASetup.tsx`**
+**Etapa 3 -- Validacao de tamanho com streaming parcial**
 
-Modificar o componente de ativacao:
-- Mesma logica de lockout na etapa de confirmacao do codigo
-- Desabilitar input e botao durante lockout
-- Limpar contagem apos ativacao bem-sucedida
+Em ambas as funcoes, antes de carregar o arquivo inteiro, verificar o tamanho:
+
+```text
+1. Fazer fetch da URL
+2. Verificar header Content-Length
+3. Se > 10MB, rejeitar com erro 413 (Payload Too Large)
+4. Se Content-Length nao disponivel, ler com limite: abortar se ultrapassar 10MB durante a leitura
+5. Converter para base64 apenas apos validacao
+```
 
 ### Detalhes Tecnicos
 
-**Arquivos novos:**
-- `src/hooks/useOTPBruteForceProtection.ts`
-
 **Arquivos modificados:**
-- `src/pages/auth/MFAVerify.tsx` -- Integrar hook + UI de lockout
-- `src/components/mfa/MFASetup.tsx` -- Integrar hook + UI de lockout
+- `supabase/functions/extract-pdf-images/index.ts`
+- `supabase/functions/process-knowledge-pdf/index.ts`
 
-**Nenhuma migracao SQL necessaria** -- protecao puramente client-side complementando o rate limiting server-side do Supabase Auth.
+**Nenhum arquivo novo necessario** -- reutiliza os modulos compartilhados `_shared/rate-limiter.ts` e `_shared/security.ts` ja existentes.
 
-**Logica do hook:**
+**Nenhuma migracao SQL necessaria.**
+
+### Resumo das Protecoes por Funcao
 
 ```text
-tentativas 1-4: delay progressivo (1s, 2s, 4s, 8s)
-tentativas 5-9: lockout de 60 segundos
-tentativas 10+: logout automatico
+Funcao                   | Auth | Role  | Rate Limit | Max Size | URL Check
+-------------------------|------|-------|------------|----------|----------
+extract-pdf-images       | +    | +     | +          | 10MB     | +
+process-knowledge-pdf    | +    | +     | +          | 10MB     | +
 ```
+
+Legenda: (+) sera adicionado nesta correcao
 
