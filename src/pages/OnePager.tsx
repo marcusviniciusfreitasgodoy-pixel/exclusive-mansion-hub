@@ -35,6 +35,7 @@ const OnePager = () => {
     "Materiais de venda despadronizados e desatualizados",
     "Visitas sem registro, avaliação ou rastreabilidade",
     "Decisões estratégicas sem dados concretos",
+    "Profissionais que visitam o imóvel sem conhecer seus detalhes e diferenciais",
   ];
 
   const diferenciais = [
