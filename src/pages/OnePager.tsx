@@ -23,73 +23,73 @@ const OnePager = () => {
       const pdfWidth = 210;
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("godoy-prime-one-pager.pdf");
+      pdf.save("godoy-prime-resumo-comercial.pdf");
     } finally {
       setExporting(false);
     }
   };
 
   const problemas = [
-    "Leads esfriam sem resposta rápida — perda de oportunidades",
+    "Contatos esfriam sem resposta rápida — perda de oportunidades",
     "Zero visibilidade sobre o desempenho das imobiliárias parceiras",
     "Materiais de venda despadronizados e desatualizados",
-    "Visitas sem registro, feedback ou rastreabilidade",
+    "Visitas sem registro, avaliação ou rastreabilidade",
     "Decisões estratégicas sem dados concretos",
   ];
 
   const diferenciais = [
-    { icon: Star, label: "White-label dinâmico", desc: "Cada parceiro com sua marca" },
-    { icon: MessageCircle, label: "IA Sofia 24/7", desc: "Atendimento instantâneo por IA" },
-    { icon: AlertTriangle, label: "Fichas com validade jurídica", desc: "Hash + geolocalização" },
-    { icon: TrendingUp, label: "Analytics completo", desc: "Heatmap, funil e ROI" },
-    { icon: Lightbulb, label: "Efeito UAU", desc: "Landing pages de alto impacto" },
+    { icon: Star, label: "Marca própria dinâmica", desc: "Cada parceiro com sua marca" },
+    { icon: MessageCircle, label: "Sofia IA 24/7", desc: "Atendimento instantâneo por IA" },
+    { icon: AlertTriangle, label: "Fichas com validade jurídica", desc: "Código de verificação + geolocalização" },
+    { icon: TrendingUp, label: "Painel analítico completo", desc: "Mapa de calor, funil e retorno" },
+    { icon: Lightbulb, label: "Efeito UAU", desc: "Páginas de apresentação de alto impacto" },
   ];
 
   const publicoAlvo = [
     { titulo: "Construtoras", desc: "Controle total sobre a distribuição de imóveis" },
-    { titulo: "Incorporadoras", desc: "Visibilidade do pipeline de vendas" },
-    { titulo: "Imobiliárias", desc: "Materiais prontos e leads qualificados" },
+    { titulo: "Incorporadoras", desc: "Visibilidade do funil de vendas" },
+    { titulo: "Imobiliárias", desc: "Materiais prontos e contatos qualificados" },
     { titulo: "Corretores", desc: "Ferramentas profissionais para converter mais" },
   ];
 
   const funcionalidades = [
     {
       icon: TrendingUp,
-      titulo: "Vendas & CRM",
+      titulo: "Vendas e Gestão de Clientes",
       items: [
-        { nome: "Pipeline Kanban", desc: "Gestão visual de 8 estágios de leads" },
+        { nome: "Funil Visual (Kanban)", desc: "Gestão visual de 8 estágios de contatos" },
         { nome: "Propostas formais", desc: "Documentos com validação e assinatura" },
-        { nome: "Fichas de visita", desc: "Hash + geolocalização (validade jurídica)" },
-        { nome: "Agendamento inteligente", desc: "Calendário integrado com upload de docs" },
+        { nome: "Fichas de visita", desc: "Código de verificação + geolocalização (validade jurídica)" },
+        { nome: "Agendamento inteligente", desc: "Calendário integrado com envio de documentos" },
       ],
     },
     {
       icon: Palette,
-      titulo: "Marketing & Branding",
+      titulo: "Marketing e Marca",
       items: [
-        { nome: "Sites white-label", desc: "Cada parceiro com sua marca automaticamente" },
-        { nome: "Templates premium", desc: "4 estilos: Luxo, Moderno, Clássico, Alto Padrão" },
+        { nome: "Sites com marca própria", desc: "Cada parceiro com sua marca automaticamente" },
+        { nome: "Modelos exclusivos", desc: "4 estilos: Luxo, Moderno, Clássico, Alto Padrão" },
         { nome: "Domínio personalizado", desc: "URL própria para cada construtora" },
-        { nome: "Aprovação de mídias", desc: "Workflow de controle de marca" },
+        { nome: "Aprovação de mídias", desc: "Fluxo de aprovação e controle de marca" },
       ],
     },
     {
       icon: Bot,
-      titulo: "IA & Atendimento",
+      titulo: "IA e Atendimento",
       items: [
-        { nome: "Sofia AI 24/7", desc: "Chatbot com voz e base de conhecimento" },
+        { nome: "Sofia IA 24/7", desc: "Assistente virtual com voz e base de conhecimento" },
         { nome: "Base de conhecimento", desc: "Alimentada por PDFs técnicos" },
         { nome: "Resposta instantânea", desc: "Atendimento em menos de 1 minuto" },
       ],
     },
     {
       icon: BarChart3,
-      titulo: "Dados & Gestão",
+      titulo: "Dados e Gestão",
       items: [
-        { nome: "Feedback NPS", desc: "Pesquisa pós-visita com assinatura digital" },
-        { nome: "Analytics BI", desc: "Heatmap, funil, ROI e métricas por parceiro" },
-        { nome: "Multi-tenant", desc: "Gestão separada construtora/imobiliária" },
-        { nome: "Hub de integrações", desc: "GA4, Pixel, webhooks" },
+        { nome: "Pesquisa de Satisfação (NPS)", desc: "Pesquisa pós-visita com assinatura digital" },
+        { nome: "Painel de Indicadores", desc: "Mapa de calor, funil, retorno e métricas por parceiro" },
+        { nome: "Multiempresa", desc: "Gestão separada construtora/imobiliária" },
+        { nome: "Central de integrações", desc: "GA4, Pixel, automações externas" },
       ],
     },
   ];
@@ -116,7 +116,7 @@ const OnePager = () => {
             <img src={logoNegativo} alt="Godoy Prime" className="h-12" />
           </div>
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37]/80">One-Pager Comercial</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37]/80">Resumo Comercial</p>
             <p className="text-xs text-[#D4AF37]/50 mt-0.5">Tecnologia para o mercado imobiliário</p>
           </div>
         </div>
@@ -142,9 +142,9 @@ const OnePager = () => {
             <Lightbulb className="h-4 w-4 text-[#D4AF37]" /> A Solução: Godoy Prime
           </h2>
           <p className="text-xs text-[#0C2340]/80 leading-relaxed">
-            Plataforma SaaS que conecta <strong>construtoras</strong> e <strong>imobiliárias</strong> em um
-            ecossistema digital unificado — com links rastreáveis white-label, inteligência artificial,
-            fichas de visita com validade jurídica e analytics em tempo real.
+            Plataforma digital que conecta <strong>construtoras</strong> e <strong>imobiliárias</strong> em um
+            ecossistema digital unificado — com links rastreáveis de marca própria, inteligência artificial,
+            fichas de visita com validade jurídica e indicadores em tempo real.
           </p>
         </div>
 

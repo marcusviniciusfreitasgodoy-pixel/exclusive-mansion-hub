@@ -13,52 +13,52 @@ const AUDIENCE_STYLES: Record<Audience, { label: string; className: string }> = 
 const FAQ_ITEMS: { question: string; answer: string; audience: Audience[] }[] = [
   {
     question: 'O que é a plataforma Godoy Prime e para quem ela foi feita?',
-    answer: 'É uma plataforma que conecta construtoras, imobiliárias, corretores e clientes em um único ambiente digital. Construtoras cadastram imóveis e distribuem para parceiros com rastreamento completo; imobiliárias recebem páginas white-label com sua marca; corretores têm ferramentas de atendimento com IA; e clientes vivem uma experiência digital premium.',
+    answer: 'É uma plataforma que conecta construtoras, imobiliárias, corretores e clientes em um único ambiente digital. Construtoras cadastram imóveis e distribuem para parceiros com rastreamento completo; imobiliárias recebem páginas com marca própria automaticamente; corretores têm ferramentas de atendimento com IA; e clientes vivem uma experiência digital premium.',
     audience: ['construtora', 'imobiliaria', 'corretor', 'cliente'],
   },
   {
     question: 'Preciso de uma imobiliária parceira para usar a plataforma?',
-    answer: 'Não. Construtoras podem gerar links diretos dos imóveis com seu próprio branding (logo, cores e favicon), sem depender de uma imobiliária intermediária. Corretores autônomos também podem utilizar as ferramentas de agendamento e feedback diretamente.',
+    answer: 'Não. Construtoras podem gerar links diretos dos imóveis com sua própria identidade visual (logo, cores e favicon), sem depender de uma imobiliária intermediária. Corretores autônomos também podem utilizar as ferramentas de agendamento e avaliação diretamente.',
     audience: ['construtora', 'corretor'],
   },
   {
-    question: 'Como funciona o link white-label para imobiliárias?',
-    answer: 'A construtora concede acesso ao imóvel para a imobiliária, que recebe um link exclusivo com sua marca (logo, cor primária e favicon). Cada acesso, lead e visita é rastreado individualmente, permitindo medir a performance de cada parceiro.',
+    question: 'Como funciona o link com marca própria para imobiliárias?',
+    answer: 'A construtora concede acesso ao imóvel para a imobiliária, que recebe um link exclusivo com sua marca (logo, cor primária e favicon). Cada acesso, contato e visita é rastreado individualmente, permitindo medir a performance de cada parceiro.',
     audience: ['imobiliaria', 'construtora'],
   },
   {
-    question: 'Os leads gerados ficam visíveis para quem?',
-    answer: 'Os leads ficam visíveis tanto para a construtora quanto para a imobiliária parceira que gerou o contato. Cada parte vê apenas os dados relevantes ao seu escopo, respeitando a privacidade e o isolamento de dados entre parceiros.',
+    question: 'Os contatos gerados ficam visíveis para quem?',
+    answer: 'Os contatos ficam visíveis tanto para a construtora quanto para a imobiliária parceira que gerou o registro. Cada parte vê apenas os dados relevantes ao seu escopo, respeitando a privacidade e o isolamento de dados entre parceiros.',
     audience: ['construtora', 'imobiliaria'],
   },
   {
     question: 'Como a plataforma ajuda o corretor no dia a dia?',
-    answer: 'O corretor conta com a assistente Sofia AI para responder dúvidas de clientes 24/7, base de conhecimento completa de cada imóvel para se preparar antes das visitas, fichas de visita digitais com validade jurídica e agendamento inteligente com confirmação automática.',
+    answer: 'O corretor conta com a assistente virtual Sofia IA para responder dúvidas de clientes 24/7, base de conhecimento completa de cada imóvel para se preparar antes das visitas, fichas de visita digitais com validade jurídica e agendamento inteligente com confirmação automática.',
     audience: ['corretor'],
   },
   {
     question: 'O cliente final precisa criar conta na plataforma?',
-    answer: 'Não. O cliente acessa as páginas dos imóveis diretamente pelo link compartilhado, interage com o chatbot Sofia, agenda visitas e envia propostas sem precisar criar nenhuma conta. A experiência é 100% digital e sem fricção.',
+    answer: 'Não. O cliente acessa as páginas dos imóveis diretamente pelo link compartilhado, interage com a assistente virtual Sofia, agenda visitas e envia propostas sem precisar criar nenhuma conta. A experiência é 100% digital e sem fricção.',
     audience: ['cliente'],
   },
   {
     question: 'Como funciona o agendamento de visitas pela plataforma?',
-    answer: 'O visitante escolhe duas opções de data/horário, faz upload de um documento de identificação (RG/CNH) e envia a solicitação. A construtora e a imobiliária recebem notificações automáticas por e-mail e WhatsApp, com links diretos para confirmar ou reagendar.',
+    answer: 'O visitante escolhe duas opções de data/horário, faz envio de um documento de identificação (RG/CNH) e envia a solicitação. A construtora e a imobiliária recebem notificações automáticas por e-mail e WhatsApp, com links diretos para confirmar ou reagendar.',
     audience: ['construtora', 'imobiliaria', 'cliente'],
   },
   {
-    question: 'O que é o chatbot Sofia e como ela ajuda na conversão?',
-    answer: 'A Sofia é uma assistente virtual com IA treinada na base de conhecimento de cada imóvel. Ela responde dúvidas 24/7, qualifica leads automaticamente e pode agendar visitas — tudo sem intervenção humana. Suporta texto e voz.',
+    question: 'O que é a assistente virtual Sofia e como ela ajuda na conversão?',
+    answer: 'A Sofia é uma assistente virtual com IA treinada na base de conhecimento de cada imóvel. Ela responde dúvidas 24/7, qualifica contatos automaticamente e pode agendar visitas — tudo sem intervenção humana. Suporta texto e voz.',
     audience: ['construtora', 'cliente'],
   },
   {
-    question: 'O feedback de visita tem validade jurídica?',
-    answer: 'Sim. O relatório de feedback inclui assinatura digital do cliente e do corretor, com registro de data, dispositivo e geolocalização. O PDF gerado automaticamente possui hash de integridade, conferindo rastreabilidade e validade legal.',
+    question: 'A avaliação de visita tem validade jurídica?',
+    answer: 'Sim. O relatório de avaliação inclui assinatura digital do cliente e do corretor, com registro de data, dispositivo e geolocalização. O PDF gerado automaticamente possui código de verificação de integridade, conferindo rastreabilidade e validade legal.',
     audience: ['construtora', 'imobiliaria', 'corretor'],
   },
   {
     question: 'Quais métricas e relatórios estão disponíveis?',
-    answer: 'O dashboard inclui funil de conversão, heatmap de horários, NPS de visitas, ranking de "Efeito UAU", performance por imobiliária parceira, evolução temporal de leads e exportação de relatórios em PDF e CSV.',
+    answer: 'O painel de controle inclui funil de conversão, mapa de calor de horários, Pesquisa de Satisfação (NPS) de visitas, ranking de "Efeito UAU", performance por imobiliária parceira, evolução temporal de contatos e exportação de relatórios em PDF e CSV.',
     audience: ['construtora', 'imobiliaria'],
   },
   {
