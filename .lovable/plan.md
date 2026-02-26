@@ -1,85 +1,44 @@
 
 
-## Traduzir Termos em Ingles para Portugues
+## Incluir "17 funcionalidades em uma unica plataforma" no One-Pager PDF
 
 ### Objetivo
-Substituir todos os termos em ingles por equivalentes em portugues nas paginas de Apresentacao e One-Pager PDF, tornando o conteudo mais acessivel para o publico-alvo.
+Atualizar a secao de Funcionalidades do One-Pager PDF para refletir todas as 17 funcionalidades presentes na pagina de Apresentacao, incluindo o titulo "17 funcionalidades em uma unica plataforma" e as 2 funcionalidades que faltam (Efeito UAU e Gestao de Parceiros).
 
-### Mapeamento de Traducoes
+### O que muda em `src/pages/OnePager.tsx`
 
-| Termo em Ingles | Traducao em Portugues |
-|---|---|
-| One-Pager Comercial | Resumo Comercial |
-| Leads | Contatos |
-| Feedback | Avaliacao / Retorno |
-| White-label | Marca propria |
-| Pipeline Kanban | Funil Visual (Kanban) |
-| Templates premium | Modelos exclusivos |
-| Workflow | Fluxo de aprovacao |
-| Landing pages | Paginas de apresentacao |
-| Analytics completo | Painel analitico completo |
-| Analytics BI | Painel de Indicadores |
-| Heatmap | Mapa de calor |
-| ROI | Retorno sobre investimento |
-| Hub de integracoes | Central de integracoes |
-| Multi-tenant | Multiempresa |
-| Sofia AI 24/7 | Sofia IA 24/7 |
-| Chatbot | Assistente virtual |
-| Hash | Codigo de verificacao |
-| Upload | Envio |
-| SaaS | Plataforma digital |
-| Vendas & CRM | Vendas e Gestao de Clientes |
-| Marketing & Branding | Marketing e Marca |
-| IA & Atendimento | IA e Atendimento |
-| Dados & Gestao | Dados e Gestao |
-| Feedback NPS | Pesquisa de Satisfacao (NPS) |
-| Efeito UAU | Efeito UAU (manter - ja e portugues) |
-| Dashboard | Painel de controle |
-| Webhooks | Automacoes externas |
+**1. Titulo da secao**
+- De: "Funcionalidades"
+- Para: "17 funcionalidades em uma unica plataforma"
+- Subtitulo compacto: "Organizadas por categoria de valor"
 
-### Arquivos a Alterar
+**2. Adicionar 2 funcionalidades que faltam na categoria "Dados e Gestao"**
+- **Efeito UAU** — Ranking dos aspectos que mais impressionam visitantes
+- **Gestao de Parceiros** — Visao consolidada de todas as imobiliarias parceiras
 
-**1. `src/pages/OnePager.tsx`** (~25 substituicoes)
-- Header: "One-Pager Comercial" → "Resumo Comercial"
-- Problemas: "Leads esfriam" → "Contatos esfriam", "feedback" → "avaliacao"
-- Diferenciais: "White-label dinamico" → "Marca propria dinamica", "Analytics completo" → "Painel analitico", "Heatmap, funil e ROI" → "Mapa de calor, funil e retorno", "Landing pages" → "Paginas de apresentacao"
-- Publico-alvo: "pipeline de vendas" → "funil de vendas", "leads qualificados" → "contatos qualificados"
-- Funcionalidades: todas as categorias e itens conforme tabela acima
-- Solucao: "SaaS" → "plataforma digital", "white-label" → "marca propria", "analytics" → "indicadores"
+**3. Ajustar layout para caber as 17 funcionalidades no A4**
+- Usar um grid 2x2 mais compacto com `text-[10px]` nas descricoes
+- Reduzir `gap-y` e `space-y` para acomodar os 2 itens extras
+- Manter o formato: icone gold + titulo da categoria + lista com bullet gold + nome bold + descricao
 
-**2. `src/components/apresentacao/FeatureCategoriesSection.tsx`** (~20 substituicoes)
-- Titulos das categorias: "Vendas & CRM" → "Vendas e Gestao de Clientes", etc.
-- Nomes das funcionalidades: "Pipeline Kanban" → "Funil Visual (Kanban)", "Sites White-Label" → "Sites com Marca Propria", "Templates Premium" → "Modelos Exclusivos", "Sofia AI 24/7" → "Sofia IA 24/7"
-- Descricoes: "leads" → "contatos", "upload" → "envio", "Workflow" → "Fluxo de aprovacao", "Chatbot" → "Assistente virtual", "Heatmap" → "Mapa de calor", "ROI" → "Retorno", "webhooks" → "automacoes externas", "Multi-tenant" → "Multiempresa", "Analytics BI" → "Painel de Indicadores"
+### Conteudo final das 4 categorias (17 itens)
 
-**3. `src/components/apresentacao/BenefitsStrip.tsx`** (~2 substituicoes)
-- "leads rastreados" → "contatos rastreados"
-- "chatbot IA" → "assistente virtual IA"
+**Vendas e Gestao de Clientes** (4 itens - sem mudanca)
+- Funil Visual (Kanban), Propostas formais, Fichas de visita, Agendamento inteligente
 
-**4. `src/components/apresentacao/FAQSection.tsx`** (~15 substituicoes)
-- "white-label" → "marca propria" em todas as perguntas e respostas
-- "leads" → "contatos"
-- "chatbot Sofia" → "assistente virtual Sofia"
-- "hash de integridade" → "codigo de verificacao de integridade"
-- "heatmap" → "mapa de calor"
-- "dashboard" → "painel de controle"
-- "feedback" → "avaliacao" (quando aplicavel)
-- "Efeito UAU" → manter (ja e portugues)
-- "NPS" → manter com contexto "(Pesquisa de Satisfacao)"
+**Marketing e Marca** (4 itens - sem mudanca)
+- Sites com marca propria, Modelos exclusivos, Dominio personalizado, Aprovacao de midias
 
-**5. `src/pages/Apresentacao.tsx`** (~3 substituicoes)
-- "white-label" na secao Como Funciona → "marca propria"
-- "NPS e Efeito UAU no dashboard" → "satisfacao e Efeito UAU no painel"
-- "Links white-label rastreados" → "Links com marca propria rastreados"
+**IA e Atendimento** (3 itens - sem mudanca)
+- Sofia IA 24/7, Base de conhecimento, Resposta instantanea
 
-### Termos mantidos em ingles (justificativa tecnica)
-- **NPS**: sigla universalmente conhecida, mantida com explicacao "(Pesquisa de Satisfacao)"
-- **Kanban**: termo japones universalmente adotado, mantido entre parenteses
-- **PDF/CSV**: siglas tecnicas universais
-- **GA4, Pixel**: nomes proprios de produtos (Google Analytics 4, Meta Pixel)
-- **WhatsApp, E-mail**: nomes proprios / ja incorporados ao portugues
+**Dados e Gestao** (6 itens - adicionar 2)
+- Pesquisa de Satisfacao (NPS), Painel de Indicadores, Multiempresa, Central de integracoes
+- **NOVO:** Efeito UAU — Ranking dos aspectos que mais impressionam visitantes
+- **NOVO:** Gestao de Parceiros — Visao consolidada de todas as imobiliarias parceiras
 
 ### Detalhes tecnicos
-- Apenas conteudo textual sera alterado (strings, labels, descricoes)
-- Nenhuma alteracao em logica, layout ou estilos
-- Nome do arquivo PDF exportado sera alterado para "godoy-prime-resumo-comercial.pdf"
+- Apenas alteracoes textuais e de espacamento no arquivo `src/pages/OnePager.tsx`
+- Nenhuma mudanca em logica, exportacao PDF ou outros componentes
+- Reducao de `py-5` para `py-4` e `space-y-1` para `space-y-0.5` na secao de funcionalidades para acomodar os itens extras
+
