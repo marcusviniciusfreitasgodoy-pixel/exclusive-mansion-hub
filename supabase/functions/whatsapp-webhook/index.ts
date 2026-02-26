@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,6 +43,16 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limiting - 30 requests per minute per IP
+    const clientId = getClientIdentifier(req);
+    const rateLimit = await checkRateLimit(supabase, clientId, "whatsapp-webhook", {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json();
     console.log('Webhook received:', JSON.stringify(body, null, 2));
