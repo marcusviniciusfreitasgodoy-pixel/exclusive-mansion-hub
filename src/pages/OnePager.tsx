@@ -142,34 +142,6 @@ const OnePager = () => {
           </div>
         </div>
 
-        {/* ROI Estimado */}
-        <div className="px-10 py-7 border-b border-[#0C2340]/10">
-          <h2 className="text-lg font-bold text-[#0C2340] uppercase tracking-wide mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-[#D4AF37]" /> ROI Estimado
-          </h2>
-          <div className="bg-[#fdf8e8] rounded-lg p-5 border border-[#D4AF37]/30">
-            <p className="text-sm text-[#0C2340]/80 mb-3">
-              Imóveis de alto padrão: VGV médio <strong>R$ 800.000+</strong>
-            </p>
-            <p className="text-xl font-bold text-[#0C2340] mb-4">
-              1 lead convertido = ROI de 100x sobre o custo anual da plataforma
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { valor: "+40%", label: "Conversão de leads" },
-                { valor: "<1 min", label: "Tempo de resposta" },
-                { valor: "100%", label: "Visibilidade de parceiros" },
-                { valor: "Digital", label: "Feedback com validade jurídica" },
-              ].map((m, i) => (
-                <div key={i} className="text-center bg-white rounded p-3 border border-[#D4AF37]/20">
-                  <p className="text-lg font-bold text-[#D4AF37]">{m.valor}</p>
-                  <p className="text-xs text-[#0C2340]/70">{m.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* CTA */}
         <div className="bg-gradient-to-r from-[#0C2340] to-[#102a4a] text-white px-10 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
