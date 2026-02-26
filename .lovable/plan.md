@@ -1,38 +1,86 @@
 
 
-## Ajuste de Identidade Visual do One-Pager
+## Atualizar One-Pager com Funcionalidades Completas
 
-### Problema Atual
-O one-pager usa cores genericas (slate, emerald, amber) que nao correspondem a identidade visual da Godoy Prime. O logo tambem esta com filtro CSS (`brightness-0 invert`) que reduz a qualidade visual.
+### Objetivo
+Enriquecer o one-pager existente com as 17 funcionalidades mapeadas, organizadas pela logica **Dor -> Solucao -> Beneficio**, mantendo o formato A4 exportavel em PDF.
 
-### Mudancas no arquivo `src/pages/OnePager.tsx`
+### Nova Estrutura do One-Pager
 
-**1. Logo em alta resolucao**
-- Trocar de `logo-principal.png` (versao escura) para `logo-negativo.png` (versao branca para fundo escuro)
-- Remover o filtro `brightness-0 invert` que degrada a imagem
-- Aumentar o tamanho do logo de `h-12` para `h-14`
+```text
++------------------------------------------+
+|  [Logo Godoy Prime]    ONE-PAGER COMERCIAL|
++------------------------------------------+
+|  O PROBLEMA (5 dores - manter atual)     |
++------------------------------------------+
+|  A SOLUCAO (texto resumido - manter)     |
++------------------------------------------+
+|  FUNCIONALIDADES POR CATEGORIA           |
+|                                          |
+|  Vendas & CRM          | Marketing       |
+|  - Pipeline Kanban     | - White-label   |
+|  - Propostas formais   | - Templates     |
+|  - Fichas de visita    | - Dominio custom|
+|  - Agendamento         | - Aprovacao     |
+|                        |   de midias     |
+|------------------------+-----------------|
+|  IA & Atendimento      | Dados & Gestao  |
+|  - Sofia AI 24/7       | - Feedback NPS  |
+|  - Base conhecimento   | - Analytics BI  |
+|  - Voz (ElevenLabs)    | - Multi-tenant  |
+|                        | - Integracoes   |
++------------------------------------------+
+|  DIFERENCIAIS          | PUBLICO-ALVO    |
+|  (5 itens - manter)    | (4 itens)       |
++------------------------------------------+
+|  CTA + Contatos (manter)                 |
++------------------------------------------+
+```
 
-**2. Header e Footer - Navy da marca**
-- Substituir `from-slate-900 to-slate-800` por gradiente usando o navy da marca: `from-[#0C2340] to-[#102a4a]`
-- Footer CTA: mesmo tratamento navy
+### Mudancas em `src/pages/OnePager.tsx`
 
-**3. Secao "Solucao" - Fundo cream da marca**
-- Trocar `bg-slate-50` por um tom cream alinhado com a paleta (`bg-[#faf8f3]`)
+**1. Nova secao "Funcionalidades" entre Solucao e Diferenciais**
+- Grid 2x2 com 4 categorias: Vendas e CRM, Marketing e Branding, IA e Atendimento, Dados e Gestao
+- Cada categoria com icone gold, titulo navy e 3-4 funcionalidades listadas com texto compacto
+- Cada funcionalidade inclui nome + beneficio curto (1 linha)
+- Fundo alternado para separacao visual
 
-**4. Acentos Gold no lugar de emerald/amber**
-- Titulos de secao: trocar `text-emerald-700` por `text-[#0C2340]` (navy)
-- Icones de destaque: trocar `text-amber-500` e `text-blue-500` por `text-[#D4AF37]` (gold)
-- ROI box: trocar `bg-emerald-50`, `border-emerald-200`, `text-emerald-700` por tons gold (`bg-[#fdf8e8]`, `border-[#D4AF37]/30`, `text-[#0C2340]`)
-- Metricas ROI: bordas e valores em gold/navy
-- Botao WhatsApp CTA: trocar `bg-emerald-600` por gold `bg-[#D4AF37]` com texto navy
+**2. Compactar textos existentes**
+- Reduzir padding das secoes de `py-7` para `py-5` para caber tudo em uma pagina A4
+- Reduzir espacamento dos problemas de `space-y-2` para `space-y-1.5`
+- Usar `text-xs` nos itens de funcionalidades para densidade
 
-**5. Detalhes tipograficos**
-- Subtitulo header: trocar `text-slate-300/400` por tons gold claros (`text-[#D4AF37]/80`)
-- Bullets do problema: manter `bg-red-500` (semanticamente correto para "problemas")
-- Titulos de secao: aplicar navy (`text-[#0C2340]`) em vez de slate
+**3. Adicionar icones para as categorias**
+- Importar icones adicionais do lucide-react: `BarChart3`, `Shield`, `Bot`, `Palette`
+- Vendas e CRM: `TrendingUp`
+- Marketing: `Palette`
+- IA: `Bot`
+- Dados: `BarChart3`
 
-**6. Bordas e separadores**
-- Trocar `border-slate-200` por `border-[#0C2340]/10` para consistencia
+### Conteudo das Funcionalidades
+
+**Vendas e CRM**
+- Pipeline Kanban: Gestao visual de 8 estagios de leads
+- Propostas formais: Documentos com validacao e assinatura
+- Fichas de visita: Registro com hash e geolocalizacao (validade juridica)
+- Agendamento inteligente: Calendario integrado com upload de docs
+
+**Marketing e Branding**
+- Sites white-label: Cada parceiro com sua marca automaticamente
+- Templates premium: 4 estilos (Luxo, Moderno, Classico, Alto Padrao)
+- Dominio personalizado: URL propria para cada construtora
+- Aprovacao de midias: Workflow de controle de marca
+
+**IA e Atendimento**
+- Sofia AI 24/7: Chatbot com voz e base de conhecimento
+- Base de conhecimento: Alimentada por PDFs tecnicos
+- Resposta instantanea: Atendimento em menos de 1 minuto
+
+**Dados e Gestao**
+- Feedback NPS: Pesquisa pos-visita com assinatura digital
+- Analytics BI: Heatmap, funil, ROI e metricas por parceiro
+- Multi-tenant: Gestao separada construtora/imobiliaria
+- Hub de integracoes: GA4, Pixel, webhooks
 
 ### Resultado esperado
-Um documento visualmente coeso com a marca Godoy Prime: navy profundo nos cabecalhos, gold nos acentos e destaques, cream nos fundos alternados, e o logo em alta resolucao sem filtros CSS.
+Um one-pager completo que apresenta todas as 17 funcionalidades organizadas em 4 categorias, mantendo o layout A4, as cores da marca e a exportacao em PDF funcional.
