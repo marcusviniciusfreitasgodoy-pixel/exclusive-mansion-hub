@@ -1,86 +1,89 @@
 
 
-## Atualizar One-Pager com Funcionalidades Completas
+## Atualizar Pagina de Apresentacao com 17 Funcionalidades
 
 ### Objetivo
-Enriquecer o one-pager existente com as 17 funcionalidades mapeadas, organizadas pela logica **Dor -> Solucao -> Beneficio**, mantendo o formato A4 exportavel em PDF.
+Substituir a lista atual de 10 funcionalidades genericas por uma estrutura organizada em 4 categorias tematicas com as 17 funcionalidades mapeadas, incluindo dor, solucao e beneficio para cada uma. Adicionar tambem as personas Corretor e Cliente.
 
-### Nova Estrutura do One-Pager
+### Mudancas em `src/pages/Apresentacao.tsx`
 
+**1. Substituir `PLATFORM_FEATURES` por `FEATURE_CATEGORIES`**
+
+Nova estrutura de dados com 4 categorias, cada uma contendo suas funcionalidades com dor e beneficio:
+
+- **Vendas e CRM** (icone: TrendingUp)
+  - Pipeline Kanban (8 estagios) - Dor: leads sem acompanhamento
+  - Propostas formais com validacao - Dor: propostas informais sem controle
+  - Fichas de visita com hash e geo - Dor: visitas sem registro legal
+  - Agendamento inteligente com docs - Dor: agendamento manual e desorganizado
+
+- **Marketing e Branding** (icone: Palette)
+  - Sites white-label por parceiro - Dor: materiais despadronizados
+  - Templates premium (4 estilos) - Dor: paginas amadoras
+  - Dominio personalizado - Dor: URLs genericas sem credibilidade
+  - Aprovacao de midias (workflow) - Dor: uso de materiais nao autorizados
+
+- **IA e Atendimento** (icone: Bot)
+  - Sofia AI 24/7 com voz - Dor: leads sem resposta rapida
+  - Base de conhecimento (PDFs) - Dor: corretores sem informacao do imovel
+  - Resposta em menos de 1 minuto - Dor: atendimento demorado
+
+- **Dados e Gestao** (icone: BarChart3)
+  - Feedback NPS com assinatura digital - Dor: feedback perdido em papel
+  - Analytics BI (heatmap, funil) - Dor: decisoes sem dados
+  - Multi-tenant (construtora/imobiliaria) - Dor: dados misturados entre parceiros
+  - Hub de integracoes (GA4, Pixel, webhooks) - Dor: sistemas isolados
+  - Efeito UAU (ranking de impressoes) - Dor: sem saber o que encanta o cliente
+  - Gestao de parceiros consolidada - Dor: sem visibilidade das imobiliarias
+
+**2. Nova secao visual: "Funcionalidades por Categoria"**
+
+Substituir o grid simples de cards por uma secao com 4 blocos tematicos:
+- Cada bloco com icone gold, titulo da categoria e lista de funcionalidades
+- Cada funcionalidade mostra: nome em bold, descricao curta e tags de persona
+- Layout em grid 2x2 para desktop, empilhado no mobile
+- Cards com borda lateral gold e hover com sombra
+
+**3. Expandir personas no Benefits Strip**
+
+Atualizar a secao de metricas para incluir beneficios para as 4 personas:
+- Construtora: 100% visibilidade sobre parceiros
+- Imobiliaria: Materiais prontos e leads rastreados
+- Corretor: Resposta em menos de 1 min com IA
+- Cliente: Experiencia digital premium
+
+**4. Adicionar tags de persona expandidas**
+
+Incluir `corretor` e `cliente` no type `Audience`:
 ```text
-+------------------------------------------+
-|  [Logo Godoy Prime]    ONE-PAGER COMERCIAL|
-+------------------------------------------+
-|  O PROBLEMA (5 dores - manter atual)     |
-+------------------------------------------+
-|  A SOLUCAO (texto resumido - manter)     |
-+------------------------------------------+
-|  FUNCIONALIDADES POR CATEGORIA           |
-|                                          |
-|  Vendas & CRM          | Marketing       |
-|  - Pipeline Kanban     | - White-label   |
-|  - Propostas formais   | - Templates     |
-|  - Fichas de visita    | - Dominio custom|
-|  - Agendamento         | - Aprovacao     |
-|                        |   de midias     |
-|------------------------+-----------------|
-|  IA & Atendimento      | Dados & Gestao  |
-|  - Sofia AI 24/7       | - Feedback NPS  |
-|  - Base conhecimento   | - Analytics BI  |
-|  - Voz (ElevenLabs)    | - Multi-tenant  |
-|                        | - Integracoes   |
-+------------------------------------------+
-|  DIFERENCIAIS          | PUBLICO-ALVO    |
-|  (5 itens - manter)    | (4 itens)       |
-+------------------------------------------+
-|  CTA + Contatos (manter)                 |
-+------------------------------------------+
+type Audience = 'construtora' | 'imobiliaria' | 'corretor' | 'cliente';
 ```
 
-### Mudancas em `src/pages/OnePager.tsx`
+Legenda visual com 4 cores:
+- Construtora: bg-primary (navy)
+- Imobiliaria: bg-secondary (gold)
+- Corretor: bg-emerald-600
+- Cliente: bg-blue-500
 
-**1. Nova secao "Funcionalidades" entre Solucao e Diferenciais**
-- Grid 2x2 com 4 categorias: Vendas e CRM, Marketing e Branding, IA e Atendimento, Dados e Gestao
-- Cada categoria com icone gold, titulo navy e 3-4 funcionalidades listadas com texto compacto
-- Cada funcionalidade inclui nome + beneficio curto (1 linha)
-- Fundo alternado para separacao visual
+**5. Atualizar FAQ**
 
-**2. Compactar textos existentes**
-- Reduzir padding das secoes de `py-7` para `py-5` para caber tudo em uma pagina A4
-- Reduzir espacamento dos problemas de `space-y-2` para `space-y-1.5`
-- Usar `text-xs` nos itens de funcionalidades para densidade
+Adicionar 3 novas perguntas ao FAQ:
+- "Como a plataforma ajuda o corretor no dia a dia?" (persona: corretor)
+- "O cliente final precisa criar conta?" (persona: cliente)
+- "Posso usar a plataforma sem imobiliaria parceira?" (ja existe, adicionar tag corretor)
 
-**3. Adicionar icones para as categorias**
-- Importar icones adicionais do lucide-react: `BarChart3`, `Shield`, `Bot`, `Palette`
-- Vendas e CRM: `TrendingUp`
-- Marketing: `Palette`
-- IA: `Bot`
-- Dados: `BarChart3`
+**6. Icones adicionais a importar**
 
-### Conteudo das Funcionalidades
+Adicionar ao import do lucide-react: `Bot`, `Palette`, `Layout`, `Globe`, `FileCheck`, `Megaphone`
 
-**Vendas e CRM**
-- Pipeline Kanban: Gestao visual de 8 estagios de leads
-- Propostas formais: Documentos com validacao e assinatura
-- Fichas de visita: Registro com hash e geolocalizacao (validade juridica)
-- Agendamento inteligente: Calendario integrado com upload de docs
-
-**Marketing e Branding**
-- Sites white-label: Cada parceiro com sua marca automaticamente
-- Templates premium: 4 estilos (Luxo, Moderno, Classico, Alto Padrao)
-- Dominio personalizado: URL propria para cada construtora
-- Aprovacao de midias: Workflow de controle de marca
-
-**IA e Atendimento**
-- Sofia AI 24/7: Chatbot com voz e base de conhecimento
-- Base de conhecimento: Alimentada por PDFs tecnicos
-- Resposta instantanea: Atendimento em menos de 1 minuto
-
-**Dados e Gestao**
-- Feedback NPS: Pesquisa pos-visita com assinatura digital
-- Analytics BI: Heatmap, funil, ROI e metricas por parceiro
-- Multi-tenant: Gestao separada construtora/imobiliaria
-- Hub de integracoes: GA4, Pixel, webhooks
+### Secoes que permanecem inalteradas
+- Hero (titulo, subtitulo, botoes)
+- Pain Points (6 dores)
+- Como Funciona (4 passos)
+- CTA Demo
+- Formulario de contato
+- Footer
+- FloatingWhatsApp
 
 ### Resultado esperado
-Um one-pager completo que apresenta todas as 17 funcionalidades organizadas em 4 categorias, mantendo o layout A4, as cores da marca e a exportacao em PDF funcional.
+Pagina de apresentacao comercial completa com todas as 17 funcionalidades organizadas por categoria, cada uma conectada a uma dor especifica e com tags de persona (Construtora, Imobiliaria, Corretor, Cliente).
