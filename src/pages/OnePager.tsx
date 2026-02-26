@@ -90,6 +90,8 @@ const OnePager = () => {
         { nome: "Painel de Indicadores", desc: "Mapa de calor, funil, retorno e métricas por parceiro" },
         { nome: "Multiempresa", desc: "Gestão separada construtora/imobiliária" },
         { nome: "Central de integrações", desc: "GA4, Pixel, automações externas" },
+        { nome: "Efeito UAU", desc: "Ranking dos aspectos que mais impressionam visitantes" },
+        { nome: "Gestão de Parceiros", desc: "Visão consolidada de todas as imobiliárias parceiras" },
       ],
     },
   ];
@@ -149,22 +151,23 @@ const OnePager = () => {
         </div>
 
         {/* Funcionalidades por Categoria */}
-        <div className="px-10 py-5 border-b border-[#0C2340]/10">
-          <h2 className="text-base font-bold text-[#0C2340] uppercase tracking-wide mb-4 flex items-center gap-2">
-            <Layout className="h-4 w-4 text-[#D4AF37]" /> Funcionalidades
+        <div className="px-10 py-4 border-b border-[#0C2340]/10">
+          <h2 className="text-sm font-bold text-[#0C2340] uppercase tracking-wide mb-1 flex items-center gap-2">
+            <Layout className="h-4 w-4 text-[#D4AF37]" /> 17 funcionalidades em uma única plataforma
           </h2>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <p className="text-[10px] text-[#0C2340]/60 mb-3">Organizadas por categoria de valor</p>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             {funcionalidades.map((cat, i) => (
               <div key={i} className={i >= 2 ? "pt-1" : ""}>
                 <div className="flex items-center gap-2 mb-2">
                   <cat.icon className="h-4 w-4 text-[#D4AF37] shrink-0" />
                   <p className="text-xs font-bold text-[#0C2340] uppercase tracking-wide">{cat.titulo}</p>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {cat.items.map((item, j) => (
                     <div key={j} className="flex items-start gap-2">
                       <span className="mt-1.5 h-1 w-1 rounded-full bg-[#D4AF37] shrink-0" />
-                      <p className="text-xs text-[#0C2340]/80">
+                      <p className="text-[10px] text-[#0C2340]/80">
                         <strong className="text-[#0C2340]">{item.nome}</strong> — {item.desc}
                       </p>
                     </div>
