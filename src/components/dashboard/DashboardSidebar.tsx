@@ -34,6 +34,7 @@ import {
   Images,
   Clock,
   BookOpen,
+  Presentation,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
@@ -143,6 +144,14 @@ export function DashboardSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/apresentacao" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <Presentation className="h-4 w-4" />
+                    <span>Apresentação</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild data-tour="manual">
                   <a href="/manual" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
