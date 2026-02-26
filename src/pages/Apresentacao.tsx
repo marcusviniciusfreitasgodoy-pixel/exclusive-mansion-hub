@@ -9,77 +9,16 @@ import { toast } from 'sonner';
 import {
   Building2, Users, BarChart3, Calendar, MessageSquare, Share2,
   Shield, Zap, TrendingUp, Eye, ClipboardCheck, Star,
-  ArrowRight, Play, CheckCircle2, Phone, Mail, HelpCircle
+  ArrowRight, Play, CheckCircle2, Phone, Mail, HelpCircle,
+  Bot, Palette, Globe, FileCheck, Layout, Megaphone
 } from 'lucide-react';
 import logoPrincipal from '@/assets/logo-principal.png';
 import authBackground from '@/assets/auth-background.jpg';
 import { supabase } from '@/integrations/supabase/client';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
-
-type Audience = 'construtora' | 'imobiliaria';
-
-const PLATFORM_FEATURES: { icon: typeof Share2; title: string; desc: string; audience: Audience[] }[] = [
-  {
-    icon: Share2,
-    title: 'Links White-Label',
-    desc: 'Páginas personalizadas por imobiliária com rastreamento individual de performance.',
-    audience: ['imobiliaria'],
-  },
-  {
-    icon: BarChart3,
-    title: 'Analytics em Tempo Real',
-    desc: 'Funil de conversão, heatmap de horários e métricas individuais por imóvel e parceiro.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: Users,
-    title: 'CRM e Pipeline Visual',
-    desc: '8 etapas de venda, pontuação automática de leads e histórico completo de interações.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: Calendar,
-    title: 'Agendamento Inteligente',
-    desc: 'Validação de disponibilidade, identificação por CNH, lembretes automáticos e confirmação digital.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Feedback Digital de Visitas',
-    desc: 'NPS, assinatura digital e geração automática de PDF com validade jurídica.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: MessageSquare,
-    title: 'Chatbot com IA',
-    desc: 'Assistente virtual treinado na base de conhecimento do imóvel para qualificação 24/7.',
-    audience: ['construtora'],
-  },
-  {
-    icon: Star,
-    title: 'Efeito UAU',
-    desc: 'Ranking dos aspectos que mais impressionam visitantes, com gráficos de satisfação.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: Building2,
-    title: 'Gestão de Parceiros',
-    desc: 'Visão consolidada de todas as imobiliárias e suas métricas de performance.',
-    audience: ['construtora'],
-  },
-  {
-    icon: Eye,
-    title: 'Relatórios e Exportação',
-    desc: 'PDF profissional com dados de visitas, leads e satisfação para proprietários e clientes.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    icon: Shield,
-    title: 'Segurança Jurídica',
-    desc: 'Relatório de visita com assinatura digital, rastreabilidade e validade legal.',
-    audience: ['imobiliaria'],
-  },
-];
+import { FeatureCategoriesSection } from '@/components/apresentacao/FeatureCategoriesSection';
+import { BenefitsStrip } from '@/components/apresentacao/BenefitsStrip';
+import { FAQSection } from '@/components/apresentacao/FAQSection';
 
 const PAIN_POINTS = [
   'Leads demoram horas para receber resposta e esfriam',
@@ -88,59 +27,6 @@ const PAIN_POINTS = [
   'Visitas sem registro, feedback perdido em anotações de papel',
   'Decisões comerciais tomadas sem dados concretos',
   'Profissionais que visitam o imóvel sem conhecer seus detalhes e diferenciais',
-];
-
-const FAQ_ITEMS: { question: string; answer: string; audience: Audience[] }[] = [
-  {
-    question: 'O que é a plataforma Godoy Prime e para quem ela foi feita?',
-    answer: 'É uma plataforma que conecta construtoras e imobiliárias em um único ambiente digital. Construtoras cadastram imóveis e distribuem para parceiros com rastreamento completo; imobiliárias recebem páginas white-label com sua marca e acompanham seus leads e visitas.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'Preciso de uma imobiliária parceira para usar a plataforma?',
-    answer: 'Não. Construtoras podem gerar links diretos dos imóveis com seu próprio branding (logo, cores e favicon), sem depender de uma imobiliária intermediária. Leads e métricas de links diretos aparecem normalmente no dashboard.',
-    audience: ['construtora'],
-  },
-  {
-    question: 'Como funciona o link white-label para imobiliárias?',
-    answer: 'A construtora concede acesso ao imóvel para a imobiliária, que recebe um link exclusivo com sua marca (logo, cor primária e favicon). Cada acesso, lead e visita é rastreado individualmente, permitindo medir a performance de cada parceiro.',
-    audience: ['imobiliaria', 'construtora'],
-  },
-  {
-    question: 'Os leads gerados ficam visíveis para quem?',
-    answer: 'Os leads ficam visíveis tanto para a construtora quanto para a imobiliária parceira que gerou o contato. Cada parte vê apenas os dados relevantes ao seu escopo, respeitando a privacidade e o isolamento de dados entre parceiros.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'Como funciona o agendamento de visitas pela plataforma?',
-    answer: 'O visitante escolhe duas opções de data/horário, faz upload de um documento de identificação (RG/CNH) e envia a solicitação. A construtora e a imobiliária recebem notificações automáticas por e-mail e WhatsApp, com links diretos para confirmar ou reagendar.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'O que é o chatbot Sofia e como ela ajuda na conversão?',
-    answer: 'A Sofia é uma assistente virtual com IA treinada na base de conhecimento de cada imóvel. Ela responde dúvidas 24/7, qualifica leads automaticamente e pode agendar visitas — tudo sem intervenção humana. Suporta texto e voz.',
-    audience: ['construtora'],
-  },
-  {
-    question: 'O feedback de visita tem validade jurídica?',
-    answer: 'Sim. O relatório de feedback inclui assinatura digital do cliente e do corretor, com registro de data, dispositivo e geolocalização. O PDF gerado automaticamente possui hash de integridade, conferindo rastreabilidade e validade legal.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'Quais métricas e relatórios estão disponíveis?',
-    answer: 'O dashboard inclui funil de conversão, heatmap de horários, NPS de visitas, ranking de "Efeito UAU", performance por imobiliária parceira, evolução temporal de leads e exportação de relatórios em PDF e CSV.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'Quanto custa a plataforma?',
-    answer: 'Oferecemos planos personalizados de acordo com o porte da operação. Agende uma demonstração gratuita para conhecer todas as funcionalidades e receber uma proposta sob medida para sua empresa.',
-    audience: ['construtora', 'imobiliaria'],
-  },
-  {
-    question: 'Como faço para começar a usar?',
-    answer: 'Basta solicitar uma demonstração pelo formulário abaixo ou pelo WhatsApp. Nossa equipe fará uma apresentação personalizada, criará sua conta e ajudará na configuração inicial dos seus imóveis e parceiros.',
-    audience: ['construtora', 'imobiliaria'],
-  },
 ];
 
 export default function Apresentacao() {
@@ -215,7 +101,7 @@ export default function Apresentacao() {
             Problemas que eliminamos<br />do seu dia a dia
           </h2>
           <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-            Se algum destes cenários parece familiar, essa ferramenta foi feita para você. Nossa plataforma resolve cada um deles de forma integrada — sem planilhas, sem retrabalho, sem perda de informação.
+            Se algum destes cenários parece familiar, essa ferramenta foi feita para você.
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PAIN_POINTS.map((pain, i) => (
@@ -228,60 +114,11 @@ export default function Apresentacao() {
         </div>
       </section>
 
-      {/* Plataforma Consolidada */}
-      <section className="py-16 md:py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">
-            Tudo o que você precisa em uma única plataforma
-          </h2>
-          <p className="text-muted-foreground text-center mb-4 max-w-2xl mx-auto">
-            Funcionalidades para Construtoras e Imobiliárias — sem repetição, sem lacunas.
-          </p>
-          <div className="flex justify-center gap-4 mb-12 text-sm">
-            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-primary" /> Construtora</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-secondary" /> Imobiliária</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {PLATFORM_FEATURES.map((f, i) => (
-              <Card key={i} className="group hover:shadow-xl transition-all duration-300 border border-l-[3px] border-l-secondary">
-                <CardContent className="p-4 md:p-6 flex flex-col h-full">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors shrink-0">
-                    <f.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-base md:text-lg mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 flex-1">{f.desc}</p>
-                  <div className="flex flex-wrap gap-2 mt-auto">
-                    {f.audience.includes('construtora') && (
-                      <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-[11px] md:text-xs font-semibold">Construtora</span>
-                    )}
-                    {f.audience.includes('imobiliaria') && (
-                      <span className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-[11px] md:text-xs font-semibold">Imobiliária</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Funcionalidades por Categoria */}
+      <FeatureCategoriesSection />
 
       {/* Benefits strip */}
-      <section className="py-12 bg-primary text-primary-foreground">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { icon: Zap, label: 'Resposta em < 1 min', sub: 'com chatbot IA' },
-            { icon: Eye, label: '100% visibilidade', sub: 'sobre parceiros' },
-            { icon: TrendingUp, label: '+40% conversão', sub: 'de leads qualificados' },
-            { icon: Shield, label: 'Feedback digital', sub: 'com validade jurídica' },
-          ].map((b, i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
-              <b.icon className="h-8 w-8 text-secondary" />
-              <span className="font-bold text-lg">{b.label}</span>
-              <span className="text-sm text-primary-foreground/70">{b.sub}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <BenefitsStrip />
 
       {/* Como Funciona */}
       <section className="py-16 md:py-20 bg-muted/50">
@@ -327,45 +164,7 @@ export default function Apresentacao() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-20">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <HelpCircle className="h-7 w-7 text-secondary" />
-            <h2 className="text-2xl md:text-3xl font-bold text-center">
-              Perguntas Frequentes
-            </h2>
-          </div>
-          <p className="text-muted-foreground text-center mb-4 max-w-2xl mx-auto">
-            Tire suas dúvidas sobre a plataforma — para construtoras e imobiliárias.
-          </p>
-          <div className="flex justify-center gap-4 mb-8 text-sm">
-            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-primary" /> Construtora</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-secondary" /> Imobiliária</span>
-          </div>
-          <Accordion type="single" collapsible className="space-y-3">
-            {FAQ_ITEMS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-5 shadow-sm">
-                <AccordionTrigger className="text-left text-sm md:text-base font-medium py-4 hover:no-underline gap-3">
-                  <div className="flex-1">
-                    {faq.question}
-                    <div className="flex gap-1.5 mt-1.5">
-                      {faq.audience.includes('construtora') && (
-                        <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-semibold">Construtora</span>
-                      )}
-                      {faq.audience.includes('imobiliaria') && (
-                        <span className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold">Imobiliária</span>
-                      )}
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground pb-4 leading-relaxed">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
+      <FAQSection />
 
       {/* Form */}
       <section id="agendar" className="py-16 md:py-20 bg-muted/50">
