@@ -66,6 +66,7 @@ const EmpreendimentoDetalhe = lazy(() => import("./pages/empreendimentos/Empreen
 const Apresentacao = lazy(() => import("./pages/Apresentacao"));
 const Manual = lazy(() => import("./pages/Manual"));
 const AssinaturaVisita = lazy(() => import("./pages/AssinaturaVisita"));
+const OnePager = lazy(() => import("./pages/OnePager"));
 
 // Lazy load admin/utility pages
 const TesteConexao = lazy(() => import("./pages/TesteConexao"));
@@ -150,6 +151,11 @@ function MainRoutes() {
                 </ProtectedRoute>
               } />
               
+              {/* One-Pager Comercial - Public */}
+              <Route path="/one-pager" element={
+                <LazyRoute><OnePager /></LazyRoute>
+              } />
+
               {/* Templates Showcase - Public */}
               <Route path="/templates" element={
                 <LazyRoute><TemplatesShowcase /></LazyRoute>
