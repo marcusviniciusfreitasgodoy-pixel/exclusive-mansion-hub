@@ -1,76 +1,38 @@
 
 
-## One-Pager Comercial Exportavel em PDF
+## Ajuste de Identidade Visual do One-Pager
 
-### Objetivo
-Criar uma nova pagina `/one-pager` com layout otimizado para impressao/PDF, contendo as secoes: Problema, Solucao, Diferenciais, Publico-Alvo, ROI Estimado e CTA. Um botao "Exportar PDF" usara `jspdf` + `html2canvas` (ja instalados no projeto) para gerar o documento.
+### Problema Atual
+O one-pager usa cores genericas (slate, emerald, amber) que nao correspondem a identidade visual da Godoy Prime. O logo tambem esta com filtro CSS (`brightness-0 invert`) que reduz a qualidade visual.
 
-### Estrutura da Pagina
+### Mudancas no arquivo `src/pages/OnePager.tsx`
 
-A pagina tera layout A4 (210x297mm) com fundo branco, otimizada para exportacao limpa:
+**1. Logo em alta resolucao**
+- Trocar de `logo-principal.png` (versao escura) para `logo-negativo.png` (versao branca para fundo escuro)
+- Remover o filtro `brightness-0 invert` que degrada a imagem
+- Aumentar o tamanho do logo de `h-12` para `h-14`
 
-```text
-+------------------------------------------+
-|  [Logo Godoy Prime]    ONE-PAGER COMERCIAL|
-|  Tecnologia para o mercado imobiliario    |
-+------------------------------------------+
-|                                           |
-|  O PROBLEMA                               |
-|  - Leads esfriam sem resposta rapida      |
-|  - Zero visibilidade sobre parceiros      |
-|  - Materiais despadronizados              |
-|  - Visitas sem registro ou feedback       |
-|  - Decisoes sem dados concretos           |
-|                                           |
-+------------------------------------------+
-|                                           |
-|  A SOLUCAO: GODOY PRIME                   |
-|  Plataforma SaaS que conecta construtoras |
-|  e imobiliarias em um ecossistema digital |
-|  com rastreamento, IA e analytics.        |
-|                                           |
-+------------------------------------------+
-|  DIFERENCIAIS          |  PUBLICO-ALVO    |
-|  - White-label dinamico|  - Construtoras  |
-|  - IA Sofia 24/7       |  - Incorporadoras|
-|  - Feedback juridico   |  - Imobiliarias  |
-|  - Efeito UAU          |  - Corretores    |
-|  - Analytics completo  |    autonomos     |
-+------------------------------------------+
-|                                           |
-|  ROI ESTIMADO                             |
-|  Imoveis alto padrao: VGV medio R$ 800k+  |
-|  1 lead convertido = ROI de 100x sobre    |
-|  o custo anual da plataforma              |
-|                                           |
-|  Metricas: +40% conversao, <1min resposta |
-|  100% visibilidade, feedback digital      |
-|                                           |
-+------------------------------------------+
-|                                           |
-|  [Agendar Demonstracao]  [WhatsApp]       |
-|  contato@godoyprime.com.br                |
-|  (21) 96407-5124                          |
-|                                           |
-+------------------------------------------+
-```
+**2. Header e Footer - Navy da marca**
+- Substituir `from-slate-900 to-slate-800` por gradiente usando o navy da marca: `from-[#0C2340] to-[#102a4a]`
+- Footer CTA: mesmo tratamento navy
 
-### Arquivos a Criar/Modificar
+**3. Secao "Solucao" - Fundo cream da marca**
+- Trocar `bg-slate-50` por um tom cream alinhado com a paleta (`bg-[#faf8f3]`)
 
-**1. `src/pages/OnePager.tsx`** (novo)
-- Componente com layout fixo A4, fundo branco, tipografia escura
-- Secoes: Header com logo, Problema (lista com icones), Solucao (texto descritivo), Diferenciais (grid 2 colunas), Publico-Alvo (cards por perfil), ROI Estimado (metricas em destaque), CTA (botoes de contato)
-- Botao "Exportar PDF" fixo no topo (oculto na impressao via `print:hidden`)
-- Usa `html2canvas` para capturar o conteudo e `jspdf` para gerar o PDF A4
+**4. Acentos Gold no lugar de emerald/amber**
+- Titulos de secao: trocar `text-emerald-700` por `text-[#0C2340]` (navy)
+- Icones de destaque: trocar `text-amber-500` e `text-blue-500` por `text-[#D4AF37]` (gold)
+- ROI box: trocar `bg-emerald-50`, `border-emerald-200`, `text-emerald-700` por tons gold (`bg-[#fdf8e8]`, `border-[#D4AF37]/30`, `text-[#0C2340]`)
+- Metricas ROI: bordas e valores em gold/navy
+- Botao WhatsApp CTA: trocar `bg-emerald-600` por gold `bg-[#D4AF37]` com texto navy
 
-**2. `src/App.tsx`** (modificar)
-- Adicionar rota publica `/one-pager` apontando para o novo componente com lazy loading
+**5. Detalhes tipograficos**
+- Subtitulo header: trocar `text-slate-300/400` por tons gold claros (`text-[#D4AF37]/80`)
+- Bullets do problema: manter `bg-red-500` (semanticamente correto para "problemas")
+- Titulos de secao: aplicar navy (`text-[#0C2340]`) em vez de slate
 
-### Detalhes Tecnicos
+**6. Bordas e separadores**
+- Trocar `border-slate-200` por `border-[#0C2340]/10` para consistencia
 
-- **Exportacao PDF**: Captura o container principal com `html2canvas` (scale: 2 para alta resolucao), depois insere no `jspdf` em formato A4. O botao de exportacao e elementos de navegacao recebem classe `print:hidden` para nao aparecerem no PDF.
-- **Responsividade**: A pagina funciona normalmente no browser mas o layout e otimizado para A4 (max-width ~794px centralizado).
-- **Sem dependencias novas**: `jspdf` e `html2canvas` ja estao instalados no projeto.
-- **Cores da marca**: Usa as variaveis CSS existentes (`primary`, `secondary`) para manter consistencia visual com o restante do app.
-- **Conteudo**: Todo o texto e hardcoded (nao depende de banco de dados), baseado nas informacoes ja definidas na pagina `/apresentacao`.
-
+### Resultado esperado
+Um documento visualmente coeso com a marca Godoy Prime: navy profundo nos cabecalhos, gold nos acentos e destaques, cream nos fundos alternados, e o logo em alta resolucao sem filtros CSS.
