@@ -2,8 +2,8 @@ import { Eye, Share2, Zap, Star } from 'lucide-react';
 
 const BENEFITS = [
   { icon: Eye, label: '100% visibilidade', sub: 'sobre parceiros', persona: 'Construtora' },
-  { icon: Share2, label: 'Materiais prontos', sub: 'e leads rastreados', persona: 'Imobiliária' },
-  { icon: Zap, label: 'Resposta em < 1 min', sub: 'com chatbot IA', persona: 'Corretor' },
+  { icon: Share2, label: 'Materiais prontos', sub: 'e contatos rastreados', persona: 'Imobiliária' },
+  { icon: Zap, label: 'Resposta em < 1 min', sub: 'com assistente virtual IA', persona: 'Corretor' },
   { icon: Star, label: 'Experiência premium', sub: 'do primeiro contato à visita', persona: 'Cliente' },
 ];
 

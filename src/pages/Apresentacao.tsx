@@ -21,10 +21,10 @@ import { BenefitsStrip } from '@/components/apresentacao/BenefitsStrip';
 import { FAQSection } from '@/components/apresentacao/FAQSection';
 
 const PAIN_POINTS = [
-  'Leads demoram horas para receber resposta e esfriam',
+  'Contatos demoram horas para receber resposta e esfriam',
   'Sem visibilidade sobre a performance das imobiliárias parceiras',
   'Materiais de marketing despadronizados e desatualizados',
-  'Visitas sem registro, feedback perdido em anotações de papel',
+  'Visitas sem registro, avaliação perdida em anotações de papel',
   'Decisões comerciais tomadas sem dados concretos',
   'Profissionais que visitam o imóvel sem conhecer seus detalhes e diferenciais',
 ];
@@ -132,8 +132,8 @@ export default function Apresentacao() {
           <div className="grid gap-8 md:grid-cols-4">
             {[
               { num: '1', title: 'Cadastre seu imóvel', desc: 'Fotos, vídeos, descrição e escolha do template visual.' },
-              { num: '2', title: 'Compartilhe com parceiros', desc: 'Links white-label rastreados individualmente.' },
-              { num: '3', title: 'Acompanhe em tempo real', desc: 'Leads, visitas, NPS e Efeito UAU no dashboard.' },
+              { num: '2', title: 'Compartilhe com parceiros', desc: 'Links com marca própria rastreados individualmente.' },
+              { num: '3', title: 'Acompanhe em tempo real', desc: 'Contatos, visitas, satisfação e Efeito UAU no painel.' },
               { num: '4', title: 'Exporte e apresente', desc: 'Relatórios em PDF prontos para proprietários e clientes.' },
             ].map((step) => (
               <div key={step.num} className="text-center">
