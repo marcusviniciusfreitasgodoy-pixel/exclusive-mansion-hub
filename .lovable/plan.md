@@ -1,88 +1,24 @@
 
+## Adicionar link Admin no menu lateral
 
-## Sincronizar Manual, Tour Guiado, Apresentacao e One-Pager
+### O que sera feito
+Adicionar um item "Gerenciar Usuarios" no menu lateral do dashboard, visivel apenas quando o usuario logado for o desenvolvedor (`dev@godoyrealty.com`).
 
-### Contexto
-
-A auditoria cruzada revelou 4 desalinhamentos entre os materiais. Todas as correcoes sao aditivas (nenhum conteudo existente sera removido).
-
----
-
-### Correcao 1 — Tour Imobiliaria: adicionar Pipeline CRM
+### Alteracao
 
 **Arquivo:** `src/components/dashboard/DashboardSidebar.tsx`
-- Adicionar `tourId: 'pipeline'` ao item "Pipeline CRM" na lista `imobiliariaLinks`
 
-**Arquivo:** `src/components/dashboard/GuidedTour.tsx`
-- Adicionar novo passo ao `TOUR_IMOBILIARIA` (apos "Meus Links"):
+1. Importar o icone `Shield` do lucide-react
+2. Obter o `user` do hook `useAuth()` (ja disponivel no contexto)
+3. Adicionar uma secao condicional no sidebar (antes do grupo Apresentacao/Manual) que renderiza o link `/admin/usuarios` apenas quando `user?.email === 'dev@godoyrealty.com'`
 
-```text
-Titulo: Pipeline CRM
-Descricao: Organize seus leads em 8 etapas visuais. Arraste cards entre colunas para atualizar o progresso.
-Selector: [data-tour="pipeline"]
-```
+O link tera:
+- Icone: Shield
+- Titulo: "Gerenciar Usuarios"
+- Label do grupo: "Administracao"
+- URL: `/admin/usuarios`
 
----
-
-### Correcao 2 — Tour Construtora: adicionar Feedbacks
-
-**Arquivo:** `src/components/dashboard/DashboardSidebar.tsx`
-- Adicionar `tourId: 'feedbacks'` ao item "Feedbacks e Satisfacao" na lista `construtoraLinks`
-
-**Arquivo:** `src/components/dashboard/GuidedTour.tsx`
-- Adicionar novo passo ao `TOUR_CONSTRUTORA` (apos "Agendamentos"):
-
-```text
-Titulo: Feedbacks e Satisfacao
-Descricao: Colete NPS, Efeito UAU e avaliacoes pos-visita. Exporte relatorios em PDF.
-Selector: [data-tour="feedbacks"]
-```
-
----
-
-### Correcao 3 — Manual Construtora: adicionar topico Fichas de Visita
-
-**Arquivo:** `src/pages/Manual.tsx`
-- Adicionar novo topico ao array `construtoraTopics` (apos "Efeito UAU e Satisfacao"):
-
-```text
-Titulo: Fichas de Visita com Validade Juridica
-Icone: ClipboardCheck
-Conteudo: Cada visita registrada gera uma ficha digital com:
-  - Codigo de verificacao unico
-  - Geolocalizacao automatica
-  - Assinatura digital do corretor e do cliente
-  - Data e horario registrados
-  Essas fichas servem como comprovante oficial da visita e alimentam os relatorios de analytics.
-```
-
----
-
-### Correcao 4 — Manual Imobiliaria: adicionar topico Gestao de Corretores
-
-**Arquivo:** `src/pages/Manual.tsx`
-- Adicionar novo topico ao array `imobiliariaTopics` (apos "Configurar Formularios"):
-
-```text
-Titulo: Gestao de Corretores
-Icone: Users
-Conteudo: No menu Corretores, voce pode:
-  - Cadastrar corretores vinculados a sua imobiliaria
-  - Atribuir imoveis e leads a cada corretor
-  - Acompanhar metricas individuais de performance
-  - Gerenciar permissoes de acesso
-  Cada corretor pode acessar a plataforma com login proprio e ver apenas os dados pertinentes.
-```
-
----
-
-### Resumo de arquivos alterados
-
-| Arquivo | Alteracao |
-|---|---|
-| `src/components/dashboard/DashboardSidebar.tsx` | 2 tourIds adicionados |
-| `src/components/dashboard/GuidedTour.tsx` | 2 passos adicionados (1 construtora, 1 imobiliaria) |
-| `src/pages/Manual.tsx` | 2 topicos adicionados (1 construtora, 1 imobiliaria) |
-
-Nenhuma alteracao na Apresentacao ou no One-Pager (ja estao completos).
-
+### Detalhes tecnicos
+- A verificacao de e-mail segue o mesmo padrao ja usado em `GerenciarUsuarios.tsx` (constante `DEVELOPER_EMAIL`)
+- O link usara o componente `Link` do react-router (navegacao interna, sem abrir em nova aba)
+- Nenhuma alteracao de banco de dados ou RLS necessaria
