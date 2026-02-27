@@ -58,6 +58,11 @@ const construtoraTopics = [
     content: `Após cada visita, o sistema coleta feedback estruturado que alimenta os gráficos de satisfação:\n\n• **Efeito UAU** — descubra quais aspectos do imóvel mais impressionam: vista, acabamento, varanda, áreas comuns, etc.\n• **NPS (Net Promoter Score)** — meça a probabilidade de recomendação.\n• **Avaliações por Categoria** — localização, acabamento, layout, custo-benefício e atendimento.\n• **Nível de Interesse** — porcentagem de visitantes muito interessados vs. indecisos.\n• **Objeções** — entenda os motivos de resistência mais comuns.\n\nUse esses dados para ajustar a comunicação e direcionar campanhas.`,
   },
   {
+    icon: ClipboardCheck,
+    title: 'Fichas de Visita com Validade Jurídica',
+    content: `Cada visita registrada gera uma ficha digital com:\n\n• **Código de verificação único** — garante autenticidade do documento.\n• **Geolocalização automática** — registra o local exato da visita.\n• **Assinatura digital** do corretor e do cliente.\n• **Data e horário** registrados automaticamente.\n\nEssas fichas servem como comprovante oficial da visita e alimentam os relatórios de analytics.`,
+  },
+  {
     icon: FileText,
     title: 'Exportar Relatórios em PDF',
     content: `Na seção de Analytics e Feedbacks, clique em **Exportar PDF** para gerar relatórios prontos para apresentação:\n\n• Inclui gráficos de NPS, Efeito UAU, avaliações e evolução temporal.\n• Formato profissional com logo da construtora.\n• Ideal para reuniões com proprietários e investidores.\n• Os relatórios de feedback individual também podem ser exportados com assinatura digital.`,
@@ -124,6 +129,11 @@ const imobiliariaTopics = [
     icon: Settings,
     title: 'Configurar Formulários Personalizados',
     content: `Em **Configurações > Formulários**, você pode personalizar os formulários de:\n\n• **Agendamento de visita** — adicione campos extras como tipo de documento, preferências de horário.\n• **Feedback do corretor** — inclua perguntas específicas da sua operação.\n• **Feedback do cliente** — adapte o questionário pós-visita.\n\nUse o editor visual para arrastar, reordenar e configurar campos (texto, seleção, múltipla escolha, etc.).`,
+  },
+  {
+    icon: Users,
+    title: 'Gestão de Corretores',
+    content: `No menu **Corretores**, você pode:\n\n• **Cadastrar corretores** vinculados à sua imobiliária.\n• **Atribuir imóveis e leads** a cada corretor.\n• **Acompanhar métricas individuais** de performance.\n• **Gerenciar permissões** de acesso.\n\nCada corretor pode acessar a plataforma com login próprio e ver apenas os dados pertinentes.`,
   },
   {
     icon: ImagePlus,
