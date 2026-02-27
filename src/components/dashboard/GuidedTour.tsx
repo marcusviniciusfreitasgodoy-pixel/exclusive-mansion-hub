@@ -198,6 +198,12 @@ export const TOUR_CONSTRUTORA: TourStep[] = [
     position: 'right',
   },
   {
+    targetSelector: '[data-tour="feedbacks"]',
+    title: 'Feedbacks e Satisfação',
+    description: 'Colete NPS, Efeito UAU e avaliações pós-visita. Exporte relatórios em PDF.',
+    position: 'right',
+  },
+  {
     targetSelector: '[data-tour="imobiliarias"]',
     title: 'Imobiliárias Parceiras',
     description: 'Veja a performance de cada imobiliária parceira com métricas detalhadas.',
@@ -234,6 +240,12 @@ export const TOUR_IMOBILIARIA: TourStep[] = [
     targetSelector: '[data-tour="leads"]',
     title: 'Meus Leads',
     description: 'Gerencie seus leads capturados com filtros e contato rápido via WhatsApp.',
+    position: 'right',
+  },
+  {
+    targetSelector: '[data-tour="pipeline"]',
+    title: 'Pipeline CRM',
+    description: 'Organize seus leads em 8 etapas visuais. Arraste cards entre colunas para atualizar o progresso.',
     position: 'right',
   },
   {

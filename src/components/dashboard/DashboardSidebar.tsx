@@ -44,7 +44,7 @@ const construtoraLinks = [
   { title: 'Aprovar Mídias', url: '/dashboard/construtora/aprovar-midias', icon: ImagePlus, hasBadge: true },
   { title: 'Pipeline CRM', url: '/dashboard/construtora/pipeline', icon: Kanban, tourId: 'pipeline' },
   { title: 'Dashboard de Visitas', url: '/dashboard/construtora/agendamentos', icon: Calendar, tourId: 'agendamentos' },
-  { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText },
+  { title: 'Feedbacks & Satisfação', url: '/dashboard/construtora/feedbacks', icon: FileText, tourId: 'feedbacks' },
   { title: 'Leads', url: '/dashboard/construtora/leads', icon: MessageSquare },
   { title: 'Analytics', url: '/dashboard/construtora/analytics', icon: BarChart3, tourId: 'analytics' },
   { title: 'Integrações', url: '/dashboard/construtora/integracoes', icon: Link2 },
@@ -55,7 +55,7 @@ const construtoraLinks = [
 const imobiliariaLinks = [
   { title: 'Imóveis Disponíveis', url: '/dashboard/imobiliaria', icon: Home, tourId: 'imoveis' },
   { title: 'Minhas Mídias', url: '/dashboard/imobiliaria/minhas-midias', icon: Images },
-  { title: 'Pipeline CRM', url: '/dashboard/imobiliaria/pipeline', icon: Kanban },
+  { title: 'Pipeline CRM', url: '/dashboard/imobiliaria/pipeline', icon: Kanban, tourId: 'pipeline' },
   { title: 'Agendamentos', url: '/dashboard/imobiliaria/agendamentos', icon: Calendar, tourId: 'agendamentos' },
   { title: 'Configurar Agenda', url: '/dashboard/imobiliaria/configurar-agenda', icon: Clock },
   { title: 'Feedbacks', url: '/dashboard/imobiliaria/feedbacks', icon: FileText },
