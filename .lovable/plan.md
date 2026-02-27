@@ -1,31 +1,88 @@
 
 
-## Sincronizar dores entre One-Pager e Apresentacao
+## Sincronizar Manual, Tour Guiado, Apresentacao e One-Pager
 
-### Alteracao unica
+### Contexto
 
-**Arquivo: `src/pages/OnePager.tsx` (linha 37-38)**
+A auditoria cruzada revelou 4 desalinhamentos entre os materiais. Todas as correcoes sao aditivas (nenhum conteudo existente sera removido).
 
-Adicionar a 6a dor que ja existe na Apresentacao mas falta no One-Pager:
+---
+
+### Correcao 1 — Tour Imobiliaria: adicionar Pipeline CRM
+
+**Arquivo:** `src/components/dashboard/DashboardSidebar.tsx`
+- Adicionar `tourId: 'pipeline'` ao item "Pipeline CRM" na lista `imobiliariaLinks`
+
+**Arquivo:** `src/components/dashboard/GuidedTour.tsx`
+- Adicionar novo passo ao `TOUR_IMOBILIARIA` (apos "Meus Links"):
 
 ```text
-Antes (5 itens):
-1. Contatos esfriam sem resposta rapida — perda de oportunidades
-2. Zero visibilidade sobre o desempenho das imobiliarias parceiras
-3. Materiais de venda despadronizados e desatualizados
-4. Visitas sem registro, avaliacao ou rastreabilidade
-5. Decisoes estrategicas sem dados concretos
-
-Depois (6 itens — sincronizado com Apresentacao):
-1. Contatos esfriam sem resposta rapida — perda de oportunidades
-2. Zero visibilidade sobre o desempenho das imobiliarias parceiras
-3. Materiais de venda despadronizados e desatualizados
-4. Visitas sem registro, avaliacao ou rastreabilidade
-5. Decisoes estrategicas sem dados concretos
-6. Profissionais que visitam o imovel sem conhecer seus detalhes e diferenciais  ← NOVO
+Titulo: Pipeline CRM
+Descricao: Organize seus leads em 8 etapas visuais. Arraste cards entre colunas para atualizar o progresso.
+Selector: [data-tour="pipeline"]
 ```
 
-### Detalhes tecnicos
-- Apenas uma linha adicionada ao array `problemas` em `src/pages/OnePager.tsx`
-- A pagina de Apresentacao (`src/pages/Apresentacao.tsx`) ja possui as 6 dores — nenhuma alteracao necessaria nela
-- O layout da secao "O Problema" no One-Pager comporta 6 itens sem necessidade de ajuste de espacamento
+---
+
+### Correcao 2 — Tour Construtora: adicionar Feedbacks
+
+**Arquivo:** `src/components/dashboard/DashboardSidebar.tsx`
+- Adicionar `tourId: 'feedbacks'` ao item "Feedbacks e Satisfacao" na lista `construtoraLinks`
+
+**Arquivo:** `src/components/dashboard/GuidedTour.tsx`
+- Adicionar novo passo ao `TOUR_CONSTRUTORA` (apos "Agendamentos"):
+
+```text
+Titulo: Feedbacks e Satisfacao
+Descricao: Colete NPS, Efeito UAU e avaliacoes pos-visita. Exporte relatorios em PDF.
+Selector: [data-tour="feedbacks"]
+```
+
+---
+
+### Correcao 3 — Manual Construtora: adicionar topico Fichas de Visita
+
+**Arquivo:** `src/pages/Manual.tsx`
+- Adicionar novo topico ao array `construtoraTopics` (apos "Efeito UAU e Satisfacao"):
+
+```text
+Titulo: Fichas de Visita com Validade Juridica
+Icone: ClipboardCheck
+Conteudo: Cada visita registrada gera uma ficha digital com:
+  - Codigo de verificacao unico
+  - Geolocalizacao automatica
+  - Assinatura digital do corretor e do cliente
+  - Data e horario registrados
+  Essas fichas servem como comprovante oficial da visita e alimentam os relatorios de analytics.
+```
+
+---
+
+### Correcao 4 — Manual Imobiliaria: adicionar topico Gestao de Corretores
+
+**Arquivo:** `src/pages/Manual.tsx`
+- Adicionar novo topico ao array `imobiliariaTopics` (apos "Configurar Formularios"):
+
+```text
+Titulo: Gestao de Corretores
+Icone: Users
+Conteudo: No menu Corretores, voce pode:
+  - Cadastrar corretores vinculados a sua imobiliaria
+  - Atribuir imoveis e leads a cada corretor
+  - Acompanhar metricas individuais de performance
+  - Gerenciar permissoes de acesso
+  Cada corretor pode acessar a plataforma com login proprio e ver apenas os dados pertinentes.
+```
+
+---
+
+### Resumo de arquivos alterados
+
+| Arquivo | Alteracao |
+|---|---|
+| `src/components/dashboard/DashboardSidebar.tsx` | 2 tourIds adicionados |
+| `src/components/dashboard/GuidedTour.tsx` | 2 passos adicionados (1 construtora, 1 imobiliaria) |
+| `src/pages/Manual.tsx` | 2 topicos adicionados (1 construtora, 1 imobiliaria) |
+
+Nenhuma alteracao na Apresentacao ou no One-Pager (ja estao completos).
+
