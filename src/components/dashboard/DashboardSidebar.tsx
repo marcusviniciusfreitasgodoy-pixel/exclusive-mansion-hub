@@ -35,6 +35,7 @@ import {
   Clock,
   BookOpen,
   Presentation,
+  Shield,
 } from 'lucide-react';
 import logo from '@/assets/logo-principal.png';
 
@@ -67,7 +68,8 @@ const imobiliariaLinks = [
 ];
 
 export function DashboardSidebar() {
-  const { role, construtora, imobiliaria, signOut } = useAuth();
+  const { user, role, construtora, imobiliaria, signOut } = useAuth();
+  const isDeveloper = user?.email === 'dev@godoyrealty.com';
   const location = useLocation();
 
   // Fetch pending media count for construtora badge
@@ -140,6 +142,27 @@ export function DashboardSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isDeveloper && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Administração
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/admin/usuarios')}>
+                    <Link to="/admin/usuarios" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      <span>Gerenciar Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup>
           <SidebarGroupContent>
