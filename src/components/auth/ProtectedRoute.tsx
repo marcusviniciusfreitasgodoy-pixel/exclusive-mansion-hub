@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, loading, mfaRequired } = useAuth();
+  const { user, role, roles, loading, mfaRequired } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -27,7 +27,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth/mfa-verify" replace />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
+  // Check if user has ANY of the allowed roles (not just the primary one)
+  if (allowedRoles && !allowedRoles.some(r => roles.includes(r))) {
     if (role === 'construtora') {
       return <Navigate to="/dashboard/construtora" replace />;
     } else if (role === 'imobiliaria') {

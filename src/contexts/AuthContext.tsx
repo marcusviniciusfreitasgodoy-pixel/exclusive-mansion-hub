@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  roles: AppRole[];
   construtora: Construtora | null;
   imobiliaria: Imobiliaria | null;
   loading: boolean;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
   const [construtora, setConstrutora] = useState<Construtora | null>(null);
   const [imobiliaria, setImobiliaria] = useState<Imobiliaria | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Pick the operational role first (construtora or imobiliaria), fallback to admin
       const operationalRole = rolesData?.find(r => r.role === 'construtora' || r.role === 'imobiliaria');
       const roleData = operationalRole || rolesData?.[0] || null;
+
+      const allRoles = rolesData?.map(r => r.role as AppRole) || [];
+      setRoles(allRoles);
 
       if (roleData) {
         setRole(roleData.role as AppRole);
@@ -113,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setRole(null);
+          setRoles([]);
           setConstrutora(null);
           setImobiliaria(null);
         }
@@ -197,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    setRoles([]);
     setConstrutora(null);
     setImobiliaria(null);
   };
@@ -212,6 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       role,
+      roles,
       construtora,
       imobiliaria,
       loading,
