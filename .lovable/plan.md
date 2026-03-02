@@ -1,24 +1,30 @@
 
-## Adicionar link Admin no menu lateral
+## Criar usuario admin diretamente no banco
 
-### O que sera feito
-Adicionar um item "Gerenciar Usuarios" no menu lateral do dashboard, visivel apenas quando o usuario logado for o desenvolvedor (`dev@godoyrealty.com`).
+### Abordagem
 
-### Alteracao
+Vou criar uma edge function temporaria `create-admin-user` que usa a API administrativa para criar o usuario `dev@godoyrealty.com` com senha, perfil de construtora e role `admin`. Depois de executada com sucesso, a funcao pode ser removida.
 
-**Arquivo:** `src/components/dashboard/DashboardSidebar.tsx`
+### Passos
 
-1. Importar o icone `Shield` do lucide-react
-2. Obter o `user` do hook `useAuth()` (ja disponivel no contexto)
-3. Adicionar uma secao condicional no sidebar (antes do grupo Apresentacao/Manual) que renderiza o link `/admin/usuarios` apenas quando `user?.email === 'dev@godoyrealty.com'`
+1. **Criar edge function `create-admin-user`**
+   - Usa `supabase.auth.admin.createUser()` com `email_confirm: true` (ja confirmado, sem necessidade de verificar e-mail)
+   - Insere role `admin` na tabela `user_roles`
+   - Insere role `construtora` na tabela `user_roles` (para o sidebar funcionar corretamente com os menus de construtora)
+   - Cria perfil na tabela `construtoras` com nome "Godoy Realty" e CNPJ placeholder
 
-O link tera:
-- Icone: Shield
-- Titulo: "Gerenciar Usuarios"
-- Label do grupo: "Administracao"
-- URL: `/admin/usuarios`
+2. **Invocar a funcao uma vez para criar o usuario**
+
+3. **Remover a edge function apos uso** (por seguranca)
 
 ### Detalhes tecnicos
-- A verificacao de e-mail segue o mesmo padrao ja usado em `GerenciarUsuarios.tsx` (constante `DEVELOPER_EMAIL`)
-- O link usara o componente `Link` do react-router (navegacao interna, sem abrir em nova aba)
-- Nenhuma alteracao de banco de dados ou RLS necessaria
+
+A funcao tera uma senha fixa que voce devera alterar apos o primeiro login. A senha inicial sera informada no chat para voce anotar.
+
+O usuario tera duas roles: `admin` (para acesso administrativo) e `construtora` (para que o sidebar exiba os menus corretos, ja que o `AuthContext` usa a role para decidir quais links mostrar).
+
+### Seguranca
+
+- A edge function sera protegida por verificacao de service role key
+- Sera removida imediatamente apos o uso
+- A senha devera ser alterada no primeiro acesso
