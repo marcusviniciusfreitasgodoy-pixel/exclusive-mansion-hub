@@ -62,11 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     try {
       // Fetch role
-      const { data: roleData } = await supabase
+      // Fetch all roles, prioritize operational role (construtora/imobiliaria) over admin
+      const { data: rolesData } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .eq('user_id', userId);
+
+      // Pick the operational role first (construtora or imobiliaria), fallback to admin
+      const operationalRole = rolesData?.find(r => r.role === 'construtora' || r.role === 'imobiliaria');
+      const roleData = operationalRole || rolesData?.[0] || null;
 
       if (roleData) {
         setRole(roleData.role as AppRole);
