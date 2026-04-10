@@ -170,15 +170,17 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Update integration stats
-        await supabase
-          .from('integracoes')
-          .update({
-            ultima_sincronizacao: new Date().toISOString(),
-            total_eventos_enviados: (integracao.total_eventos_enviados || 0) + 1,
-            erro_ultima_tentativa: null
-          })
-          .eq('id', integracao.id);
+        // Update integration stats (only if integration exists in DB)
+        if (integracao) {
+          await supabase
+            .from('integracoes')
+            .update({
+              ultima_sincronizacao: new Date().toISOString(),
+              total_eventos_enviados: (integracao.total_eventos_enviados || 0) + 1,
+              erro_ultima_tentativa: null
+            })
+            .eq('id', integracao.id);
+        }
 
       } catch (apiError) {
         result = {
