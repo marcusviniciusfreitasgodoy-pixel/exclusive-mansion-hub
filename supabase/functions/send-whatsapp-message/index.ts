@@ -52,8 +52,6 @@ Deno.serve(async (req) => {
       telefone, 
       nome, 
       mensagem, 
-      template_name, 
-      template_params,
       lead_id, 
       agendamento_id, 
       tipo_mensagem = 'manual',
@@ -90,7 +88,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get WhatsApp integration config
+    // Get Z-API integration config
     const { data: integracao } = await supabase
       .from('integracoes')
       .select('*')
@@ -102,90 +100,64 @@ Deno.serve(async (req) => {
     let result: {
       success: boolean;
       modo: string;
-      wamid?: string;
+      zapiMessageId?: string;
       wa_link?: string;
       error?: string;
     };
 
-    // Clean phone number (remove non-digits, add country code if needed)
+    // Clean phone number
     const cleanPhone = telefone.replace(/\D/g, '');
     const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
 
     if (modo_envio === 'api_oficial' && integracao?.credenciais) {
-      // WhatsApp Business API mode
-      const { phone_number_id, access_token } = integracao.credenciais as {
-        phone_number_id: string;
-        access_token: string;
+      // Z-API mode
+      const { instance_id, token: zapiToken } = integracao.credenciais as {
+        instance_id: string;
+        token: string;
       };
 
-      if (!phone_number_id || !access_token) {
+      // Also check env-level secrets as fallback
+      const instanceId = instance_id || Deno.env.get('ZAPI_INSTANCE_ID');
+      const apiToken = zapiToken || Deno.env.get('ZAPI_TOKEN');
+
+      if (!instanceId || !apiToken) {
         return new Response(
-          JSON.stringify({ error: 'Credenciais da API WhatsApp não configuradas' }),
+          JSON.stringify({ error: 'Credenciais da Z-API não configuradas' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       try {
-        let apiBody: Record<string, unknown>;
+        const zapiBaseUrl = `https://api.z-api.io/instances/${instanceId}/token/${apiToken}`;
 
-        if (template_name) {
-          // Template message
-          apiBody = {
-            messaging_product: 'whatsapp',
-            to: formattedPhone,
-            type: 'template',
-            template: {
-              name: template_name,
-              language: { code: 'pt_BR' },
-              components: template_params ? [
-                {
-                  type: 'body',
-                  parameters: Object.values(template_params).map(value => ({
-                    type: 'text',
-                    text: value
-                  }))
-                }
-              ] : []
-            }
-          };
-        } else if (mensagem) {
-          // Text message
-          apiBody = {
-            messaging_product: 'whatsapp',
-            to: formattedPhone,
-            type: 'text',
-            text: { body: mensagem }
+        if (mensagem) {
+          // Send text message via Z-API
+          const zapiResponse = await fetch(`${zapiBaseUrl}/send-text`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: formattedPhone,
+              message: mensagem
+            })
+          });
+
+          const zapiData = await zapiResponse.json();
+
+          if (!zapiResponse.ok || zapiData.error) {
+            throw new Error(zapiData.message || zapiData.error || 'Erro ao enviar mensagem via Z-API');
+          }
+
+          result = {
+            success: true,
+            modo: 'api_oficial',
+            zapiMessageId: zapiData.messageId || zapiData.id
           };
         } else {
           return new Response(
-            JSON.stringify({ error: 'Mensagem ou template é obrigatório para API oficial' }),
+            JSON.stringify({ error: 'Mensagem é obrigatória para envio via Z-API' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-
-        const waResponse = await fetch(
-          `https://graph.facebook.com/v18.0/${phone_number_id}/messages`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${access_token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(apiBody)
-          }
-        );
-
-        const waData = await waResponse.json();
-
-        if (!waResponse.ok) {
-          throw new Error(waData.error?.message || 'Erro ao enviar mensagem');
-        }
-
-        result = {
-          success: true,
-          modo: 'api_oficial',
-          wamid: waData.messages?.[0]?.id
-        };
 
         // Update integration stats
         await supabase
@@ -204,18 +176,15 @@ Deno.serve(async (req) => {
           error: apiError instanceof Error ? apiError.message : 'Erro desconhecido'
         };
 
-        // Log error in integration
         if (integracao) {
           await supabase
             .from('integracoes')
-            .update({
-              erro_ultima_tentativa: result.error
-            })
+            .update({ erro_ultima_tentativa: result.error })
             .eq('id', integracao.id);
         }
       }
     } else {
-      // wa.me link mode (simple mode)
+      // wa.me link mode (fallback)
       const encodedMessage = mensagem ? encodeURIComponent(mensagem) : '';
       const waLink = `https://wa.me/${formattedPhone}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
 
@@ -234,11 +203,10 @@ Deno.serve(async (req) => {
       telefone_destino: formattedPhone,
       nome_destino: nome || null,
       tipo_mensagem,
-      template_name: template_name || null,
       conteudo: mensagem || null,
       modo_envio: result.modo,
       status: result.success ? 'enviado' : 'falhou',
-      wamid: result.wamid || null,
+      wamid: result.zapiMessageId || null,
       erro: result.error || null,
       enviado_em: result.success ? new Date().toISOString() : null
     };

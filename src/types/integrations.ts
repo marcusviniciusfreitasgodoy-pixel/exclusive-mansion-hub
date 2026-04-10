@@ -185,34 +185,34 @@ export const INTEGRACOES_DISPONIVEIS: IntegracaoConfig[] = [
   },
   {
     tipo: 'whatsapp_business',
-    nome: 'WhatsApp Business API',
-    descricao: 'Envie notificações automáticas de novos leads e agendamentos via WhatsApp. Requer conta Meta Business.',
+    nome: 'Z-API (WhatsApp)',
+    descricao: 'Envie notificações automáticas de novos leads e agendamentos via WhatsApp usando Z-API.',
     icone: '📲',
     cor: 'bg-green-600',
     campos: [
       {
-        key: 'phone_number_id',
-        label: 'Phone Number ID',
+        key: 'instance_id',
+        label: 'Instance ID',
         tipo: 'text',
-        placeholder: '123456789012345',
+        placeholder: 'SUA-INSTANCE-ID',
         obrigatorio: true,
-        ajuda: 'ID do número no WhatsApp Business API'
+        ajuda: 'ID da instância na Z-API (encontre no painel da Z-API)'
       },
       {
-        key: 'access_token',
-        label: 'Access Token',
+        key: 'token',
+        label: 'Token',
         tipo: 'password',
-        placeholder: 'EAAxxxxxxx...',
+        placeholder: 'SEU-TOKEN',
         obrigatorio: true,
-        ajuda: 'Token de acesso permanente da API'
+        ajuda: 'Token de autenticação da instância Z-API'
       },
       {
-        key: 'business_account_id',
-        label: 'Business Account ID',
-        tipo: 'text',
-        placeholder: '123456789012345',
-        obrigatorio: true,
-        ajuda: 'ID da conta Business'
+        key: 'security_token',
+        label: 'Security Token (opcional)',
+        tipo: 'password',
+        placeholder: 'Token de segurança para webhooks',
+        obrigatorio: false,
+        ajuda: 'Token de segurança configurado nos webhooks da Z-API'
       }
     ],
     eventosDisponiveis: [
