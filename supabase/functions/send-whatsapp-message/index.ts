@@ -109,16 +109,23 @@ Deno.serve(async (req) => {
     const cleanPhone = telefone.replace(/\D/g, '');
     const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
 
-    if (modo_envio === 'api_oficial' && integracao?.credenciais) {
-      // Z-API mode
-      const { instance_id, token: zapiToken } = integracao.credenciais as {
-        instance_id: string;
-        token: string;
-      };
+    if (modo_envio === 'api_oficial') {
+      // Z-API mode - use integration credentials or env secrets
+      let instanceId = '';
+      let apiToken = '';
+      let clientToken = '';
 
-      // Also check env-level secrets as fallback
-      const instanceId = instance_id || Deno.env.get('ZAPI_INSTANCE_ID');
-      const apiToken = zapiToken || Deno.env.get('ZAPI_TOKEN');
+      if (integracao?.credenciais) {
+        const creds = integracao.credenciais as Record<string, string>;
+        instanceId = creds.instance_id || '';
+        apiToken = creds.token || '';
+        clientToken = creds.security_token || '';
+      }
+
+      // Fallback to env-level secrets
+      instanceId = instanceId || Deno.env.get('ZAPI_INSTANCE_ID') || '';
+      apiToken = apiToken || Deno.env.get('ZAPI_TOKEN') || '';
+      clientToken = clientToken || Deno.env.get('ZAPI_CLIENT_TOKEN') || '';
 
       if (!instanceId || !apiToken) {
         return new Response(
@@ -129,12 +136,16 @@ Deno.serve(async (req) => {
 
       try {
         const zapiBaseUrl = `https://api.z-api.io/instances/${instanceId}/token/${apiToken}`;
+        const zapiHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (clientToken) {
+          zapiHeaders['Client-Token'] = clientToken;
+        }
 
         if (mensagem) {
           // Send text message via Z-API
           const zapiResponse = await fetch(`${zapiBaseUrl}/send-text`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: zapiHeaders,
             body: JSON.stringify({
               phone: formattedPhone,
               message: mensagem
