@@ -1,81 +1,135 @@
 
+Entendi perfeitamente. Você precisa de um **questionário de pesquisa de mercado** estruturado para validar com construtoras e imobiliárias quais funcionalidades da plataforma têm maior valor percebido, quais já usam em outras ferramentas, e captar sugestões de novas features.
 
-## Plano: Documentação Técnica Completa para Migração
-
-Vou gerar um conjunto de documentos detalhados em PDF/Markdown cobrindo **toda a plataforma**, para que a equipe de implantação consiga replicar o sistema em outra infraestrutura sem depender do Lovable ou do Supabase atual.
-
-### Documentos que serão gerados
-
-**1. Visão Geral da Arquitetura** (~5 páginas)
-- Descrição do modelo SaaS multi-tenant (Construtora > Imobiliária > Corretor)
-- Stack tecnológico: React 18, Vite, TypeScript, Tailwind CSS, Supabase (PostgreSQL + Auth + Edge Functions + Storage)
-- Diagrama de componentes e fluxo de dados
-- Sistema de roles e permissões (construtora, imobiliaria, admin)
-
-**2. Esquema Completo do Banco de Dados** (~15 páginas)
-- Todas as 22+ tabelas com colunas, tipos, defaults e constraints
-- Todas as políticas RLS (Row-Level Security) por tabela
-- Todas as funções do banco (16 functions) com código SQL completo
-- Triggers, views materializadas, enums customizados
-- Todas as 70 migrações SQL (referência para recriar o banco do zero)
-- Storage buckets e configurações de acesso
-
-**3. Mapa de Funcionalidades** (~10 páginas)
-- 17 funcionalidades organizadas por categoria (Vendas, Marketing, IA, Dados)
-- Para cada funcionalidade: descrição, tabelas envolvidas, componentes frontend, edge functions relacionadas
-- Fluxos de usuário detalhados (registro, login, cadastro de imóvel, agendamento, feedback, pipeline CRM, etc.)
-
-**4. API Backend - Edge Functions** (~12 páginas)
-- Documentação de cada uma das 19 Edge Functions:
-  - `signup-user` - Registro de usuários
-  - `chatbot-message` - IA Sofia (chatbot)
-  - `send-whatsapp-message` - Envio Z-API
-  - `whatsapp-webhook` - Recebimento de status
-  - `send-visit-notification` - Notificação de visita
-  - `send-feedback-request/confirmation/followup` - Fluxo de feedback
-  - `send-visit-reminder` - Lembrete de visita
-  - `send-lead-notification` - Notificação de lead
-  - `generate-property-copy` - Geração de texto com IA
-  - `generate-feedback-pdf` - Geração de PDF
-  - `elevenlabs-tts` - Text-to-speech
-  - `extract-pdf-images` / `process-knowledge-pdf` - Processamento de PDFs
-  - `verify-domain` - Verificação de domínio customizado
-  - `cleanup-user` - Limpeza de usuário
-  - `send-demo-request` - Solicitação de demo
-- Para cada: endpoint, parâmetros, lógica interna, dependências externas, secrets necessários
-
-**5. Integrações Externas** (~4 páginas)
-- Z-API (WhatsApp): credenciais, endpoints, webhook
-- Resend (Email): templates, envios
-- ElevenLabs (TTS): geração de áudio
-- Lovable AI Gateway (IA): modelos utilizados
-- Google Analytics, Meta Pixel, GTM (tracking)
-
-**6. Mapa de Rotas e Permissões** (~5 páginas)
-- Todas as rotas da aplicação (40+ rotas)
-- Qual role tem acesso a cada rota
-- Páginas públicas vs protegidas
-
-**7. Segurança e Compliance** (~4 páginas)
-- Proteção de PII via RPCs SECURITY DEFINER
-- Rate limiting
-- Validação de inputs (triggers de banco)
-- Signup público desativado
-- MFA
-
-**8. Secrets e Variáveis de Ambiente** (~2 páginas)
-- Lista completa de secrets necessários
-- Onde cada um é utilizado
-- Como configurar
+## Plano: Pesquisa de Validação com Construtoras e Imobiliárias
 
 ### Formato de entrega
+Vou gerar **3 versões do mesmo documento** salvas em `/mnt/documents/`:
+1. **PDF** — pronto para envio por e-mail/WhatsApp (impressão e leitura)
+2. **DOCX** — editável, caso queira ajustar perguntas antes de enviar
+3. **Markdown** — base para você converter em Google Forms / Typeform / Tally
 
-Todos os documentos serão gerados como **arquivos Markdown** organizados e um **documento PDF consolidado**, salvos em `/mnt/documents/` para download imediato.
+### Estrutura do questionário
 
-### Escopo técnico
+**Capa + Introdução (1 página)**
+- Objetivo da pesquisa
+- Apresentação breve da plataforma (SaaS B2B para gestão integrada construtora ↔ imobiliária ↔ corretor ↔ cliente)
+- Tempo estimado de resposta (~10-15 min)
+- Confidencialidade
 
-- Leitura de todos os arquivos do projeto (edge functions, componentes, hooks, tipos, migrações)
-- Extração do esquema SQL completo das migrações
-- Mapeamento de todas as dependências (package.json)
-- Documentação do código-fonte das edge functions
+**Seção 1 — Identificação do respondente**
+- Tipo: Construtora / Incorporadora / Imobiliária / Corretor autônomo
+- Porte (nº de colaboradores, nº de imóveis/empreendimentos)
+- Cargo do respondente
+- Ferramentas atualmente utilizadas (CRM, site, WhatsApp Business, etc.)
 
+**Seção 2 — Funcionalidades por módulo da plataforma**
+
+Para cada funcionalidade, o respondente marca **3 colunas**:
+- ✅ **Já uso hoje** (em qualquer ferramenta)
+- ⭐ **Importância** (escala 1-5)
+- 🎯 **Prioridade de adoção** (Essencial / Desejável / Dispensável)
+
+Módulos cobertos (baseados nos 4 pilares e 17 funcionalidades já mapeados):
+
+1. **Vendas e Gestão de Contatos (CRM)**
+   - Funil visual Kanban (8 estágios)
+   - Lead scoring automático (0-100)
+   - Histórico de atividades por lead
+   - Tarefas e lembretes automáticos
+   - Notas internas por lead
+   - Propostas formais com assinatura digital
+   - Fichas de visita com validade jurídica (Lei 6.530/78)
+   - Agendamento inteligente de visitas
+   - Confirmação e lembretes automáticos (24h e 1h antes)
+
+2. **Marketing e Marca (White-label)**
+   - Sites/landing pages com marca da imobiliária
+   - 4 templates exclusivos (Luxo, Moderno, Clássico, Alto Padrão)
+   - Domínio personalizado
+   - Favicon customizado
+   - Resumo Comercial (One-Pager PDF)
+   - Tour 360° (Matterport/Kuula)
+   - Galeria de mídia, vídeos e book digital
+   - Materiais promocionais (book, ROI, tabelas)
+   - Aprovação de mídias (controle de marca)
+
+3. **IA e Atendimento**
+   - Sofia IA 24/7 (chatbot com voz)
+   - Base de conhecimento por imóvel (PDFs técnicos)
+   - Assistente de copywriting com IA
+   - Extração automática de imagens de PDFs
+   - Resposta em < 1 minuto
+
+4. **Comunicação e Notificações**
+   - WhatsApp automático (Z-API)
+   - E-mails transacionais
+   - Notificações de novo lead
+   - Confirmação e follow-up de feedbacks
+   - Lembretes de visita
+
+5. **Feedback e NPS Pós-Visita**
+   - Pesquisa NPS com assinatura digital
+   - Avaliação por categorias (5 estrelas)
+   - Efeito UAU (ranking qualitativo de pontos fortes)
+   - Follow-up automático de feedbacks pendentes (24h/48h)
+   - Painel de urgência
+
+6. **Analytics e BI**
+   - Dashboard de leads, visitas e conversão
+   - Mapa de calor de interesse
+   - Funil de conversão visual
+   - Evolução temporal por imobiliária parceira
+   - Origem dos leads
+   - Performance por parceiro
+   - Análise de feedbacks de visita
+
+7. **Gestão Multi-empresa**
+   - Painel separado construtora / imobiliária
+   - Gestão de imobiliárias parceiras
+   - Gestão de equipe de corretores
+   - Controle de acesso por papel (RBAC)
+   - MFA / 2FA opcional
+
+8. **Integrações Externas**
+   - Google Analytics 4
+   - Meta Pixel
+   - Google Tag Manager
+   - WhatsApp Business API (Z-API)
+   - Webhooks customizados
+
+9. **Formulários e Customização**
+   - Editor drag-and-drop de formulários
+   - 12 tipos de campo
+   - Formulários condicionais
+   - Customização de agendamento e feedback
+
+10. **Administração e Suporte**
+    - Manual do usuário
+    - Tour guiado interativo
+    - Checklist de lançamento de imóvel
+    - Aprovação de mídias com fluxo
+
+**Seção 3 — Avaliação geral**
+- Top 5 funcionalidades mais valiosas (ranqueamento livre)
+- O que NÃO usariam de jeito nenhum (e por quê)
+- Quanto pagariam por mês por uma plataforma assim (faixas)
+- Maior dor atual no processo comercial
+
+**Seção 4 — Sugestões abertas**
+- Funcionalidades faltantes (campo livre)
+- Integrações desejadas que não existem
+- Comentários gerais
+
+**Seção 5 — Próximos passos (opcional)**
+- Aceita participar de teste beta?
+- Aceita ser contactado para entrevista?
+- Dados de contato
+
+### Dimensão estimada
+- ~12-15 páginas em PDF
+- ~100-120 itens marcáveis distribuídos entre os 10 módulos
+- Tempo de resposta: 10-15 minutos
+
+### Observação
+A pesquisa será **agnóstica de marca** (não cita "Godoy Prime" como vendedora explicitamente, posicionando como "nova plataforma em desenvolvimento") — isso aumenta honestidade nas respostas. Se preferir versão com marca explícita, basta avisar antes da geração.
